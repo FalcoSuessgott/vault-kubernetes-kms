@@ -1,33 +1,31 @@
 name: Test and coverage
 
-on: [push, pull_request]
+on:
+  pull_request:
 
 jobs:
   test:
-    strategy:
-      matrix:
-        go-version: [1.19.x]
-        os: [ubuntu-latest, macos-latest, windows-latest]
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
+      
+      - run: go generate -tags tools tools/tools.go
 
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: '1.20'
+          cache: false
 
       - name: go get
         run: go get ./...
 
-      - name: go mod tidy
-        run: go mod tidy
-
       - name: Run coverage
-        run: go test -race -coverprofile="coverage.out" -covermode=atomic ./...
+        run: |
+          gotestsum -- -v -race -coverprofile="coverage.out" -covermode=atomic ./...
+        env:
+          # https://github.com/testcontainers/testcontainers-go/issues/1782
+          TESTCONTAINERS_RYUK_DISABLED: true
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'

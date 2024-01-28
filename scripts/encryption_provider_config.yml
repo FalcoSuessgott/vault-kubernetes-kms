@@ -1,0 +1,12 @@
+---
+kind: EncryptionConfiguration
+apiVersion: apiserver.config.k8s.io/v1
+resources:
+  - resources:
+      - secrets
+    providers:
+      - kms:
+          apiVersion: v2
+          name: vault
+          endpoint: unix:///opt/vaultkms.socket
+      - identity: {}

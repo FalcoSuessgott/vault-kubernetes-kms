@@ -1,0 +1,74 @@
+package testutils
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/docker/docker/api/types/container"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
+)
+
+var (
+	vaultVersion = "latest"
+	image        = fmt.Sprintf("hashicorp/vault:%s", vaultVersion)
+	envs         = map[string]string{}
+	token        = "root"
+)
+
+// TestContainer vault dev container wrapper.
+type TestContainer struct {
+	Container testcontainers.Container
+	URI       string
+	Token     string
+}
+
+// StartTestContainer Starts a fresh vault in development mode.
+func StartTestContainer() (*TestContainer, error) {
+	ctx := context.Background()
+
+	if v, ok := os.LookupEnv("VAULT_VERSION"); ok {
+		vaultVersion = v
+	}
+
+	req := testcontainers.ContainerRequest{
+		Image:        image,
+		ExposedPorts: []string{"8200/tcp"},
+		WaitingFor: wait.ForAll(
+			wait.ForLog("Root Token:").WithPollInterval(1*time.Second).WithStartupTimeout(3*time.Minute),
+			wait.ForListeningPort("8200/tcp"),
+		),
+		Cmd:        []string{"server", "-dev", "-dev-root-token-id", token},
+		AutoRemove: true,
+		Env:        envs,
+		HostConfigModifier: func(hc *container.HostConfig) {
+			hc.CapAdd = []string{"IPC_LOCK"}
+		},
+	}
+
+	c, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	mappedPort, err := c.MappedPort(ctx, "8200")
+	if err != nil {
+		return nil, err
+	}
+
+	return &TestContainer{
+		Container: c,
+		URI:       fmt.Sprintf("http://127.0.0.1:%s", mappedPort.Port()),
+		Token:     token,
+	}, nil
+}
+
+// Terminate terminates the testcontainer.
+func (v *TestContainer) Terminate() error {
+	return v.Container.Terminate(context.Background())
+}

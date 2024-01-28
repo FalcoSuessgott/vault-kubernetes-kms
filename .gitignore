@@ -5,3 +5,4 @@ coverage.out
 .envrc
 manpages/
 dist/
+nohup.out
