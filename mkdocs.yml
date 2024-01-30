@@ -1,0 +1,84 @@
+site_name: vault-kms-plugin
+site_description: "A Hashicorp Vault KMS Plugin for Kubernetes"
+site_author: FalcoSuessgott
+
+repo_name: FalcoSuessgott/vault-kms-plugin
+repo_url: https://github.com/FalcoSuessgott/vault-kms-plugin
+
+docs_dir: docs/
+
+plugins:
+  - search
+  - git-authors
+  - git-revision-date-localized:
+      locale: en
+      enable_creation_date: false
+
+nav:
+  - index.md
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.snippets
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.inlinehilite
+  - admonition
+  - def_list
+  - footnotes
+  - attr_list
+  - md_in_html
+  - tables
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - footnotes
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+theme:
+  icon:
+    edit: material/pencil
+    view: material/eye
+    repo: fontawesome/brands/github
+  name: material
+  
+  favicon: assets/favicon.ico
+  logo: assets/logo.png
+  language: en
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/eye
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/eye-outline
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - content.code.copy
+    - content.action.edit
+    - navigation.top
+    - navigation.expand
+    - navigation.footer
