@@ -25,3 +25,8 @@ linters:
     - exhaustruct
     - nolintlint
     - wrapcheck
+    - depguard
+    - gomnd
+    - goerr113
+    - gochecknoglobals
+    

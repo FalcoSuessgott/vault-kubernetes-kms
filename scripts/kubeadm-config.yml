@@ -1,0 +1,49 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeadm-config
+  namespace: kube-system
+data:
+  ClusterConfiguration: |
+    apiServer:
+      extraVolumes:
+        - name: socket
+          hostPath:
+          path: /opt/
+      extraVolumeMounts:
+        - name: socket
+          mountPath: /opt
+      certSANs:
+      - 127.0.0.1
+      - localhost
+      - 192.168.49.2
+      extraArgs:
+        encryption-provider-config: "/opt/encryption_provider_config.yml"
+        authorization-mode: Node,RBAC
+        enable-admission-plugins: NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota
+      timeoutForControlPlane: 4m0s
+    apiVersion: kubeadm.k8s.io/v1beta3
+    certificatesDir: /var/lib/minikube/certs
+    clusterName: mk
+    controlPlaneEndpoint: control-plane.minikube.internal:8443
+    controllerManager:
+      extraArgs:
+        allocate-node-cidrs: "true"
+        leader-elect: "false"
+    dns: {}
+    etcd:
+      local:
+        dataDir: /var/lib/minikube/etcd
+        extraArgs:
+          proxy-refresh-interval: "70000"
+    imageRepository: registry.k8s.io
+    kind: ClusterConfiguration
+    kubernetesVersion: v1.29.0
+    networking:
+      dnsDomain: cluster.local
+      podSubnet: 10.244.0.0/16
+      serviceSubnet: 10.96.0.0/12
+    scheduler:
+      extraArgs:
+        leader-elect: "false"
