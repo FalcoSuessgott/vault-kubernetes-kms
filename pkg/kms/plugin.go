@@ -123,7 +123,7 @@ func (p *Plugin) Decrypt(ctx context.Context, request *pb.DecryptRequest) (*pb.D
 		return nil, err
 	}
 
-	zap.L().Info("decryption request ", zap.String("request_id", request.GetUid()))
+	zap.L().Info("decryption request", zap.String("request_id", request.GetUid()))
 
 	return &pb.DecryptResponse{
 		Plaintext: resp,
