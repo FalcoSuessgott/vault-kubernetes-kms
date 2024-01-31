@@ -1,9 +1,11 @@
 # Todos
 * [x] logging
 * [ ] docs
-* [ ] CI
-* [ ] linting
+* [x] CI
+* [x] linting
 * [ ] concurreny
 * [ ] kms v1
+* [x] k8s auth
 * [ ] e2e
 * [ ] health check
+* [ ] better docker image
