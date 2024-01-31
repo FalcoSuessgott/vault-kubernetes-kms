@@ -23,19 +23,23 @@ func (s *VaultSuite) TearDownSubTest() {
 }
 
 func (s *VaultSuite) SetupSubTest() {
-	vc, err := testutils.StartTestContainer()
+	c, err := testutils.StartTestContainer()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	s.c = vc
+	s.c = c
 
-	v, err := NewClient(vc.URI, vc.Token, "transit", "kms")
+	client, err := NewClient(
+		WithVaultAddress(c.URI),
+		WithVaultToken(c.Token),
+		WithTransit("transit", "kms"),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	s.client = v
+	s.client = client
 }
 
 func TestVaultSuite(t *testing.T) {

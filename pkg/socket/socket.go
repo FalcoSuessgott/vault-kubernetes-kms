@@ -6,11 +6,13 @@ import (
 	"strings"
 )
 
+// Socket represents a unix socket.
 type Socket struct {
 	Network string
 	Path    string
 }
 
+// NewSocket returns a new unix socket.
 func NewSocket(str string) (*Socket, error) {
 	socket := &Socket{}
 
@@ -28,6 +30,7 @@ func NewSocket(str string) (*Socket, error) {
 	return socket, nil
 }
 
+// Listen listens on the current socket for connections.
 func (s *Socket) Listen() (net.Listener, error) {
 	return net.Listen(s.Network, s.Path)
 }

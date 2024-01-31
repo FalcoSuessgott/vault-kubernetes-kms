@@ -27,10 +27,6 @@ vault: ## creates vault dev server with transit engine + key
 minikube: ## starts minikube
 	./scripts/minikube.sh
 
-.PHONY: cleanup
-cleanup: ## clean up
-	./scripts/cleanup.sh
-
 PHONY: lint
 lint: ## lint go files
 	golangci-lint run -c .golang-ci.yml

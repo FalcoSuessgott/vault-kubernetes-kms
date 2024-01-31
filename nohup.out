@@ -4,7 +4,7 @@ Administrative Namespace:
              Api Address: http://0.0.0.0:8200
                      Cgo: disabled
          Cluster Address: https://0.0.0.0:8201
-   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
               Go Version: go1.21.1
               Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
                Log Level: 
@@ -27,7 +27,392 @@ You may need to set the following environment variables:
 The unseal key and root token are displayed below in case you want to
 seal/unseal the Vault or re-authenticate.
 
-Unseal Key: T3KS22auTKlJGb1Zt2fZ/fkvY2aZh9cfMnixNA+cX7Y=
+Unseal Key: qcwMr0vSGUrPDUUXbuGlYRPekKPmsYmzl0POjzTU5XA=
+Root Token: root
+
+Development mode should NOT be used in production installations!
+
+==> Vault shutdown triggered
+==> Vault server configuration:
+
+Administrative Namespace: 
+             Api Address: http://0.0.0.0:8200
+                     Cgo: disabled
+         Cluster Address: https://0.0.0.0:8201
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
+              Go Version: go1.21.1
+              Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: 
+                   Mlock: supported: true, enabled: false
+           Recovery Mode: false
+                 Storage: inmem
+                 Version: Vault v1.15.0, built 2023-09-22T16:53:10Z
+             Version Sha: b4d07277a6c5318bb50d3b94bbd6135dccb4c601
+
+==> Vault server started! Log data will stream in below:
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+    $ export VAULT_ADDR='http://0.0.0.0:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: doS1yy0AQiF/U7eT/fAFdadgkos/AiYxrUnR9ZVpi0Y=
+Root Token: root
+
+Development mode should NOT be used in production installations!
+
+==> Vault shutdown triggered
+==> Vault server configuration:
+
+Administrative Namespace: 
+             Api Address: http://0.0.0.0:8200
+                     Cgo: disabled
+         Cluster Address: https://0.0.0.0:8201
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
+              Go Version: go1.21.1
+              Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: 
+                   Mlock: supported: true, enabled: false
+           Recovery Mode: false
+                 Storage: inmem
+                 Version: Vault v1.15.0, built 2023-09-22T16:53:10Z
+             Version Sha: b4d07277a6c5318bb50d3b94bbd6135dccb4c601
+
+==> Vault server started! Log data will stream in below:
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+    $ export VAULT_ADDR='http://0.0.0.0:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: MFQcSrYJgCruisWjMdpgHSuWZqYTxcLqr3biCyUuolo=
+Root Token: root
+
+Development mode should NOT be used in production installations!
+
+==> Vault shutdown triggered
+==> Vault server configuration:
+
+Administrative Namespace: 
+             Api Address: http://0.0.0.0:8200
+                     Cgo: disabled
+         Cluster Address: https://0.0.0.0:8201
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
+              Go Version: go1.21.1
+              Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: 
+                   Mlock: supported: true, enabled: false
+           Recovery Mode: false
+                 Storage: inmem
+                 Version: Vault v1.15.0, built 2023-09-22T16:53:10Z
+             Version Sha: b4d07277a6c5318bb50d3b94bbd6135dccb4c601
+
+==> Vault server started! Log data will stream in below:
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+    $ export VAULT_ADDR='http://0.0.0.0:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: 18Pq+jG7+qAFv3o54jpyG2tB569e6dqH0vaO1jiMQmg=
+Root Token: root
+
+Development mode should NOT be used in production installations!
+
+==> Vault shutdown triggered
+==> Vault server configuration:
+
+Administrative Namespace: 
+             Api Address: http://0.0.0.0:8200
+                     Cgo: disabled
+         Cluster Address: https://0.0.0.0:8201
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
+              Go Version: go1.21.1
+              Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: 
+                   Mlock: supported: true, enabled: false
+           Recovery Mode: false
+                 Storage: inmem
+                 Version: Vault v1.15.0, built 2023-09-22T16:53:10Z
+             Version Sha: b4d07277a6c5318bb50d3b94bbd6135dccb4c601
+
+==> Vault server started! Log data will stream in below:
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+    $ export VAULT_ADDR='http://0.0.0.0:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: /4ABC06EZUVbQqs7k1RIBFfEBIb2sW6mIUg3S0c4pP0=
+Root Token: root
+
+Development mode should NOT be used in production installations!
+
+==> Vault shutdown triggered
+==> Vault server configuration:
+
+Administrative Namespace: 
+             Api Address: http://0.0.0.0:8200
+                     Cgo: disabled
+         Cluster Address: https://0.0.0.0:8201
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
+              Go Version: go1.21.1
+              Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: 
+                   Mlock: supported: true, enabled: false
+           Recovery Mode: false
+                 Storage: inmem
+                 Version: Vault v1.15.0, built 2023-09-22T16:53:10Z
+             Version Sha: b4d07277a6c5318bb50d3b94bbd6135dccb4c601
+
+==> Vault server started! Log data will stream in below:
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+    $ export VAULT_ADDR='http://0.0.0.0:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: ywyZuHpogfkwrzfNPQIpoQdrQ+PBhmAPlqVG/VO4Iu8=
+Root Token: root
+
+Development mode should NOT be used in production installations!
+
+==> Vault shutdown triggered
+==> Vault server configuration:
+
+Administrative Namespace: 
+             Api Address: http://0.0.0.0:8200
+                     Cgo: disabled
+         Cluster Address: https://0.0.0.0:8201
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
+              Go Version: go1.21.1
+              Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: 
+                   Mlock: supported: true, enabled: false
+           Recovery Mode: false
+                 Storage: inmem
+                 Version: Vault v1.15.0, built 2023-09-22T16:53:10Z
+             Version Sha: b4d07277a6c5318bb50d3b94bbd6135dccb4c601
+
+==> Vault server started! Log data will stream in below:
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+    $ export VAULT_ADDR='http://0.0.0.0:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: yaZxAtzlLz7KnADK2hUrllWSlkFKoKrDfsMLcbHZoaw=
+Root Token: root
+
+Development mode should NOT be used in production installations!
+
+==> Vault shutdown triggered
+==> Vault server configuration:
+
+Administrative Namespace: 
+             Api Address: http://0.0.0.0:8200
+                     Cgo: disabled
+         Cluster Address: https://0.0.0.0:8201
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
+              Go Version: go1.21.1
+              Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: 
+                   Mlock: supported: true, enabled: false
+           Recovery Mode: false
+                 Storage: inmem
+                 Version: Vault v1.15.0, built 2023-09-22T16:53:10Z
+             Version Sha: b4d07277a6c5318bb50d3b94bbd6135dccb4c601
+
+==> Vault server started! Log data will stream in below:
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+    $ export VAULT_ADDR='http://0.0.0.0:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: KRqEtzgOtm4hSYV2XqOLE2UCNZhw+lHrRdIY1Tl1nFs=
+Root Token: root
+
+Development mode should NOT be used in production installations!
+
+==> Vault shutdown triggered
+==> Vault server configuration:
+
+Administrative Namespace: 
+             Api Address: http://0.0.0.0:8200
+                     Cgo: disabled
+         Cluster Address: https://0.0.0.0:8201
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
+              Go Version: go1.21.1
+              Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: 
+                   Mlock: supported: true, enabled: false
+           Recovery Mode: false
+                 Storage: inmem
+                 Version: Vault v1.15.0, built 2023-09-22T16:53:10Z
+             Version Sha: b4d07277a6c5318bb50d3b94bbd6135dccb4c601
+
+==> Vault server started! Log data will stream in below:
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+    $ export VAULT_ADDR='http://0.0.0.0:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: h/J2/XmIcIFKCpTjEYv+XdkQlyhY26iujTqlUYeo8T8=
+Root Token: root
+
+Development mode should NOT be used in production installations!
+
+==> Vault shutdown triggered
+==> Vault server configuration:
+
+Administrative Namespace: 
+             Api Address: http://0.0.0.0:8200
+                     Cgo: disabled
+         Cluster Address: https://0.0.0.0:8201
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
+              Go Version: go1.21.1
+              Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: 
+                   Mlock: supported: true, enabled: false
+           Recovery Mode: false
+                 Storage: inmem
+                 Version: Vault v1.15.0, built 2023-09-22T16:53:10Z
+             Version Sha: b4d07277a6c5318bb50d3b94bbd6135dccb4c601
+
+==> Vault server started! Log data will stream in below:
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+    $ export VAULT_ADDR='http://0.0.0.0:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: CiZgpJLruI5VuGPAsOTcnjtIbH9ihP3/ts+c8jmcA28=
+Root Token: root
+
+Development mode should NOT be used in production installations!
+
+==> Vault shutdown triggered
+==> Vault server configuration:
+
+Administrative Namespace: 
+             Api Address: http://0.0.0.0:8200
+                     Cgo: disabled
+         Cluster Address: https://0.0.0.0:8201
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
+              Go Version: go1.21.1
+              Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: 
+                   Mlock: supported: true, enabled: false
+           Recovery Mode: false
+                 Storage: inmem
+                 Version: Vault v1.15.0, built 2023-09-22T16:53:10Z
+             Version Sha: b4d07277a6c5318bb50d3b94bbd6135dccb4c601
+
+==> Vault server started! Log data will stream in below:
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+    $ export VAULT_ADDR='http://0.0.0.0:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: 8QwAM1q/FkQ9D0Nmh/WzojUBKuqiiqvAY7s2kJzrHLs=
+Root Token: root
+
+Development mode should NOT be used in production installations!
+
+==> Vault shutdown triggered
+==> Vault server configuration:
+
+Administrative Namespace: 
+             Api Address: http://0.0.0.0:8200
+                     Cgo: disabled
+         Cluster Address: https://0.0.0.0:8201
+   Environment Variables: CHROME_DESKTOP, CLUTTER_IM_MODULE, COLORTERM, DBUS_SESSION_BUS_ADDRESS, DEFAULTS_PATH, DESKTOP_SESSION, DIRENV_DIFF, DIRENV_DIR, DIRENV_WATCHES, DISPLAY, DYLD_LIBRARY_PATH, EDITOR, GDK_BACKEND, GDMSESSION, GIT_ASKPASS, GODEBUG, GOPATH, GOROOT, GPG_AGENT_INFO, GTK_IM_MODULE, GTK_MODULES, GVM_OVERLAY_PREFIX, GVM_PATH_BACKUP, GVM_ROOT, GVM_VERSION, HOME, LANG, LC_ADDRESS, LC_ALL, LC_IDENTIFICATION, LC_MEASUREMENT, LC_MONETARY, LC_NAME, LC_NUMERIC, LC_PAPER, LC_TELEPHONE, LC_TIME, LD_LIBRARY_PATH, LESS, LESS_TERMCAP_mb, LESS_TERMCAP_md, LESS_TERMCAP_me, LESS_TERMCAP_se, LESS_TERMCAP_so, LESS_TERMCAP_ue, LESS_TERMCAP_us, LOGNAME, LSCOLORS, LS_COLORS, MAKEFLAGS, MAKELEVEL, MAKE_TERMERR, MAKE_TERMOUT, MANDATORY_PATH, MFLAGS, NVM_BIN, NVM_CD_FLAGS, NVM_DIR, NVM_INC, OLDPWD, ORIGINAL_XDG_CURRENT_DESKTOP, PAGER, PATH, PKG_CONFIG_PATH, PWD, QT_ACCESSIBILITY, QT_IM_MODULE, SHELL, SHLVL, SPACESHIP_ROOT, SPACESHIP_VERSION, SYSTEMD_EXEC_PID, TERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, USER, USERNAME, USER_ZDOTDIR, VAULT_ADDR, VAULT_SKIP_VERIFY, VAULT_TOKEN, VISUAL, VSCODE_GIT_ASKPASS_EXTRA_ARGS, VSCODE_GIT_ASKPASS_MAIN, VSCODE_GIT_ASKPASS_NODE, VSCODE_GIT_IPC_HANDLE, VSCODE_INJECTION, WINDOWPATH, XAUTHORITY, XDG_CONFIG_DIRS, XDG_DATA_DIRS, XDG_RUNTIME_DIR, XDG_SEAT, XDG_SESSION_CLASS, XDG_SESSION_DESKTOP, XDG_SESSION_ID, XDG_SESSION_TYPE, XDG_VTNR, XMODIFIERS, ZDOTDIR, _, gvm_go_name, gvm_pkgset_name
+              Go Version: go1.21.1
+              Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: 
+                   Mlock: supported: true, enabled: false
+           Recovery Mode: false
+                 Storage: inmem
+                 Version: Vault v1.15.0, built 2023-09-22T16:53:10Z
+             Version Sha: b4d07277a6c5318bb50d3b94bbd6135dccb4c601
+
+==> Vault server started! Log data will stream in below:
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+    $ export VAULT_ADDR='http://0.0.0.0:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: NxNxgzJbcWM9TchJVyZWOZAieVXAC4OqfaACR5Qq9Xs=
 Root Token: root
 
 Development mode should NOT be used in production installations!

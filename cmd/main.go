@@ -13,48 +13,79 @@ import (
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/socket"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/utils"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/vault"
+	"github.com/caarlos0/env/v6"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 )
 
+const envPrefix = "VAULT_KMS_"
+
 type options struct {
-	socket string
+	socket string `env:"SOCKET"`
 
-	debug bool
+	debug bool `env:"DEBUG"`
 
-	vaultAddress     string
-	vaultToken       string
-	vaultTransitPath string
-	vaultTransitKey  string
+	vaultAddress   string `env:"VAULT_ADDR"`
+	vaultNamespace string `env:"VAULT_NAMESPACE"`
+	vaultToken     string `env:"VAULT_TOKEN"`
+
+	vaultK8sMount string `env:"K8S_MOUNT"`
+	vaultK8sRole  string `env:"K8S_ROLE"`
+
+	vaultTransitMount string `env:"TRANSIT_MOUNT"`
+	vaultTransitKey   string `env:"TRANSIT_KEY"`
 
 	version bool
 }
 
 func defaultOptions() *options {
 	return &options{
-		socket:           "unix:///opt/vaultkms.socket",
-		vaultTransitPath: "transit",
-		vaultTransitKey:  "kms",
+		socket: "unix:///opt/vaultkms.socket",
+
+		vaultK8sMount: "kubernetes",
+
+		vaultTransitMount: "transit",
+		vaultTransitKey:   "kms",
 	}
 }
 
-// nolint: funlen
+// nolint: funlen, cyclop
 func main() {
 	opts := defaultOptions()
 
+	// first parse any env vars
+	if err := opts.parseEnvs(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+
+		os.Exit(1)
+	}
+
+	// then flags, since the have precedence over env vars
 	flag.StringVar(&opts.socket, "socket", opts.socket, "")
 
 	flag.BoolVar(&opts.debug, "debug", opts.debug, "Enable debug logs")
 
 	flag.StringVar(&opts.vaultAddress, "vault-address", opts.vaultAddress, "")
+	flag.StringVar(&opts.vaultNamespace, "vault-namespace", opts.vaultNamespace, "")
+
 	flag.StringVar(&opts.vaultToken, "vault-token", opts.vaultToken, "")
-	flag.StringVar(&opts.vaultTransitPath, "vault-transit-path", opts.vaultTransitPath, "")
+
+	flag.StringVar(&opts.vaultK8sMount, "vault-k8s-mount", opts.vaultK8sMount, "")
+	flag.StringVar(&opts.vaultK8sRole, "vault-k8s-role", opts.vaultK8sRole, "")
+
+	flag.StringVar(&opts.vaultTransitMount, "vault-transit-mount", opts.vaultTransitMount, "")
 	flag.StringVar(&opts.vaultTransitKey, "vault-transit-key", opts.vaultTransitKey, "")
 
 	flag.BoolVar(&opts.version, "version", opts.version, "")
 
 	flag.Parse()
+
+	if err := opts.validateFlags(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+
+		os.Exit(1)
+	}
 
 	if opts.version {
 		fmt.Fprintln(os.Stdout, "version")
@@ -70,13 +101,37 @@ func main() {
 
 	l, err := logging.NewStandardLogger(logLevel)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to configure logging")
+		fmt.Fprintf(os.Stderr, "failed to configure logging")
+
 		os.Exit(1)
 	}
 
 	zap.ReplaceGlobals(l)
 
-	c, err := vault.NewClient(opts.vaultAddress, opts.vaultToken, opts.vaultTransitPath, opts.vaultTransitKey)
+	zap.L().Info("starting kms plugin",
+		zap.String("socket", opts.socket),
+
+		zap.Bool("debug", opts.debug),
+
+		zap.String("vault-address", opts.vaultAddress),
+		zap.String("vault-namespace", opts.vaultNamespace),
+
+		zap.String("vault-token", opts.vaultToken),
+
+		zap.String("vault-k8s-mount", opts.vaultK8sMount),
+		zap.String("vault-k8s-role", opts.vaultK8sRole),
+
+		zap.String("vault-transit-mount", opts.vaultTransitMount),
+		zap.String("vault-transit-key", opts.vaultTransitKey),
+	)
+
+	c, err := vault.NewClient(
+		vault.WithVaultAddress(opts.vaultAddress),
+		vault.WithVaultToken(opts.vaultNamespace),
+		vault.WithVaultNamespace(opts.vaultAddress),
+		vault.WithK8sAuth(opts.vaultK8sMount, opts.vaultK8sRole),
+		vault.WithTransit(opts.vaultTransitMount, opts.vaultTransitKey),
+	)
 	if err != nil {
 		zap.L().Fatal("Failed to create vault client", zap.Error(err))
 	}
@@ -107,7 +162,7 @@ func main() {
 	}
 
 	g := grpc.NewServer(gprcOpts...)
-	p := kms.NewKMSPlugin(c)
+	p := kms.NewPlugin(c)
 
 	p.Register(g)
 
@@ -132,4 +187,23 @@ func main() {
 	zap.L().Info("Exiting...")
 
 	os.Exit(0)
+}
+
+func (o *options) validateFlags() error {
+	switch {
+	case o.vaultAddress == "":
+		return fmt.Errorf("vault address required")
+	case o.vaultToken != "" && o.vaultK8sRole != "":
+		return fmt.Errorf("cannot use vault-token with vault-k8s-role")
+	case o.vaultToken == "" && o.vaultK8sRole == "":
+		return fmt.Errorf("either vault-token or vault-k8s-role required")
+	}
+
+	return nil
+}
+
+func (o *options) parseEnvs() error {
+	return env.Parse(o, env.Options{
+		Prefix: envPrefix,
+	})
 }
