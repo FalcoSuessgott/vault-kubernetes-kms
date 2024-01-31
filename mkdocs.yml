@@ -14,9 +14,6 @@ plugins:
       locale: en
       enable_creation_date: false
 
-nav:
-  - index.md
-
 markdown_extensions:
   - pymdownx.superfences:
       custom_fences:
@@ -54,8 +51,6 @@ theme:
     repo: fontawesome/brands/github
   name: material
   
-  favicon: assets/favicon.ico
-  logo: assets/logo.png
   language: en
   palette:
     # Palette toggle for light mode
