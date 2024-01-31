@@ -11,7 +11,10 @@ spec:
       command:
         - vault-kubernetes-kms
         - --vault-address=http://host.minikube.internal:8200
-        - --vault-token=root
+        # token auth
+        #- --vault-token=root
+        # k8s auth
+        - --vault-k8s-role=kms
       volumeMounts:
         - name: socket
           mountPath: /opt

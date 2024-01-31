@@ -1,6 +1,8 @@
 package vault
 
 import (
+	"context"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,11 +28,11 @@ func (s *VaultSuite) TestTransitEncryptDecrypt() {
 			require.NoError(s.Suite.T(), s.client.CreateTransitKey("transit", "kms"), tc.name)
 
 			// encrypt data
-			enc, _, err := s.client.Encrypt(tc.data)
+			enc, _, err := s.client.Encrypt(context.Background(), tc.data)
 			require.NoError(s.Suite.T(), err, tc.name)
 
 			// decrypt data
-			dec, err := s.client.Decrypt(enc)
+			dec, err := s.client.Decrypt(context.Background(), enc)
 			require.NoError(s.Suite.T(), err, tc.name)
 
 			// data should match decrypted text

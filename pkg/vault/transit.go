@@ -1,27 +1,21 @@
 package vault
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 )
 
-const (
-	encryptDataPath = "%s/encrypt/%s"
-	decryptDataPath = "%s/decrypt/%s"
-
-	mountEnginePath = "sys/mounts/%s"
-	transitKeyPath  = "%s/keys/%s"
-)
-
-func (c *Client) Encrypt(data []byte) ([]byte, string, error) {
+// Encrypt takes any data and encrypts it using the specified vaults transit engine.
+func (c *Client) Encrypt(ctx context.Context, data []byte) ([]byte, string, error) {
 	p := fmt.Sprintf(encryptDataPath, c.TransitEngine, c.TransitKey)
 
 	opts := map[string]interface{}{
 		"plaintext": base64.StdEncoding.EncodeToString(data),
 	}
 
-	resp, err := c.Logical().Write(p, opts)
+	resp, err := c.Logical().WriteWithContext(ctx, p, opts)
 	if err != nil {
 		return nil, "", err
 	}
@@ -44,14 +38,15 @@ func (c *Client) Encrypt(data []byte) ([]byte, string, error) {
 	return []byte(res), v.String(), nil
 }
 
-func (c *Client) Decrypt(data []byte) ([]byte, error) {
+// Decrypt takes any encrypted data and denrypts it using the specified vaults transit engine.
+func (c *Client) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
 	p := fmt.Sprintf(decryptDataPath, c.TransitEngine, c.TransitKey)
 
 	opts := map[string]interface{}{
 		"ciphertext": string(data),
 	}
 
-	resp, err := c.Logical().Write(p, opts)
+	resp, err := c.Logical().WriteWithContext(ctx, p, opts)
 	if err != nil {
 		return nil, err
 	}
