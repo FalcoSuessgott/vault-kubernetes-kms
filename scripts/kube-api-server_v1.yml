@@ -42,7 +42,7 @@ spec:
     - --service-cluster-ip-range=10.96.0.0/12
     - --tls-cert-file=/var/lib/minikube/certs/apiserver.crt
     - --tls-private-key-file=/var/lib/minikube/certs/apiserver.key
-    image: registry.k8s.io/kube-apiserver:v1.29.0
+    image: registry.k8s.io/kube-apiserver:v1.27.0
     imagePullPolicy: IfNotPresent
     livenessProbe:
       failureThreshold: 8
