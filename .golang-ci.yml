@@ -29,4 +29,5 @@ linters:
     - gomnd
     - goerr113
     - gochecknoglobals
+    - revive
     

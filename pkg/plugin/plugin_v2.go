@@ -1,4 +1,4 @@
-package kms
+package plugin
 
 import (
 	"context"
@@ -14,14 +14,14 @@ import (
 	pb "k8s.io/kms/apis/v2"
 )
 
-// Plugin a kms plugin wrapper.
-type Plugin struct {
+// PluginV2 a kms plugin wrapper.
+type PluginV2 struct {
 	vc *vault.Client
 }
 
-// NewKMSPlugin returns a kms wrapper.
-func NewPlugin(vc *vault.Client) *Plugin {
-	p := &Plugin{
+// PluginV2 returns a kms wrapper.
+func NewPluginV2(vc *vault.Client) *PluginV2 {
+	p := &PluginV2{
 		vc: vc,
 	}
 
@@ -29,7 +29,7 @@ func NewPlugin(vc *vault.Client) *Plugin {
 }
 
 // Health sends a simple plaintext for encryption and then compares the decrypted value.
-func (p *Plugin) Health() error {
+func (p *PluginV2) Health() error {
 	health := "health"
 
 	start := time.Now().Unix()
@@ -61,7 +61,7 @@ func (p *Plugin) Health() error {
 
 // Status performs a simple health check and returns ok if encryption / decryption was successful
 // https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#developing-a-kms-plugin-gRPC-server-notes-kms-v2
-func (p *Plugin) Status(_ context.Context, _ *pb.StatusRequest) (*pb.StatusResponse, error) {
+func (p *PluginV2) Status(_ context.Context, _ *pb.StatusRequest) (*pb.StatusResponse, error) {
 	health := "ok"
 
 	if err := p.vc.TokenRefresh(); err != nil {
@@ -103,13 +103,13 @@ func (p *Plugin) Status(_ context.Context, _ *pb.StatusRequest) (*pb.StatusRespo
 	}, nil
 }
 
-func (p *Plugin) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.EncryptResponse, error) {
+func (p *PluginV2) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.EncryptResponse, error) {
 	resp, id, err := p.vc.Encrypt(ctx, request.GetPlaintext())
 	if err != nil {
 		return nil, err
 	}
 
-	zap.L().Info("encryption request", zap.String("request_id", request.GetUid()))
+	zap.L().Info("v2 encryption request", zap.String("request_id", request.GetUid()))
 
 	return &pb.EncryptResponse{
 		Ciphertext: resp,
@@ -117,19 +117,19 @@ func (p *Plugin) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.E
 	}, nil
 }
 
-func (p *Plugin) Decrypt(ctx context.Context, request *pb.DecryptRequest) (*pb.DecryptResponse, error) {
+func (p *PluginV2) Decrypt(ctx context.Context, request *pb.DecryptRequest) (*pb.DecryptResponse, error) {
 	resp, err := p.vc.Decrypt(ctx, request.GetCiphertext())
 	if err != nil {
 		return nil, err
 	}
 
-	zap.L().Info("decryption request", zap.String("request_id", request.GetUid()))
+	zap.L().Info("v2 decryption request", zap.String("request_id", request.GetUid()))
 
 	return &pb.DecryptResponse{
 		Plaintext: resp,
 	}, nil
 }
 
-func (p *Plugin) Register(s *grpc.Server) {
+func (p *PluginV2) Register(s *grpc.Server) {
 	pb.RegisterKeyManagementServiceServer(s, p)
 }
