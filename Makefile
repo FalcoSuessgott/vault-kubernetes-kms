@@ -25,7 +25,7 @@ vault: ## creates vault dev server with transit engine + key
 
 .PHONY: minikube
 minikube: ## starts minikube
-	./scripts/minikube.sh
+	./scripts/minikube.sh $(version)
 
 PHONY: lint
 lint: ## lint go files

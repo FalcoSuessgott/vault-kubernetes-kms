@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/kms"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/logging"
+	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/plugin"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/socket"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/utils"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/vault"
@@ -162,11 +162,15 @@ func main() {
 	}
 
 	g := grpc.NewServer(gprcOpts...)
-	p := kms.NewPlugin(c)
+	pluginV1 := plugin.NewPluginV1(c)
+	pluginV1.Register(g)
 
-	p.Register(g)
+	zap.L().Info("Successfully registered kms plugin v1")
 
-	zap.L().Info("Successfully registered kms plugin")
+	pluginV2 := plugin.NewPluginV2(c)
+	pluginV2.Register(g)
+
+	zap.L().Info("Successfully registered kms plugin v2")
 
 	go func() {
 		if err := g.Serve(listener); err != nil {
