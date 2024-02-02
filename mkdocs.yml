@@ -1,5 +1,5 @@
 site_name: vault-kms-plugin
-site_description: "Ecnrypt Kubernetes Secrets using Hashicorp Vault as the KMS Provider"
+site_description: "Encrypt Kubernetes Secrets using Hashicorp Vault as the KMS Provider"
 site_author: FalcoSuessgott
 
 repo_name: FalcoSuessgott/vault-kms-plugin

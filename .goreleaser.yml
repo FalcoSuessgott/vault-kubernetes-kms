@@ -26,18 +26,9 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end -}}
 
-nfpms:
-  - builds:
-      - vault-kubernetes-kms
-    vendor: FalcoSuessgott
-    homepage:  https://github.com/FalcoSuessgott/vault-kubernetes-kms
-    maintainer: "Tom Morelly <tommorelly@gmail.com>"
-    description: "A Hashicorp Vault KMS Plugin for Kubernetes"
-    license: MIT
-
 dockers:
 - image_templates:
-  - 'ghcr.io/falcocuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
+  - 'ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
   dockerfile: Dockerfile
   use: buildx
   build_flag_templates:
@@ -45,7 +36,7 @@ dockers:
   - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/FalcoSuessgott/vault-kubernetes-kms/main/README.md"
   - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Tom Morelly\",\"email\":\"tommorelly@gmail.com\"}]"
   - "--label=io.artifacthub.package.license=MIT"
-  - "--label=org.opencontainers.image.description=A Hashicorp Vault KMS Plugin for Kubernetes"
+  - "--label=org.opencontainers.image.description=Encrypt Kubernetes Secrets using Hashicorp Vault as the KMS Provider"
   - "--label=org.opencontainers.image.created={{.Date}}"
   - "--label=org.opencontainers.image.name={{.ProjectName}}"
   - "--label=org.opencontainers.image.revision={{.FullCommit}}"
