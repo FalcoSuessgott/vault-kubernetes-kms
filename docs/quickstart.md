@@ -1,12 +1,28 @@
-# Minikube Quickstart
-This Guide will walk you through the required steps of installing and configuring the `vault-kms-plugin`:
+# Getting Started
+!!! tip
+    This Guide will walk you through the required steps of installing and configuring the `vault-kms-plugin` for Kubernetes.
+
+!!! warning
+    This guide uses the new version of the Kubernetes KMS Plugin API, which was introduced in Kubernetes v1.29.0 ([https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-v2](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-v2)).
 
 ## Requirements
-You will need `minikube`, `kubectl` and `vault` to be installed on your system. 
-Also it is recommend you are using either MacOS or Linux as the operating system.
+In order to run this guide, you will need to have `minikube`, `kubectl` and `vault` installed on your system. 
+Also it is recommended that you are using either MacOS or Linux as the operating system.
 
-## Minikube Setup
-Start minikube, bridge it to localhost, to access application running locally and enforce `v1.29.0` for KMSv2 Plugin usage:
+## Overview
+This guide will:
+
+1. Start `minikube` locally, bridge it to your localhost in order to access application running locally
+2. Show that secrets are per default unencrypted in etcd
+3. Start and Configure Vaults Transit Engine (used for encrypted Kubernetes Secrets) and the Kubernetes Auth method (so the plugins Service Account can authenticate to Vault), as well as a KMS policy.
+4. Run the KMS Plugin
+5. Configure the `kube-apiserver` for encrypting kubernetes secrets
+6. Show Secrets are now encrypted stored in etcd
+7. Encrypt all previously existing Secrets
+8. Show decryption works after `kube-apiserver` performs a reboot
+
+## 1. Minikube Setup
+Start `minikube`, bridge it to localhost, to access application running locally and enforce `v1.29.0` for KMSv2 Plugin usage:
 
 ```bash
 $> minikube start --driver=docker \
@@ -26,7 +42,7 @@ kube-system   kube-proxy-bvvf5                   1/1     Running            1 (1
 kube-system   kube-scheduler-minikube            1/1     Running            1 (11m ago)     20m
 ```
 
-## Verify unencrypted Secrets in etcd
+## 2. Verify Secrets are unencrypted in etcd
 ```bash
 # create any secret
 $> kubectl create secret generic secret-unencrypted -n default --from-literal=key=value      
@@ -65,7 +81,7 @@ $> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl \
 00000110  7
 ```
 
-## Vault Setup
+## 3. Vault Setup
 Start Vault, configure Vaults Transit engine and configure the kubernetes auth method for minikube:
 
 ```bash
@@ -145,7 +161,7 @@ $> vault write auth/kubernetes/role/kms \
 Success! Data written to: auth/kubernetes/role/kms
 
 # write vault policy that is used when authentication with the "kms" auth role
-vault policy write kms - <<EOF
+$> vault policy write kms - <<EOF
 # perform a simple vault login test
 path "auth/token/lookup-self" {
     capabilities = ["read"]
@@ -169,8 +185,9 @@ EOF
 Success! Uploaded policy: kms
 ```
 
-## KMS Plugin Installation
+## 4. KMS Plugin Installation
 `minikube` and `vault` are now running on your system and can communite with eath other.
+
 Now we can deploy the actual `vault-kubernetes-kms` plugin:
 
 ```bash
@@ -186,12 +203,12 @@ $> kubectl logs -n kube-system vault-kubernetes-kms
 {"level":"info","timestamp":"2024-01-31T13:18:24.898Z","caller":"cmd/main.go:169","message":"Successfully registered kms plugin"}
 ```
 
-## kube-apiserver Configuration 
+## 5. `kube-apiserver` Configuration 
 Last but not least, you will have to configure you kube-apiserver to start encrypting secrets, by providing an encryption provider config and update the kube-apiserver command:
 
 ```bash
 # copy the encryption provider config to minikube
-$> minikube cp ./scripts/encryption_provider_config.yml minikube:/opt/encryption_provider_config.yml
+$> minikube cp ./scripts/encryption_provider_config_v2.yml minikube:/opt/encryption_provider_config.yml
 
 # patch the kube-apiserver manifest (via kubectl, or minikube ssh -> sudo -i -> edit /etc/kubernetes/manifest/kube-apiserver.yaml)
 $> kubectl edit pod kube-apiserver-minikube -n kube-system
@@ -200,12 +217,14 @@ $> kubectl edit pod kube-apiserver-minikube -n kube-system
 You will have to add the `encryption-provider-config` arg to the `kube-apiserver` command, pointing to the encryption provider config copied to minikube: 
 
 ```yaml
+# ...
 spec:
   containers:
   - command:
     - kube-apiserver
     # enabling the encryption provider config
     - --encryption-provider-config=/opt/encryption_provider_config.yml
+# ...
 ```
 
 Also you will have to mount the `/opt` directory, for accessing the socket, that is created by the plugin and the encryption provider config:
@@ -213,10 +232,10 @@ Also you will have to mount the `/opt` directory, for accessing the socket, that
 ```yaml
 # ....
 volumeMounts:
-    - name: socket
+    - name: kms
       mountPath: /opt
 volumes:
-  - name: socket
+  - name: kms
     hostPath:
       path: /opt/
 # ....
@@ -225,8 +244,7 @@ volumes:
 After performing these changes, the `kube-apiserver` will restart itself, since its a static Pod.
 You can also delete the pod by running: `kubectl delete pod/kube-apiserver-minikube -n kube-system`.
 
-
-You can use watch to monitor the pods:
+You can use `watch` to monitor the pods:
 
 ```bash
 $> watch kubectl get pod -n kube-system
@@ -241,8 +259,7 @@ storage-provisioner                1/1     Running   7 (118m ago)   152m
 vault-kubernetes-kms               1/1     Running   0              49m
 ```
 
-
-## Verify secrets are encrypted now in etcd
+## 6. Verify Secrets are now encrypted now in etcd
 ```bash
 # create a new secret that is going to be encrypted in etcd
 $> kubectl create secret generic secret-encrypted -n default --from-literal=key=value
@@ -291,17 +308,26 @@ $> kubectl logs -n kube-system vault-kubernetes-kms
 {"level":"info","timestamp":"2024-01-31T13:31:29.159Z","caller":"kms/plugin.go:112","message":"encryption request","request_id":"f1eb6db8-390e-4bd4-8481-c56e46c1d685"}
 ```
 
-## Encrypt existing secrets
+## 7. Encrypt existing secrets
 You can encrypt all previous existing secrets using: 
 
 ```bash
 $> kubectl get secrets --all-namespaces -o json | kubectl replace -f -`
 ```
 
-## Verify decryption after restart
+## 8. Verify decryption after restart
 If we restart the kube-apiserver the secrets have been Successfully decrypted:
 
 ```bash
 $> kubectl delete pod/kube-apiserver-minikube -n kube-system    
 pod "kube-apiserver-minikube" deleted
+
+# secrets have been successfully decrypted
+$> kubectl get secret secret-unencrypted -o json | jq '.data | map_values(@base64d)'            
+{
+  "key": "value"
+}
 ```
+
+## Some last thoughts
+COMING SOON
