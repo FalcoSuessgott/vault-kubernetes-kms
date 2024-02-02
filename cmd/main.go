@@ -30,11 +30,11 @@ type options struct {
 	vaultNamespace string `env:"VAULT_NAMESPACE"`
 	vaultToken     string `env:"VAULT_TOKEN"`
 
-	vaultK8sMount string `env:"K8S_MOUNT"`
-	vaultK8sRole  string `env:"K8S_ROLE"`
+	vaultK8sMount string `env:"VAULT_K8S_MOUNT"`
+	vaultK8sRole  string `env:"VAULT_K8S_ROLE"`
 
-	vaultTransitMount string `env:"TRANSIT_MOUNT"`
-	vaultTransitKey   string `env:"TRANSIT_KEY"`
+	vaultTransitMount string `env:"VAULT_TRANSIT_MOUNT"`
+	vaultTransitKey   string `env:"VAULT_TRANSIT_KEY"`
 
 	version bool
 }
