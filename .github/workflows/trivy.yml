@@ -1,0 +1,46 @@
+name: image_scan
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.20'
+          cache: false
+      
+      - run: go generate -tags tools tools/tools.go
+
+      - name: go get
+        run: go get ./...
+
+      - name: go build
+        run: go build -o vault-kubernetes-kms cmd/main.go
+
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+      - name: Build an image from Dockerfile
+        run: |
+          docker build -t docker.io/falcosuessgott/vault-kubernetes-kms:${{ github.sha }} .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/falcosuessgott/vault-kubernetes-kms:${{ github.sha }}'
+          format: sarif
+          output: trivy-results.sarif
+        
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif

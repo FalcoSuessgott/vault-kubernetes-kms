@@ -1,8 +1,7 @@
-env:
-  - CGO_ENABLED=0
-
 builds:
   -
+    env:
+      - CGO_ENABLED=0
     dir: cmd
     binary: vault-kubernetes-kms
     ldflags: -s -w -X cmd/main.version={{ .Version }}
@@ -29,7 +28,8 @@ archives:
 dockers:
 - image_templates:
   - 'ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
-  dockerfile: Dockerfile
+  - 'falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
+  dockerfile: Dockerfile.goreleaser
   use: buildx
   build_flag_templates:
   - "--pull"
@@ -43,6 +43,9 @@ dockers:
   - "--label=org.opencontainers.image.version={{.Version}}"
   - "--label=org.opencontainers.image.source={{.GitURL}}"
   - "--platform=linux/amd64"
+  extra_files:
+      - go.mod
+      - go.sum
 
 docker_manifests:
 - name_template: 'ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}'
@@ -51,6 +54,12 @@ docker_manifests:
 - name_template: 'ghcr.io/falcosuessgott/{{.ProjectName}}:latest'
   image_templates:
   - 'ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
+- name_template: 'falcosuessgott/{{.ProjectName}}:{{ .Tag }}'
+  image_templates:
+  - 'falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
+- name_template: 'falcosuessgott/{{.ProjectName}}:latest'
+  image_templates:
+  - 'falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
 
 checksum:
   name_template: "checksums.txt"

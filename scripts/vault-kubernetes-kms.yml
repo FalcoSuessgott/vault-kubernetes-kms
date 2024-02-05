@@ -4,17 +4,22 @@ metadata:
   name: vault-kubernetes-kms
   namespace: kube-system
 spec:
+  imagePullSecrets: 
+    - name: regcred
   containers:
     - name: vault-kubernetes-kms
-      image: vault-kubernetes-kms
-      imagePullPolicy: Never
+      # minikube
+      #image: vault-kubernetes-kms
+      # official image
+      image: ghcr.io/falcosuessgott/vault-kubernetes-kms:latest
+      #imagePullPolicy: Never
       command:
         - vault-kubernetes-kms
         - --vault-address=http://host.minikube.internal:8200
-        # token auth
-        #- --vault-token=root
         # k8s auth
         - --vault-k8s-role=kms
+        # token auth
+        # - --vault-token=root
       volumeMounts:
         - name: socket
           mountPath: /opt

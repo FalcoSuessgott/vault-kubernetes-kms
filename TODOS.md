@@ -9,3 +9,5 @@
 * [ ] e2e
 * [ ] health check
 * [ ] better docker image
+* [ ] simple arch image
+* [ ] sign the images using cosign
