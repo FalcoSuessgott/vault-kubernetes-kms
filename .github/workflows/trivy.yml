@@ -4,10 +4,19 @@ on:
     branches:
       - main
   pull_request:
+  schedule:
+    - cron: '40 21 * * 5'
+
+permissions:
+  contents: read
 
 jobs:
   build:
     name: Build
+    permissions:
+      contents: read
+      security-events: write 
+      actions: read
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
@@ -37,8 +46,10 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'docker.io/falcosuessgott/vault-kubernetes-kms:${{ github.sha }}'
-          format: sarif
-          output: trivy-results.sarif
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
         
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
