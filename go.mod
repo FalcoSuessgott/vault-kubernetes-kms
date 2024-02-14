@@ -9,7 +9,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.27.0
 	go.uber.org/zap v1.26.0
-	google.golang.org/grpc v1.61.0
+	google.golang.org/grpc v1.61.1
 	gotest.tools/gotestsum v1.11.0
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/kms v0.29.1
