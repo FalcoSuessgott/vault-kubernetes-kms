@@ -12,7 +12,7 @@ require (
 	google.golang.org/grpc v1.61.0
 	gotest.tools/gotestsum v1.11.0
 	k8s.io/klog/v2 v2.120.1
-	k8s.io/kms v0.29.1
+	k8s.io/kms v0.29.2
 )
 
 require (
