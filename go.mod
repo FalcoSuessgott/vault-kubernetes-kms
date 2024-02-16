@@ -7,7 +7,7 @@ require (
 	github.com/docker/docker v25.0.2+incompatible
 	github.com/hashicorp/vault/api v1.11.0
 	github.com/stretchr/testify v1.8.4
-	github.com/testcontainers/testcontainers-go v0.27.0
+	github.com/testcontainers/testcontainers-go v0.28.0
 	go.uber.org/zap v1.26.0
 	google.golang.org/grpc v1.61.0
 	gotest.tools/gotestsum v1.11.0
