@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/docker/docker v25.0.2+incompatible
-	github.com/hashicorp/vault/api v1.11.0
+	github.com/hashicorp/vault/api v1.12.1
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.27.0
 	go.uber.org/zap v1.26.0
@@ -31,7 +31,7 @@ require (
 	github.com/dnephin/pflag v1.0.7 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
-	github.com/fatih/color v1.15.0 // indirect
+	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
