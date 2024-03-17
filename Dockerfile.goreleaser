@@ -3,4 +3,4 @@ FROM gcr.io/distroless/static-debian12@sha256:4a2c1a51ae5e10ec4758a0f981be3ce5d6
 WORKDIR /
 COPY vault-kubernetes-kms .
 
-ENTRYPOINT ["vault-kubernetes-kms"]
+ENTRYPOINT ["/vault-kubernetes-kms"]
