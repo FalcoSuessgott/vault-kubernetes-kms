@@ -4,9 +4,8 @@ Enabling KMS Encryption in your Cluster involves 3 steps:
 1. Preparing your Vaults Transit Engine & Kubernetes Auth Method (highly recommended, rather than using a static hardcoded Vault Token)
 2. Deploying the `vault-kubernetes-kms` Plugin
 3. Enabling the encryption provider configuration for the `kube-apiserver`.
-4. Verify Secret Encryption
 
-## 1. Preparing your Vault
+## 1. Preparing HashiCorp  Vault
 The `vault-kms-plugin` requires a Vault Authentication, that allows encrypting and decrypting data with a given Transit Key.
 
 ### Transit Engine
@@ -15,11 +14,10 @@ The `vault-kms-plugin` requires a Vault Authentication, that allows encrypting a
 
 The following steps enable a transit engine `transit` and create transit key `kms`:
 ```bash
-export VAULT_ADDR="http://127.0.0.1:8200" # change to your Vaults API Address
-export VAULT_SKIP_VERIFY="true"
-export VAULT_TOKEN="root"
-vault secrets enable transit
-vault write -f transit/keys/kms
+export VAULT_ADDR="https://vault.tld.de"   # change to your Vaults API Address
+export VAULT_TOKEN="hhvs.XXXX"             # change to a token allowed to create a transit engine and a transit key
+$> vault secrets enable transit
+$> vault write -f transit/keys/kms
 ```
 
 ### Vault Policy
@@ -55,8 +53,8 @@ path "transit/keys/kms" {
 You can create the policy using `vault policy write kms ./kms-policy.hcl`.
 
 ### Kubernetes Auth
-`vault-kubernetes-kms` supports [Vaults Kubernetes Authentication Method](https://developer.hashicorp.com/vault/docs/auth/kubernetes). This way the curent specified Service Account is used for Authentitation and Authorization. 
-Vault will need to be able to validate any incomming Service Accounts, thus we need to give Vault a token with the appropiate RBAC Settings (`role-tokenreview-binding`).
+`vault-kubernetes-kms` supports [Vaults Kubernetes Authentication Method](https://developer.hashicorp.com/vault/docs/auth/kubernetes). This way the curent specified service account is used for authentitation and authorization. 
+Vault will need to be able to validate any incomming service accounts, thus we need to give Vault a token with the appropiate RBAC settings (`role-tokenreview-binding`).
 
 The following steps can help getting you started:
 
@@ -100,20 +98,21 @@ apply these manifests by running: `kubectl apply -f rbac.yml`.
 Then you can enable Vaults Kubernete Auth method:
 
 ```bash
-vault auth enable kubernetes
-token=$(kubectl get secret -n kube-system vault-auth -o go-template='{{ .data.token }}' | base64 --decode)
-ca_cert=$(kubectl get cm kube-root-ca.crt -o jsonpath="{['data']['ca\.crt']}")
-vault write auth/kubernetes/config \
+$> vault auth enable kubernetes
+$> token=$(kubectl get secret -n kube-system vault-auth -o go-template='{{ .data.token }}' | base64 --decode)
+$> ca_cert=$(kubectl get cm kube-root-ca.crt -o jsonpath="{['data']['ca\.crt']}")
+$> vault write auth/kubernetes/config \
     token_reviewer_jwt="${token}" \
     kubernetes_host="https://127.0.0.1:8443" \
     kubernetes_ca_cert="${ca_cert}"
-vault write auth/kubernetes/role/kms }
-  bound_service_account_names=default \
-  bound_service_account_namespaces=kube-system \
-  policies=kms ttl=24h
+$> vault write auth/kubernetes/role/kms }
+    bound_service_account_names=default \
+    bound_service_account_namespaces=kube-system \
+    policies=kms \
+    ttl=24h
 ```
 
-## 2. The `vault-kubernetes-kms` Manifest 
+## 2. Deploying `vault-kubernetes-kms`
 ### CLI Args & Environment Variables
 You can either pass the required arguments as commandline args or as environment variables (using a ConfigMap or Secrets)
 
@@ -147,19 +146,21 @@ metadata:
 spec:
   containers:
     - name: vault-kubernetes-kms
-      image: vault-kubernetes-kms
-      imagePullPolicy: Never
+      image: falcosuessgott/vault-kubernetes-kms:v0.0.3
       command:
-        - vault-kubernetes-kms
-        - --vault-address=https://vault.prod.de:8200
+        - /vault-kubernetes-kms
+        - --vault-address=https://host.minikube.internal # change to your vault address
+        - --socket=unix:///opt/kms/vaultkms.socket
+        - --vault-k8s-mount=kubernetes
         - --vault-k8s-role=kms
       volumeMounts:
+        # mount the hostpath volume to enable the kms socket to the node
         - name: kms
-          mountPath: /opt
+          mountPath: /opt/kms
   volumes:
     - name: kms
       hostPath:
-        path: /opt
+        path: /opt/kms
 ```
 
 ### Vault Token Auth (not recommended)
@@ -173,19 +174,66 @@ metadata:
 spec:
   containers:
     - name: vault-kubernetes-kms
-      image: vault-kubernetes-kms
-      imagePullPolicy: Never
+      image: falcosuessgott/vault-kubernetes-kms:v0.0.3
       command:
-        - vault-kubernetes-kms
-        - --vault-address=https://vault.prod.de:8200
+        - /vault-kubernetes-kms
+        - --vault-address=https://host.minikube.internal # change to your vault address
+        - --socket=unix:///opt/kms/vaultkms.socket
         - --vault-token=hvs.ABC123
       volumeMounts:
+        # mount the hostpath volume to enable the kms socket to the node
         - name: kms
-          mountPath: /opt
+          mountPath: /opt/kms
   volumes:
     - name: kms
       hostPath:
-        path: /opt
+        path: /opt/kms
+```
+
+
+### TLS Configuration
+It is recommended, to specify the CA cert that issued the vault server certificate. To do so, you would have to create a Kubernetes secret containing Vaults CA certificate PEM encoded. 
+
+Example:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vault-kubernetes-kms
+  namespace: kube-system
+spec:
+  containers:
+    - name: vault-kubernetes-kms
+      image: falcosuessgott/vault-kubernetes-kms:v0.0.3
+      command:
+        - /vault-kubernetes-kms
+        - --vault-address=https://host.minikube.internal
+        - --socket=unix:///opt/kms/vaultkms.socket
+        - --vault-k8s-mount=minikube-cluster
+        - --vault-k8s-role=kms
+      env:
+        # add vaults CA file via env vars
+        - name: VAULT_CACERT
+          value: /opt/ca/ca.crt
+      volumeMounts:
+        # mount the hostpath volume to enable the kms socket to the node
+        - name: kms
+          mountPath: /opt/kms
+        # mount the ca cert under /opt/ca/ca.crt
+        - name: ca-cert
+          mountPath: /opt/ca/ca.crt
+          subPath: ca.crt
+  volumes:
+    - name: kms
+      hostPath:
+        path: /opt/kms
+    - name: ca-cert
+      secret:
+        secretName: ca-cert # secret name containing the Vault CA certificate
+        items:
+          - key: ca.crt # key of the PEM encoded certificate
+            path: ca.crt
 ```
 
 After applying you check the pods logs for any errors:
@@ -203,7 +251,6 @@ $> kubectl logs -n kube-system vault-kubernetes-kms
 ### Determine which KMS version to use
 Since the `vault-kms-plugin` supports both KMS versions, you would have to determine, which KMS Plugin version works for your setup:
 
-
 From the [Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#before-you-begin):
 
 !!! note 
@@ -214,6 +261,8 @@ From the [Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-
     **If you selected KMS API v1 to support clusters prior to version v1.27 or if you have a legacy KMS plugin that only supports KMS v1, any supported Kubernetes version will work**. This API is deprecated as of Kubernetes v1.28. Kubernetes does not recommend the use of this API.
 
 ### Encryption Provider configuration
+Copy the appropiate encryption provider configuration to your control plane nodes (e.g. `/opt/kms/encryption_provider_config.yml`):
+
 #### KMS Plugin v1
 ```yaml 
 ---
@@ -225,7 +274,7 @@ resources:
     providers:
       - kms:
           name: vault
-          endpoint: unix:///opt/vaultkms.socket
+          endpoint: unix:///opt/kms/vaultkms.socket
       - identity: {}
 ```
 
@@ -242,13 +291,13 @@ resources:
       - kms:
           apiVersion: v2
           name: vault
-          endpoint: unix:///opt/vaultkms.socket
+          endpoint: unix:///opt/kms/vaultkms.socket
       - identity: {}
 ```
 
 ### Modify the `kube-api-server` Manifest
 Last but not least, you would have to enable the encryption provider config for the `kube-apiserver`.
-This steps depends on wether your Control Plane Components run as a SystemD Deamon or as static Pod on your Ccontrol Plane Nodes (usually located at `/etc/kubernetes/manifests`).
+This steps depends on wether your control plane components run as a systemd deamon or as static Pod on your control plane nodes (usually located at `/etc/kubernetes/manifests`).
 
 **Either way, the following changes need to be done:**
 
@@ -259,7 +308,7 @@ spec:
   - command:
     - kube-apiserver
     # enabling the encryption provider config
-    - --encryption-provider-config=/opt/encryption_provider_config.yml
+    - --encryption-provider-config=/opt/kms/encryption_provider_config.yml
 # ...
 ```
 
@@ -269,11 +318,11 @@ Also you will have to mount the `/opt` directory, for accessing the socket, that
 # ....
 volumeMounts:
     - name: kms
-      mountPath: /opt
+      mountPath: /opt/kms
 volumes:
   - name: kms
     hostPath:
-      path: /opt/
+      path: /opt/kms
 # ....
 ```
 
@@ -301,7 +350,7 @@ $> kubectl logs -n kube-system vault-kubernetes-kms
 {"level":"info","timestamp":"2024-01-31T13:31:29.159Z","caller":"kms/plugin.go:112","message":"encryption request","request_id":"f1eb6db8-390e-4bd4-8481-c56e46c1d685"}
 ```
 
-## 4. Verify Secret Encryption
+## Verify Secret Encryption
 Finally, create a secret to verify everything works correctly:
 
 ```bash
@@ -316,7 +365,8 @@ You could also check the etcd storage for the encrypted data:
 
 ```bash
 # this works only on minikube, you would have to update the params according to your cluster config
-$> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
+$> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl
+    --endpoints=https://127.0.0.1:2379 \
     --cert /var/lib/minikube/certs/etcd/server.crt \
     --key /var/lib/minikube/certs/etcd/server.key \
     --cacert /var/lib/minikube/certs/etcd/ca.crt \

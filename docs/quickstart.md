@@ -1,6 +1,8 @@
 # Getting Started
 !!! tip
     This Guide will walk you through the required steps of installing and configuring the `vault-kms-plugin` for Kubernetes.
+    
+    Checkout [https://falcosuessgott.github.io/hashicorp-vault-playground/home/](https://falcosuessgott.github.io/hashicorp-vault-playground/home/) a project that helps you quickly setting up Kubernetes HashiCorp Vault
 
 !!! warning
     This guide uses the new version of the Kubernetes KMS Plugin API, which was introduced in Kubernetes v1.29.0 ([https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-v2](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-v2)).
@@ -12,14 +14,14 @@ Also it is recommended that you are using either MacOS or Linux as the operating
 ## Overview
 This guide will:
 
-1. Start `minikube` locally, bridge it to your localhost in order to access application running locally
-2. Show that secrets are per default unencrypted in etcd
-3. Start and Configure Vaults Transit Engine (used for encrypted Kubernetes Secrets) and the Kubernetes Auth method (so the plugins Service Account can authenticate to Vault), as well as a KMS policy.
-4. Run the KMS Plugin
-5. Configure the `kube-apiserver` for encrypting kubernetes secrets
-6. Show Secrets are now encrypted stored in etcd
+1. Start `minikube` locally, bridge it to your localhost in order to access any application running on your system
+2. Show that secrets are per default unencrypted stored in etcd
+3. Start and configure Vaults Transit Engine (used for encrypted Kubernetes secrets) and the Kubernetes auth method (so the plugins service account can authenticate to Vault), as well as a KMS policy.
+4. Deploy the KMS Plugin as a single Pod
+5. Configure the `kube-apiserver` to use the encryption provider and restart the kube-apiserver
+6. Show secrets are now encrypted stored in etcd
 7. Encrypt all previously existing Secrets
-8. Show decryption works after `kube-apiserver` performs a reboot
+8. Show decryption works after `kube-apiserver` performs a restart
 
 ## 1. Minikube Setup
 Start `minikube`, bridge it to localhost, to access application running locally and enforce `v1.29.0` for KMSv2 Plugin usage:
@@ -48,7 +50,7 @@ kube-system   kube-scheduler-minikube            1/1     Running            1 (1
 $> kubectl create secret generic secret-unencrypted -n default --from-literal=key=value      
 secret/secret-unencrypted created
 
-# show secret
+# show the secret
 $> kubectl get secret secret-unencrypted -o json | jq '.data | map_values(@base64d)'            
 {
   "key": "value"
@@ -75,7 +77,7 @@ $> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl \
 000000b0  70 64 61 74 65 1a 02 76  31 22 08 08 fc 92 e9 ad  |pdate..v1"......|
 000000c0  06 10 00 32 08 46 69 65  6c 64 73 56 31 3a 2c 0a  |...2.FieldsV1:,.|
 000000d0  2a 7b 22 66 3a 64 61 74  61 22 3a 7b 22 2e 22 3a  |*{"f:data":{".":|
-000000e0  7b 7d 2c 22 66 3a 6b 65  79 22 3a 7b 7d 7d 2c 22  |{},"f:key":{}},"|
+000000e0  7b 7d 2c 22 66 3a 6b 65  79 22 3a 7b 7d 7d 2c 22  |{},"f:key":{}},"|  # secret keys unencrypted
 000000f0  66 3a 74 79 70 65 22 3a  7b 7d 7d 42 00 12 0c 0a  |f:type":{}}B....|
 00000100  03 6b 65 79 12 05 76 61  6c 75 65 1a 06 4f 70 61  |.key..value..Opa|  # secret values unencrypted
 00000110  7
@@ -134,12 +136,43 @@ supports_encryption       true
 supports_signing          false
 type                      aes256-gcm96
 
+# create SA, SA token and CRB, this service account is used to verify other kubernetes service accounts
+$> cat <<EOF | kubectl apply -f -
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-auth
+  namespace: kube-system
+---
 
-# create sa, secret and crb
-$> kubectl apply -f scripts/rbac.yml
-serviceaccount/vault-auth unchanged
-secret/vault-auth unchanged
-clusterrolebinding.rbac.authorization.k8s.io/role-tokenreview-binding unchanged
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vault-auth
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: vault-auth
+type: kubernetes.io/service-account-token
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+   name: role-tokenreview-binding
+   namespace: kube-system
+roleRef:
+   apiGroup: rbac.authorization.k8s.io
+   kind: ClusterRole
+   name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: vault-auth
+  namespace: kube-system
+EOF 
+serviceaccount/vault-auth created
+secret/vault-auth created
+clusterrolebinding.rbac.authorization.k8s.io/role-tokenreview-binding created
 
 # enable 8s auth on vault
 $> vault auth enable kubernetes
@@ -185,14 +218,38 @@ EOF
 Success! Uploaded policy: kms
 ```
 
-## 4. KMS Plugin Installation
+## 4. KMS Plugin Deployment
 `minikube` and `vault` are now running on your system and can communite with eath other.
 
-Now we can deploy the actual `vault-kubernetes-kms` plugin:
+Now we can deploy the actual `vault-kubernetes-kms` plugin running as a Pod (in production this should be a static pod on every node):
 
 ```bash
 # apply the manifest
-$> kubectl apply -f scripts/vault-kubernetes-kms.yml
+$> cat <<EOF | kubectl apply -f  - 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vault-kubernetes-kms
+  namespace: kube-system
+spec:
+  containers:
+    - name: vault-kubernetes-kms
+      image: falcosuessgott/vault-kubernetes-kms:v0.0.3
+      command:
+        - /vault-kubernetes-kms
+        - --vault-address=https://host.minikube.internal
+        - --vault-k8s-mount=kubernetes
+        - --vault-k8s-role=kms
+      volumeMounts:
+        # mouunt /opt/kms host directory
+        - name: kms
+          mountPath: /opt/kms
+  volumes:
+    # mouunt /opt/kms host directory
+    - name: kms
+      hostPath:
+        path: /opt/kms
+EOF 
 
 # see the logs wether k8s auth was successful
 $> kubectl logs -n kube-system vault-kubernetes-kms
@@ -207,11 +264,22 @@ $> kubectl logs -n kube-system vault-kubernetes-kms
 Last but not least, you will have to configure you kube-apiserver to start encrypting secrets, by providing an encryption provider config and update the kube-apiserver command:
 
 ```bash
-# copy the encryption provider config to minikube
-$> minikube cp ./scripts/encryption_provider_config_v2.yml minikube:/opt/encryption_provider_config.yml
-
-# patch the kube-apiserver manifest (via kubectl, or minikube ssh -> sudo -i -> edit /etc/kubernetes/manifest/kube-apiserver.yaml)
-$> kubectl edit pod kube-apiserver-minikube -n kube-system
+$> minikube ssh
+minikube> vim.tiny /opt/kms/encryption_provider_config.yml
+  ---
+  apiVersion: apiserver.config.k8s.io/v1
+  kind: EncryptionConfiguration
+  resources:
+    - resources:
+        - secrets
+      providers:
+        - kms:
+            apiVersion: v2
+            name: vault 
+            endpoint: unix:///opt/kms/vaultkms.socket
+        - identity: {}
+minikube> sudo -i
+minikube> vim.tiny /etc/kubernetes/manifests/kube-apiserver.yaml
 ```
 
 You will have to add the `encryption-provider-config` arg to the `kube-apiserver` command, pointing to the encryption provider config copied to minikube: 
@@ -223,22 +291,24 @@ spec:
   - command:
     - kube-apiserver
     # enabling the encryption provider config
-    - --encryption-provider-config=/opt/encryption_provider_config.yml
+    - --encryption-provider-config=/opt/kms/encryption_provider_config.yml
 # ...
 ```
 
-Also you will have to mount the `/opt` directory, for accessing the socket, that is created by the plugin and the encryption provider config:
+Also you will have to mount the `/opt/kms` directory, for accessing the socket, that is created by the plugin and the encryption provider config:
 
 ```yaml
-# ....
+# ...
 volumeMounts:
-    - name: kms
-      mountPath: /opt
+  - name: socket
+    mountPath: /opt/kms
+# ...
+# mount kms socket
 volumes:
-  - name: kms
+  - name: socket
     hostPath:
-      path: /opt/
-# ....
+      path: /opt/kms
+# ...
 ```
 
 After performing these changes, the `kube-apiserver` will restart itself, since its a static Pod.
@@ -330,4 +400,9 @@ $> kubectl get secret secret-unencrypted -o json | jq '.data | map_values(@base6
 ```
 
 ## Some last thoughts
-COMING SOON
+For production usage you should consider:
+
+* deploy the `vault-kubenetes-kms` Pod using a dedicated Service Account, instead of `default` (also adjust the kubernetes auth role)
+* use HTTPS for the communication between Kubernetes & HashiCorp Vault (see [https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/))
+* deploy the `vault-kubernetes-kms` plugin as a static pod on all control plane nodes
+* automate the deployment using your preferred automation method
