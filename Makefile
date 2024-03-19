@@ -1,5 +1,3 @@
-projectname?=vault-kubernetes-kms
-
 default: help
 
 .PHONY: help
@@ -10,23 +8,28 @@ PHONY: fmt
 fmt: ## format go files
 	gofumpt -w .
 	gci write .
-	
-.PHONY: build
-build: ## build plugin and image
-	./scripts/build.sh
+	pre-commit run -a
 
-.PHONY: run
-run: build ## apply kms k8s manifest
-	./scripts/run.sh
-
-..PHONY: vault
-vault: ## creates vault dev server with transit engine + key
-	./scripts/vault.sh
-
-.PHONY: minikube
-minikube: ## starts minikube
-	./scripts/minikube.sh $(version)
+.PHONY: docs
+docs: ## render docs locally
+	mkdocs serve
 
 PHONY: lint
 lint: ## lint go files
 	golangci-lint run -c .golang-ci.yml
+
+..PHONY: setup-vault
+setup-vault: ## setup a local vault dev server with transit engine + key
+	./scripts/vault.sh
+
+.PHONY: setup-registry
+setup-registry: ## setup a local docker registry for pulling in kind
+	./scripts/local-registry.sh
+
+.PHONY: setup-kind
+setup-kind: ## setup kind cluster with encrpytion provider configured
+	kind delete cluster --name=kms || true
+	kind create cluster --name=kms --config scripts/kind-config.yaml
+
+.PHONY: setup-local
+setup-local: setup-vault setup-registry setup-kind ## complete local setup

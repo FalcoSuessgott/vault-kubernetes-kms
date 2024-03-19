@@ -43,19 +43,22 @@ markdown_extensions:
       alternate_style: true
   - toc:
       permalink: true
+  - markdown_include.include:
+        base_path: docs
 
 nav:
   - Home: index.md
   - Quickstart: quickstart.md
   - Configuration: configuration.md
   - Troubleshooting: troubleshooting.md
+  - Development: development.md
 theme:
   icon:
     edit: material/pencil
     view: material/eye
     repo: fontawesome/brands/github
   name: material
-  
+
   language: en
   palette:
     # Palette toggle for light mode
