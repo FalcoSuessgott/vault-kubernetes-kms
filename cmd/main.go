@@ -62,20 +62,20 @@ func main() {
 	}
 
 	// then flags, since the have precedence over env vars
-	flag.StringVar(&opts.socket, "socket", opts.socket, "")
+	flag.StringVar(&opts.socket, "socket", opts.socket, "Destination path of the socket (required)")
 
 	flag.BoolVar(&opts.debug, "debug", opts.debug, "Enable debug logs")
 
-	flag.StringVar(&opts.vaultAddress, "vault-address", opts.vaultAddress, "")
-	flag.StringVar(&opts.vaultNamespace, "vault-namespace", opts.vaultNamespace, "")
+	flag.StringVar(&opts.vaultAddress, "vault-address", opts.vaultAddress, "Vault API address (required)")
+	flag.StringVar(&opts.vaultNamespace, "vault-namespace", opts.vaultNamespace, "Vault Namespace (only when Vault Enterprise)")
 
-	flag.StringVar(&opts.vaultToken, "vault-token", opts.vaultToken, "")
+	flag.StringVar(&opts.vaultToken, "vault-token", opts.vaultToken, "Vault Token (when Token auth) ")
 
-	flag.StringVar(&opts.vaultK8sMount, "vault-k8s-mount", opts.vaultK8sMount, "")
-	flag.StringVar(&opts.vaultK8sRole, "vault-k8s-role", opts.vaultK8sRole, "")
+	flag.StringVar(&opts.vaultK8sMount, "vault-k8s-mount", opts.vaultK8sMount, "Vault Kubernetes mount name (when Kubernetes auth)")
+	flag.StringVar(&opts.vaultK8sRole, "vault-k8s-role", opts.vaultK8sRole, "Vault Kubernetes role name (when Kubernetes auth)")
 
-	flag.StringVar(&opts.vaultTransitMount, "vault-transit-mount", opts.vaultTransitMount, "")
-	flag.StringVar(&opts.vaultTransitKey, "vault-transit-key", opts.vaultTransitKey, "")
+	flag.StringVar(&opts.vaultTransitMount, "vault-transit-mount", opts.vaultTransitMount, "Vault Transit mount name")
+	flag.StringVar(&opts.vaultTransitKey, "vault-transit-key", opts.vaultTransitKey, "Vault Transit key name")
 
 	flag.BoolVar(&opts.version, "version", opts.version, "")
 
@@ -127,8 +127,8 @@ func main() {
 
 	c, err := vault.NewClient(
 		vault.WithVaultAddress(opts.vaultAddress),
-		vault.WithVaultToken(opts.vaultNamespace),
-		vault.WithVaultNamespace(opts.vaultAddress),
+		vault.WithVaultToken(opts.vaultToken),
+		vault.WithVaultNamespace(opts.vaultNamespace),
 		vault.WithK8sAuth(opts.vaultK8sMount, opts.vaultK8sRole),
 		vault.WithTransit(opts.vaultTransitMount, opts.vaultTransitKey),
 	)
