@@ -15,7 +15,7 @@ A Kubernetes KMS Plugin that uses [HashiCorp Vaults](https://developer.hashicorp
 ## Without a KMS Provider
 ```bash
 # create any secret
-$> kubectl create secret generic secret-unencrypted -n default --from-literal=key=value      
+$> kubectl create secret generic secret-unencrypted -n default --from-literal=key=value
 
 # proof that k8s secrets are stored unenctyped on disk and in ectd
 $> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl \
@@ -85,4 +85,3 @@ $> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl --e
 000001a0  41 43 2b 6f 31 45 61 6a  57 72 32 53 6c 57 0a     |AC+o1EajWr2SlW.|
 000001af
 ```
-

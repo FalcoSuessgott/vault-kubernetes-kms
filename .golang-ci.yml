@@ -30,4 +30,3 @@ linters:
     - goerr113
     - gochecknoglobals
     - revive
-    

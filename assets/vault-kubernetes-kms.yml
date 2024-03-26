@@ -8,7 +8,7 @@ spec:
   hostNetwork: true
   containers:
     - name: vault-kubernetes-kms
-      image: localhost:5000/vault-kubernetes-kms:latest
+      image: falcosuessgott/vault-kubernetes-kms:latest
       imagePullPolicy: IfNotPresent
       command:
         - /vault-kubernetes-kms

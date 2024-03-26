@@ -1,9 +1,9 @@
-name: mkdocs 
+name: mkdocs
 
 on:
   push:
     branches:
-      - master 
+      - master
       - main
 permissions:
   contents: write

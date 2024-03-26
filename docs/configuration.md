@@ -25,7 +25,7 @@ The following Vault Policy lists the API paths required for the `vault-kubernete
 
 !!! note
     This Policy assumes the transit engine is mounted at `transit` with a key named `kms`.
-    In case your configuration differs, you will have to update the policy accordingly. 
+    In case your configuration differs, you will have to update the policy accordingly.
 
 ```hcl
 # kms-policy.hcl
@@ -53,7 +53,7 @@ path "transit/keys/kms" {
 You can create the policy using `vault policy write kms ./kms-policy.hcl`.
 
 ### Kubernetes Auth
-`vault-kubernetes-kms` supports [Vaults Kubernetes Authentication Method](https://developer.hashicorp.com/vault/docs/auth/kubernetes). This way the curent specified service account is used for authentitation and authorization. 
+`vault-kubernetes-kms` supports [Vaults Kubernetes Authentication Method](https://developer.hashicorp.com/vault/docs/auth/kubernetes). This way the curent specified service account is used for authentitation and authorization.
 Vault will need to be able to validate any incomming service accounts, thus we need to give Vault a token with the appropiate RBAC settings (`role-tokenreview-binding`).
 
 The following steps can help getting you started:
@@ -93,7 +93,7 @@ subjects:
   namespace: kube-system
 ```
 
-apply these manifests by running: `kubectl apply -f rbac.yml`. 
+apply these manifests by running: `kubectl apply -f rbac.yml`.
 
 Then you can enable Vaults Kubernete Auth method:
 
@@ -120,7 +120,7 @@ You can either pass the required arguments as commandline args or as environment
 
 * `--vault-address` (`VAULT_KMS_VAULT_ADDR`); default: `""`
 
-and either one of: 
+and either one of:
 
 * `--vault-token` (`VAULT_KMS_VAULT_TOKEN`); default: `""`
 * `--vault-k8s-role` (`VAULT_KMS_VAULT_K8S_ROLE`); required: `false`, default: `""`
@@ -144,12 +144,14 @@ metadata:
   name: vault-kubernetes-kms
   namespace: kube-system
 spec:
+  priorityClassName: system-node-critical
+  hostNetwork: true
   containers:
     - name: vault-kubernetes-kms
-      image: falcosuessgott/vault-kubernetes-kms:v0.0.3
+      image: falcosuessgott/vault-kubernetes-kms:latest
       command:
         - /vault-kubernetes-kms
-        - --vault-address=https://host.minikube.internal # change to your vault address
+        - --vault-address=https://vault.server.de # change to your vault API address
         - --socket=unix:///opt/kms/vaultkms.socket
         - --vault-k8s-mount=kubernetes
         - --vault-k8s-role=kms
@@ -172,12 +174,14 @@ metadata:
   name: vault-kubernetes-kms
   namespace: kube-system
 spec:
+  priorityClassName: system-node-critical
+  hostNetwork: true
   containers:
     - name: vault-kubernetes-kms
-      image: falcosuessgott/vault-kubernetes-kms:v0.0.3
+      image: falcosuessgott/vault-kubernetes-kms:latest
       command:
         - /vault-kubernetes-kms
-        - --vault-address=https://host.minikube.internal # change to your vault address
+        - --vault-address=https://vault.server.d # change to your vault API address
         - --socket=unix:///opt/kms/vaultkms.socket
         - --vault-token=hvs.ABC123
       volumeMounts:
@@ -192,7 +196,7 @@ spec:
 
 
 ### TLS Configuration
-It is recommended, to specify the CA cert that issued the vault server certificate. To do so, you would have to create a Kubernetes secret containing Vaults CA certificate PEM encoded. 
+It is recommended, to specify the CA cert that issued the vault server certificate. To do so, you would have to create a Kubernetes secret containing Vaults CA certificate PEM encoded.
 
 Example:
 
@@ -203,12 +207,14 @@ metadata:
   name: vault-kubernetes-kms
   namespace: kube-system
 spec:
+  priorityClassName: system-node-critical
+  hostNetwork: true
   containers:
     - name: vault-kubernetes-kms
-      image: falcosuessgott/vault-kubernetes-kms:v0.0.3
+      image: falcosuessgott/vault-kubernetes-kms:latest
       command:
         - /vault-kubernetes-kms
-        - --vault-address=https://host.minikube.internal
+        - --vault-address=https://vault.server.de
         - --socket=unix:///opt/kms/vaultkms.socket
         - --vault-k8s-mount=minikube-cluster
         - --vault-k8s-role=kms
@@ -253,18 +259,18 @@ Since the `vault-kms-plugin` supports both KMS versions, you would have to deter
 
 From the [Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#before-you-begin):
 
-!!! note 
+!!! note
     The version of Kubernetes that you need depends on which KMS API version you have selected. Kubernetes recommends using KMS v2.
 
     **If you selected KMS API v2, you should use Kubernetes v1.29** (if you are running a different version of Kubernetes that also supports the v2 KMS API, switch to the documentation for that version of Kubernetes).
-    
+
     **If you selected KMS API v1 to support clusters prior to version v1.27 or if you have a legacy KMS plugin that only supports KMS v1, any supported Kubernetes version will work**. This API is deprecated as of Kubernetes v1.28. Kubernetes does not recommend the use of this API.
 
 ### Encryption Provider configuration
 Copy the appropiate encryption provider configuration to your control plane nodes (e.g. `/opt/kms/encryption_provider_config.yml`):
 
 #### KMS Plugin v1
-```yaml 
+```yaml
 ---
 kind: EncryptionConfiguration
 apiVersion: apiserver.config.k8s.io/v1
@@ -280,7 +286,7 @@ resources:
 
 #### KMS Plugin v2
 
-```yaml 
+```yaml
 ---
 kind: EncryptionConfiguration
 apiVersion: apiserver.config.k8s.io/v1
@@ -346,7 +352,7 @@ vault-kubernetes-kms               1/1     Running   0              49m
 You should now see in the plugin logs that encryption and decryption requests are coming:
 
 ```bash
-$> kubectl logs -n kube-system vault-kubernetes-kms                                                              
+$> kubectl logs -n kube-system vault-kubernetes-kms
 {"level":"info","timestamp":"2024-01-31T13:31:29.159Z","caller":"kms/plugin.go:112","message":"encryption request","request_id":"f1eb6db8-390e-4bd4-8481-c56e46c1d685"}
 ```
 
@@ -358,8 +364,7 @@ $> kubectl create secret generic secret-encrypted -n default --from-literal=key=
 secret/secret-encrypted created
 ```
 
-**If the secret creation fails, something does not work.**
-
+**If the secret creation fails, something does not work!**
 
 You could also check the etcd storage for the encrypted data:
 
@@ -370,7 +375,7 @@ $> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl
     --cert /var/lib/minikube/certs/etcd/server.crt \
     --key /var/lib/minikube/certs/etcd/server.key \
     --cacert /var/lib/minikube/certs/etcd/ca.crt \
-    get /registry/secrets/default/secret-encrypted" | hexdump -C 
+    get /registry/secrets/default/secret-encrypted" | hexdump -C
 00000000  2f 72 65 67 69 73 74 72  79 2f 73 65 63 72 65 74  |/registry/secret|
 00000010  73 2f 64 65 66 61 75 6c  74 2f 73 65 63 72 65 74  |s/default/secret|
 00000020  2d 65 6e 63 72 79 70 74  65 64 0a 6b 38 73 3a 65  |-encrypted.k8s:e|
