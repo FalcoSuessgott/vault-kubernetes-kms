@@ -7,5 +7,5 @@ resources:
     providers:
       - kms:
           name: vault
-          endpoint: unix:///opt/vaultkms.socket
+          endpoint: unix:///opt/kms/vaultkms.socket
       - identity: {}

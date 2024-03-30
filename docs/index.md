@@ -14,3 +14,4 @@ A Kubernetes KMS Plugin that uses [HashiCorp Vaults](https://developer.hashicorp
 * support [Vault Token Auth](https://developer.hashicorp.com/vault/docs/auth/token) (not recommended for production) and [Vault Kubernetes Auth](https://developer.hashicorp.com/vault/docs/auth/kubernetes) using the Plugins Service Account
 * support Kubernetes [KMS Plugin v1 (deprecated since `v1.28.0`) & v2 (stable in `v1.29.0`)](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#before-you-begin)
 * automatic Token Renewal for avoiding Token expiry
+* KMS key rotation
