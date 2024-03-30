@@ -19,6 +19,13 @@ spec:
         # mount /opt/kms host directory
         - name: kms
           mountPath: /opt/kms
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: "2"
+          memory: 1Gi
   volumes:
     # mount /opt/kms host directory
     - name: kms

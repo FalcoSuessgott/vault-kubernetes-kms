@@ -159,6 +159,13 @@ spec:
         # mount the hostpath volume to enable the kms socket to the node
         - name: kms
           mountPath: /opt/kms
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: "2"
+          memory: 1Gi
   volumes:
     - name: kms
       hostPath:
@@ -188,6 +195,13 @@ spec:
         # mount the hostpath volume to enable the kms socket to the node
         - name: kms
           mountPath: /opt/kms
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: "2"
+          memory: 1Gi
   volumes:
     - name: kms
       hostPath:
@@ -230,6 +244,13 @@ spec:
         - name: ca-cert
           mountPath: /opt/ca/ca.crt
           subPath: ca.crt
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: "2"
+          memory: 1Gi
   volumes:
     - name: kms
       hostPath:
