@@ -267,38 +267,17 @@ From the [Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-
     **If you selected KMS API v1 to support clusters prior to version v1.27 or if you have a legacy KMS plugin that only supports KMS v1, any supported Kubernetes version will work**. This API is deprecated as of Kubernetes v1.28. Kubernetes does not recommend the use of this API.
 
 ### Encryption Provider configuration
-Copy the appropiate encryption provider configuration to your control plane nodes (e.g. `/opt/kms/encryption_provider_config.yml`):
+Copy the appropriate encryption provider configuration to your control plane nodes (e.g. `/opt/kms/encryption_provider_config.yml`):
 
 #### KMS Plugin v1
 ```yaml
----
-kind: EncryptionConfiguration
-apiVersion: apiserver.config.k8s.io/v1
-resources:
-  - resources:
-      - secrets
-    providers:
-      - kms:
-          name: vault
-          endpoint: unix:///opt/kms/vaultkms.socket
-      - identity: {}
+{!../scripts/encryption_provider_config_v1.yml!}
 ```
 
-#### KMS Plugin v2
 
+#### KMS Plugin v2
 ```yaml
----
-kind: EncryptionConfiguration
-apiVersion: apiserver.config.k8s.io/v1
-resources:
-  - resources:
-      - secrets
-    providers:
-      - kms:
-          apiVersion: v2
-          name: vault
-          endpoint: unix:///opt/kms/vaultkms.socket
-      - identity: {}
+{!../scripts/encryption_provider_config_v2.yml!}
 ```
 
 ### Modify the `kube-api-server` Manifest

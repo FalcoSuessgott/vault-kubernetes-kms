@@ -50,6 +50,7 @@ nav:
   - Home: index.md
   - Quickstart: quickstart.md
   - Configuration: configuration.md
+  - Concepts: concepts.md
   - Troubleshooting: troubleshooting.md
   - Development: development.md
 theme:
