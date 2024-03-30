@@ -39,7 +39,7 @@ The following `kind`-config configures the local running registry, copies the en
 This can be run via `make setup-kind`, which runs `kind create cluster --name=kms --config scripts/kind-config.yaml` under the hood:
 
 ```yaml
-{!../scripts/kind-config.yaml!}
+{!../scripts/kind-config_v2.yaml!}
 ```
 
 #### the `vault-kubernetes-kms` manifest

@@ -29,7 +29,7 @@ setup-registry: ## setup a local docker registry for pulling in kind
 .PHONY: setup-kind
 setup-kind: ## setup kind cluster with encrpytion provider configured
 	kind delete cluster --name=kms || true
-	kind create cluster --name=kms --config scripts/kind-config.yaml
+	kind create cluster --name=kms --config scripts/kind-config_v2.yaml
 
 .PHONY: setup-local
 setup-local: setup-vault setup-registry setup-kind ## complete local setup

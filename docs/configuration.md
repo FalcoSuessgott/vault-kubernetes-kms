@@ -59,38 +59,7 @@ Vault will need to be able to validate any incomming service accounts, thus we n
 The following steps can help getting you started:
 
 ```yaml
-# rbac.yml
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: vault-auth
-  namespace: kube-system
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: vault-auth
-  namespace: kube-system
-  annotations:
-    kubernetes.io/service-account.name: vault-auth
-type: kubernetes.io/service-account-token
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-   name: role-tokenreview-binding
-   namespace: kube-system
-roleRef:
-   apiGroup: rbac.authorization.k8s.io
-   kind: ClusterRole
-   name: system:auth-delegator
-subjects:
-- kind: ServiceAccount
-  name: vault-auth
-  namespace: kube-system
+{!../assets/rbac.yml!}
 ```
 
 apply these manifests by running: `kubectl apply -f rbac.yml`.
