@@ -2,6 +2,9 @@ name: Test and coverage
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   test:
