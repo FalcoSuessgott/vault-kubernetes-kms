@@ -3,8 +3,8 @@ name: mkdocs
 on:
   push:
     branches:
-      - master
       - main
+
 permissions:
   contents: write
 jobs:
