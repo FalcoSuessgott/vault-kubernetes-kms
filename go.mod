@@ -1,13 +1,15 @@
 module github.com/FalcoSuessgott/vault-kubernetes-kms
 
-go 1.20
+go 1.21
+
+toolchain go1.21.1
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/docker/docker v25.0.5+incompatible
 	github.com/hashicorp/vault/api v1.12.2
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.29.1
+	github.com/testcontainers/testcontainers-go/modules/vault v0.29.1
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.62.1
 	gotest.tools/gotestsum v1.11.0
@@ -29,6 +31,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/dnephin/pflag v1.0.7 // indirect
+	github.com/docker/docker v25.0.5+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect

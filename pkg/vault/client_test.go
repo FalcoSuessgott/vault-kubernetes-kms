@@ -12,34 +12,37 @@ import (
 type VaultSuite struct {
 	suite.Suite
 
-	c      *testutils.TestContainer
-	client *Client
+	tc    *testutils.TestContainer
+	vault *Client
 }
 
 func (s *VaultSuite) TearDownSubTest() {
-	if err := s.c.Terminate(); err != nil {
+	if err := s.tc.Terminate(); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func (s *VaultSuite) SetupSubTest() {
-	c, err := testutils.StartTestContainer()
+	tc, err := testutils.StartTestContainer(
+		"secrets enable transit",
+		"write -f transit/keys/kms",
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	s.c = c
+	s.tc = tc
 
-	client, err := NewClient(
-		WithVaultAddress(c.URI),
-		WithVaultToken(c.Token),
+	vault, err := NewClient(
+		WithVaultAddress(tc.URI),
+		WithVaultToken(tc.Token),
 		WithTransit("transit", "kms"),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	s.client = client
+	s.vault = vault
 }
 
 func TestVaultSuite(t *testing.T) {

@@ -3,7 +3,7 @@ package plugin
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"sort"
 	"strconv"
 	"time"
@@ -53,7 +53,7 @@ func (p *PluginV2) Health() error {
 	if health != string(dec.GetPlaintext()) {
 		zap.L().Info("Health status failed")
 
-		return fmt.Errorf("health check failed")
+		return errors.New("health check failed")
 	}
 
 	return nil

@@ -1,7 +1,7 @@
 package socket
 
 import (
-	"fmt"
+	"errors"
 	"net"
 	"strings"
 )
@@ -24,7 +24,7 @@ func NewSocket(str string) (*Socket, error) {
 	}
 
 	if socket.Path == "" {
-		return nil, fmt.Errorf("path missing")
+		return nil, errors.New("path missing")
 	}
 
 	return socket, nil

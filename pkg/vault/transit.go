@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 )
 
@@ -22,7 +23,7 @@ func (c *Client) Encrypt(ctx context.Context, data []byte) ([]byte, string, erro
 
 	res, ok := resp.Data["ciphertext"].(string)
 	if !ok {
-		return nil, "", fmt.Errorf("invalid response")
+		return nil, "", errors.New("invalid response")
 	}
 
 	keyVersions, err := c.GetKeyVersions()
@@ -53,7 +54,7 @@ func (c *Client) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
 
 	res, ok := resp.Data["plaintext"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid response")
+		return nil, errors.New("invalid response")
 	}
 
 	decoded, err := base64.StdEncoding.DecodeString(res)
@@ -80,33 +81,4 @@ func (c *Client) GetKeyVersions() (map[string]interface{}, error) {
 	}
 
 	return keys, nil
-}
-
-// EnableTransitEngine enables a transit engine under the given path.
-func (c *Client) EnableTransitEngine(path string) error {
-	options := map[string]interface{}{
-		"type": "transit",
-		"options": map[string]interface{}{
-			"path": path,
-		},
-	}
-
-	_, err := c.Logical().Write(fmt.Sprintf(mountEnginePath, path), options)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// CreateTransitKey enables a transit engine under the given path.
-func (c *Client) CreateTransitKey(path, key string) error {
-	p := fmt.Sprintf(transitKeyPath, path, key)
-
-	_, err := c.Logical().Write(p, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
