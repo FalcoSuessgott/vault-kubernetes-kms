@@ -21,18 +21,12 @@ func (s *VaultSuite) TestTransitEncryptDecrypt() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			// enable transit engine
-			require.NoError(s.Suite.T(), s.client.EnableTransitEngine("transit"), tc.name)
-
-			// create a transit key
-			require.NoError(s.Suite.T(), s.client.CreateTransitKey("transit", "kms"), tc.name)
-
 			// encrypt data
-			enc, _, err := s.client.Encrypt(context.Background(), tc.data)
+			enc, _, err := s.vault.Encrypt(context.Background(), tc.data)
 			require.NoError(s.Suite.T(), err, tc.name)
 
 			// decrypt data
-			dec, err := s.client.Decrypt(context.Background(), enc)
+			dec, err := s.vault.Decrypt(context.Background(), enc)
 			require.NoError(s.Suite.T(), err, tc.name)
 
 			// data should match decrypted text

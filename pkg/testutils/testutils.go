@@ -3,20 +3,12 @@ package testutils
 import (
 	"context"
 	"fmt"
-	"os"
-	"time"
 
-	"github.com/docker/docker/api/types/container"
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
+	"github.com/testcontainers/testcontainers-go/modules/vault"
 )
 
-var (
-	vaultVersion = "latest"
-	image        = fmt.Sprintf("hashicorp/vault:%s", vaultVersion)
-	envs         = map[string]string{}
-	token        = "root"
-)
+var token = "root"
 
 // TestContainer vault dev container wrapper.
 type TestContainer struct {
@@ -26,44 +18,25 @@ type TestContainer struct {
 }
 
 // StartTestContainer Starts a fresh vault in development mode.
-func StartTestContainer() (*TestContainer, error) {
+func StartTestContainer(commands ...string) (*TestContainer, error) {
 	ctx := context.Background()
 
-	if v, ok := os.LookupEnv("VAULT_VERSION"); ok {
-		vaultVersion = v
-	}
-
-	req := testcontainers.ContainerRequest{
-		Image:        image,
-		ExposedPorts: []string{"8200/tcp"},
-		WaitingFor: wait.ForAll(
-			wait.ForLog("Root Token:").WithPollInterval(1*time.Second).WithStartupTimeout(3*time.Minute),
-			wait.ForListeningPort("8200/tcp"),
-		),
-		Cmd:        []string{"server", "-dev", "-dev-root-token-id", token},
-		AutoRemove: true,
-		Env:        envs,
-		HostConfigModifier: func(hc *container.HostConfig) {
-			hc.CapAdd = []string{"IPC_LOCK"}
-		},
-	}
-
-	c, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
+	vaultContainer, err := vault.RunContainer(ctx,
+		vault.WithToken(token),
+		vault.WithInitCommand(commands...),
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to start container: %w", err)
 	}
 
-	mappedPort, err := c.MappedPort(ctx, "8200")
+	uri, err := vaultContainer.HttpHostAddress(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error returning container mapped port: %w", err)
 	}
 
 	return &TestContainer{
-		Container: c,
-		URI:       fmt.Sprintf("http://127.0.0.1:%s", mappedPort.Port()),
+		Container: vaultContainer,
+		URI:       uri,
 		Token:     token,
 	}, nil
 }

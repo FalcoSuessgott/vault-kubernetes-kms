@@ -15,7 +15,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.21.1'
           cache: false
 
       - run: go generate -tags tools tools/tools.go
@@ -30,6 +30,8 @@ jobs:
           # https://github.com/testcontainers/testcontainers-go/issues/1782
           TESTCONTAINERS_RYUK_DISABLED: true
 
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest'
-        run: bash <(curl -s https://codecov.io/bash)
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: FalcoSuessgott/vault-kubernetes-kms

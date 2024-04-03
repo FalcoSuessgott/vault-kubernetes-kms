@@ -14,6 +14,11 @@ fmt: ## format go files
 docs: ## render docs locally
 	mkdocs serve
 
+PHONY: test
+test: ## display test coverage
+	go test --cover -parallel=1 -v -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out | sort -rnk3
+
 PHONY: lint
 lint: ## lint go files
 	golangci-lint run -c .golang-ci.yml

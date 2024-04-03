@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -183,7 +184,7 @@ func main() {
 
 	signal := <-signals
 
-	zap.L().Info("Received singnal", zap.Stringer("signal", signal))
+	zap.L().Info("Received singal", zap.Stringer("signal", signal))
 	zap.L().Info("Shutting down server")
 
 	g.GracefulStop()
@@ -196,11 +197,11 @@ func main() {
 func (o *options) validateFlags() error {
 	switch {
 	case o.vaultAddress == "":
-		return fmt.Errorf("vault address required")
+		return errors.New("vault address required")
 	case o.vaultToken != "" && o.vaultK8sRole != "":
-		return fmt.Errorf("cannot use vault-token with vault-k8s-role")
+		return errors.New("cannot use vault-token with vault-k8s-role")
 	case o.vaultToken == "" && o.vaultK8sRole == "":
-		return fmt.Errorf("either vault-token or vault-k8s-role required")
+		return errors.New("either vault-token or vault-k8s-role required")
 	}
 
 	return nil
