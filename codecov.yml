@@ -8,6 +8,3 @@ coverage:
       default:
         target: 50%
         threshold: 5%
-
-ignore:
-  - "cmd/man.go"
