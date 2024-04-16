@@ -47,12 +47,13 @@ markdown_extensions:
         base_path: docs
 
 nav:
-  - Home: index.md
-  - Quickstart: quickstart.md
-  - Configuration: configuration.md
-  - Concepts: concepts.md
-  - Troubleshooting: troubleshooting.md
-  - Development: development.md
+  - vault-kubernetes-kms:
+    - index.md
+    - quickstart.md
+    - configuration.md
+    - concepts.md
+    - troubleshooting.md
+    - development.md
 theme:
   icon:
     edit: material/pencil

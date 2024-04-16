@@ -1,10 +1,8 @@
 builds:
   -
     env:
-      - CGO_ENABLED=0
-    dir: cmd
+      - CGO_ENABLED=0 
     binary: vault-kubernetes-kms
-    ldflags: -s -w -X cmd/main.version={{ .Version }}
     goos:
       - linux
     goarch:

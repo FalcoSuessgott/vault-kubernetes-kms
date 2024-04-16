@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"testing"
@@ -9,37 +9,37 @@ import (
 func TestValidateFlags(t *testing.T) {
 	testCases := []struct {
 		name string
-		opts *options
+		opts *Options
 		err  bool
 	}{
 		{
 			name: "token & k8s auth",
 			err:  true,
-			opts: &options{
-				vaultAddress: "e2e",
-				vaultToken:   "abc",
-				vaultK8sRole: "abc",
+			opts: &Options{
+				VaultAddress: "e2e",
+				VaultToken:   "abc",
+				VaultK8sRole: "abc",
 			},
 		},
 		{
 			name: "token & k8s auth",
 			err:  true,
-			opts: &options{
-				vaultAddress: "e2e",
+			opts: &Options{
+				VaultAddress: "e2e",
 			},
 		},
 		{
 			name: "no vault address",
 			err:  true,
-			opts: &options{
-				vaultToken: "abc",
+			opts: &Options{
+				VaultToken: "abc",
 			},
 		},
 		{
 			name: "k8s auth",
-			opts: &options{
-				vaultAddress: "e2e",
-				vaultK8sRole: "kms",
+			opts: &Options{
+				VaultAddress: "e2e",
+				VaultK8sRole: "kms",
 			},
 		},
 	}

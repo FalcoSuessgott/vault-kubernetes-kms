@@ -26,14 +26,6 @@ jobs:
           go-version: '1.21.1'
           cache: false
 
-      - run: go generate -tags tools tools/tools.go
-
-      - name: go get
-        run: go get ./...
-
-      - name: go build
-        run: go build -o vault-kubernetes-kms cmd/main.go
-
       - uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
@@ -46,10 +38,8 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'docker.io/falcosuessgott/vault-kubernetes-kms:${{ github.sha }}'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
+          format: 'sarif'
           output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3

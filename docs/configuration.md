@@ -5,7 +5,7 @@ Enabling KMS Encryption in your Cluster involves 3 steps:
 2. Deploying the `vault-kubernetes-kms` Plugin
 3. Enabling the encryption provider configuration for the `kube-apiserver`.
 
-## 1. Preparing HashiCorp  Vault
+## Preparing HashiCorp  Vault
 The `vault-kms-plugin` requires a Vault Authentication, that allows encrypting and decrypting data with a given Transit Key.
 
 ### Transit Engine
@@ -14,11 +14,17 @@ The `vault-kms-plugin` requires a Vault Authentication, that allows encrypting a
 
 The following steps enable a transit engine `transit` and create transit key `kms`:
 ```bash
-export VAULT_ADDR="https://vault.tld.de"   # change to your Vaults API Address
-export VAULT_TOKEN="hhvs.XXXX"             # change to a token allowed to create a transit engine and a transit key
+$> export VAULT_ADDR="https://vault.tld.de"   # change to your Vaults API Address
+$> export VAULT_TOKEN="hhvs.XXXX"             # change to a token allowed to create a transit engine and a transit key
 $> vault secrets enable transit
 $> vault write -f transit/keys/kms
 ```
+
+!!! warning
+    Absolutely make sure to either Backup (snapshot) your Vault in order to recover from failure, or export your KMS key prior usage (option: `allow-plaintext-backup`).
+
+    **If you loose the KMS key or recreate it, the kube-apiserver will not be able to decrypt any secrets.**
+
 
 ### Vault Policy
 The following Vault Policy lists the API paths required for the `vault-kubernetes-kms` plugin:
@@ -29,7 +35,7 @@ The following Vault Policy lists the API paths required for the `vault-kubernete
 
 ```hcl
 # kms-policy.hcl
-# lookup the current tokens ttl for token renewal
+# lookup the current tokens ttl for token renewal, is also in Vaults default policy
 path "auth/token/lookup-self" {
     capabilities = ["read"]
 }
@@ -81,23 +87,23 @@ $> vault write auth/kubernetes/role/kms }
     ttl=24h
 ```
 
-## 2. Deploying `vault-kubernetes-kms`
+## Deploying `vault-kubernetes-kms`
 ### CLI Args & Environment Variables
 You can either pass the required arguments as commandline args or as environment variables (using a ConfigMap or Secrets)
 
 **Required**:
 
-* `--vault-address` (`VAULT_KMS_VAULT_ADDR`); default: `""`
+* `--vault-address` (`VAULT_KMS_VAULT_ADDR`)
 
-and either one of:
+**and either one of:**
 
-* `--vault-token` (`VAULT_KMS_VAULT_TOKEN`); default: `""`
-* `--vault-k8s-role` (`VAULT_KMS_VAULT_K8S_ROLE`); required: `false`, default: `""`
+* `--vault-token` (`VAULT_KMS_VAULT_TOKEN`)
+* `--vault-k8s-role` (`VAULT_KMS_VAULT_K8S_ROLE`)
 
 
 **Optional**:
 
-* `--socket` (`VAULT_KMS_SOCKET`); default: `unix:///opt/vaultkms.socket"`
+* `--socket` (`VAULT_KMS_SOCKET`); default: `unix:///opt/kms/vaultkms.socket"`
 * `--vault-namespace` (`VAULT_KMS_VAULT_NAMESPACE`); default: `""`
 * `--vault-k8s-mount` (`VAULT_KMS_VAULT_K8S_MOUNT`); default: `kubernetes`
 * `--vault-transit-mount` (`VAULT_KMS_VAULT_TRANSIT_MOUNT`); default: `transit`
@@ -121,7 +127,6 @@ spec:
       command:
         - /vault-kubernetes-kms
         - --vault-address=https://vault.server.de # change to your vault API address
-        - --socket=unix:///opt/kms/vaultkms.socket
         - --vault-k8s-mount=kubernetes
         - --vault-k8s-role=kms
       volumeMounts:
@@ -143,6 +148,9 @@ spec:
 
 ### Vault Token Auth (not recommended)
 
+!!! info
+    It is recommended, that the Vault token used for authentication is an orphaned and periodic token. Periodic tokens can be renewed within the period.  An orphan token does not have a parent token and will not be revoked when the token that created it expires. Example: `vault token create -orphan -policy="kms" -period=24h`
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -158,7 +166,6 @@ spec:
       command:
         - /vault-kubernetes-kms
         - --vault-address=https://vault.server.d # change to your vault API address
-        - --socket=unix:///opt/kms/vaultkms.socket
         - --vault-token=hvs.ABC123
       volumeMounts:
         # mount the hostpath volume to enable the kms socket to the node
@@ -198,7 +205,6 @@ spec:
       command:
         - /vault-kubernetes-kms
         - --vault-address=https://vault.server.de
-        - --socket=unix:///opt/kms/vaultkms.socket
         - --vault-k8s-mount=minikube-cluster
         - --vault-k8s-role=kms
       env:
@@ -243,7 +249,7 @@ $> kubectl logs -n kube-system vault-kubernetes-kms
 {"level":"info","timestamp":"2024-01-31T13:18:24.898Z","caller":"cmd/main.go:169","message":"Successfully registered kms plugin"}
 ```
 
-## 3. Enabling the encryption provider configuration for the `kube-apiserver`.
+## Enabling the encryption provider configuration for the `kube-apiserver`.
 ### Determine which KMS version to use
 Since the `vault-kms-plugin` supports both KMS versions, you would have to determine, which KMS Plugin version works for your setup:
 

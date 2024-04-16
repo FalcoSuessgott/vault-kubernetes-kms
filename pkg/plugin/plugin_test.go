@@ -18,7 +18,7 @@ import (
 	v2 "k8s.io/kms/apis/v2"
 )
 
-var socketPath = "/opt/vaultkms.sock"
+var socketPath = "/opt/vault/vaultkms.sock"
 
 type PluginSuite struct {
 	suite.Suite
