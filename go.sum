@@ -334,5 +334,5 @@ gotest.tools/gotestsum v1.12.0 h1:CmwtaGDkHxrZm4Ib0Vob89MTfpc3GrEFMJKovliPwGk=
 gotest.tools/gotestsum v1.12.0/go.mod h1:fAvqkSptospfSbQw26CTYzNwnsE/ztqLeyhP0h67ARY=
 gotest.tools/v3 v3.5.1 h1:EENdUnS3pdur5nybKYIh2Vfgc8IUNBjxDPSjtiJcOzU=
 gotest.tools/v3 v3.5.1/go.mod h1:isy3WKz7GK6uNw/sbHzfKBLvlvXwUyV06n6brMxxopU=
-k8s.io/kms v0.29.4 h1:cFGEoCLwoXk/eqYZppLZxybCdmEWeRKMCbm9f13IdRQ=
-k8s.io/kms v0.29.4/go.mod h1:vWVImKkJd+1BQY4tBwdfSwjQBiLrnbNtHADcDEDQFtk=
+k8s.io/kms v0.30.1 h1:gEIbEeCbFiaN2tNfp/EUhFdGr5/CSj8Eyq6Mkr7cCiY=
+k8s.io/kms v0.30.1/go.mod h1:GrMurD0qk3G4yNgGcsCEmepqf9KyyIrTXYR2lyUOJC4=
