@@ -59,8 +59,8 @@ path "transit/keys/kms" {
 You can create the policy using `vault policy write kms ./kms-policy.hcl`.
 
 ### Kubernetes Auth
-`vault-kubernetes-kms` supports [Vaults Kubernetes Authentication Method](https://developer.hashicorp.com/vault/docs/auth/kubernetes). This way the curent specified service account is used for authentitation and authorization.
-Vault will need to be able to validate any incomming service accounts, thus we need to give Vault a token with the appropiate RBAC settings (`role-tokenreview-binding`).
+`vault-kubernetes-kms` supports [Vaults Kubernetes Authentication Method](https://developer.hashicorp.com/vault/docs/auth/kubernetes). This way the current specified service account is used for authentication and authorization.
+Vault will need to be able to validate any incoming service accounts, thus we need to give Vault a token with the appropriate RBAC settings (`role-tokenreview-binding`).
 
 The following steps can help getting you started:
 
@@ -70,7 +70,7 @@ The following steps can help getting you started:
 
 apply these manifests by running: `kubectl apply -f rbac.yml`.
 
-Then you can enable Vaults Kubernete Auth method:
+Then you can enable Vaults Kubernetes Auth method:
 
 ```bash
 $> vault auth enable kubernetes
@@ -80,7 +80,7 @@ $> vault write auth/kubernetes/config \
     token_reviewer_jwt="${token}" \
     kubernetes_host="https://127.0.0.1:8443" \
     kubernetes_ca_cert="${ca_cert}"
-$> vault write auth/kubernetes/role/kms }
+$> vault write auth/kubernetes/role/kms
     bound_service_account_names=default \
     bound_service_account_namespaces=kube-system \
     policies=kms \
@@ -89,7 +89,7 @@ $> vault write auth/kubernetes/role/kms }
 
 ## Deploying `vault-kubernetes-kms`
 ### CLI Args & Environment Variables
-You can either pass the required arguments as commandline args or as environment variables (using a ConfigMap or Secrets)
+You can either pass the required arguments as command line args or as environment variables (using a ConfigMap or Secrets)
 
 **Required**:
 
@@ -278,7 +278,7 @@ Copy the appropriate encryption provider configuration to your control plane nod
 
 ### Modify the `kube-api-server` Manifest
 Last but not least, you would have to enable the encryption provider config for the `kube-apiserver`.
-This steps depends on wether your control plane components run as a systemd deamon or as static Pod on your control plane nodes (usually located at `/etc/kubernetes/manifests`).
+This steps depends on wether your control plane components run as a systemd daemon or as static Pod on your control plane nodes (usually located at `/etc/kubernetes/manifests`).
 
 **Either way, the following changes need to be done:**
 
