@@ -35,7 +35,7 @@ func TestVaultSuite(t *testing.T) {
 	}
 }
 
-func (p *PluginSuite) SetupAllSuitr() {
+func (p *PluginSuite) SetupAllSuite() {
 	// create unix socket
 	_, err := socket.NewSocket(socketPath)
 	if err != nil {
@@ -43,7 +43,7 @@ func (p *PluginSuite) SetupAllSuitr() {
 	}
 
 	// grpc connection with socket
-	conn, err := grpc.Dial(
+	conn, err := grpc.NewClient(
 		socketPath,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
