@@ -1,5 +1,5 @@
 # vault-kms-plugin
-A Kubernetes KMS Plugin that uses [HashiCorp Vaults](https://developer.hashicorp.com/vault) [Transit Engine](https://developer.hashicorp.com/vault/docs/secrets/transit) for securely encrypting Secrets, Config Maps and other Kubernetes Objects in etcd at rcest (on disk).
+A Kubernetes KMS Plugin that uses [HashiCorp Vaults](https://developer.hashicorp.com/vault) [Transit Engine](https://developer.hashicorp.com/vault/docs/secrets/transit) for securely encrypting Secrets, Config Maps and other Kubernetes Objects in etcd at Rest (on disk).
 
 [![E2E](https://github.com/FalcoSuessgott/vault-kubernetes-kms/actions/workflows/e2e.yml/badge.svg)](https://github.com/FalcoSuessgott/vault-kubernetes-kms/actions/workflows/e2e.yml)
 <img src="https://github.com/FalcoSuessgott/vault-kubernetes-kms/actions/workflows/test.yml/badge.svg" alt="drawing"/> <img src="https://github.com/FalcoSuessgott/vault-kubernetes-kms/actions/workflows/lint.yml/badge.svg" alt="drawing"/> <img src="https://img.shields.io/github/v/release/FalcoSuessgott/vault-kubernetes-kms" alt="drawing"/>
@@ -31,7 +31,7 @@ Since the key used for encrypting secrets is not stored in Kubernetes, an attack
 # create any secret
 $> kubectl create secret generic secret-unencrypted -n default --from-literal=key=value
 
-# proof that k8s secrets are stored unenctyped on disk and in ectd
+# proof that k8s secrets are stored unencrypted on disk and in etctd
 $> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl \
     --endpoints=https://127.0.0.1:2379 \
     --cert /var/lib/minikube/certs/etcd/server.crt \
@@ -64,7 +64,7 @@ $> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl \
 # create any k8s secret
 $> kubectl create secret generic secret-encrypted -n default --from-literal=key=value
 
-# proof that now secrets are stored enctyped on disk and in ectd
+# proof that now secrets are stored encrypted on disk and in etctd
 $> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
     --cert /var/lib/minikube/certs/etcd/server.crt \
     --key /var/lib/minikube/certs/etcd/server.key \

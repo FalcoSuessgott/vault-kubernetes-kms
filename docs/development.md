@@ -8,9 +8,9 @@ Obviously you will need all the tools mentioned above installed. Also this setup
 ## Components
 Basically, we will need:
 
-1. A local Vault server initialized & unsealed and with a transit engine enabled aswell as a transit key created.
+1. A local Vault server initialized & unsealed and with a transit engine enabled as well as a transit key created.
 2. A local (docker) registry so kind can pull the currently unreleased `vault-kubernetes-kms` image.
-3. A local Kubernetes Cluster (kind) configured to use the local registry aswell as the required settings for the kube-apiservers encryption provider config.
+3. A local Kubernetes Cluster (kind) configured to use the local registry as well as the required settings for the kube-apiservers encryption provider config.
 
 ### 1. Local Vault Server using `vault`
 The following snippets sets up a local vault development server and creates a transit engine as well as a key.

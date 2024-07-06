@@ -2,7 +2,7 @@
 This Guide will walk you through the required steps of installing and configuring the `vault-kms-plugin` for Kubernetes. It currently uses token based authentication and HTTP communication, which is not secure enough when running in production.
 
 !!! tip
-    Checkout [https://falcosuessgott.github.io/hashicorp-vault-playground/home/](https://falcosuessgott.github.io/hashicorp-vault-playground/home/) a project that helps you quickly setting up HashiCorp Vault locally with many useful Kubernetes Labs already preconfigured.
+    Checkout [https://falcosuessgott.github.io/hashicorp-vault-playground/home/](https://falcosuessgott.github.io/hashicorp-vault-playground/home/) a project that helps you quickly setting up HashiCorp Vault locally with many useful Kubernetes Labs already pre configured.
 
 !!! warning
     This guide uses the new version of the Kubernetes KMS Plugin API, which was introduced in Kubernetes v1.29.0 ([https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-v2](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-v2)).
@@ -158,7 +158,7 @@ $> kubectl get secret secret -o json | jq '.data | map_values(@base64d)'
 For production usage you should consider:
 
 * use Vaults Kubernetes Auth Method (see [https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/))
-* deploy the `vault-kubenetes-kms` Pod using a dedicated Service Account, instead of `default` (also adjust the kubernetes auth role)
+* deploy the `vault-kubernetes-kms` Pod using a dedicated Service Account, instead of `default` (also adjust the kubernetes auth role)
 * use HTTPS for the communication between Kubernetes & HashiCorp Vault (see [https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/))
 * deploy the `vault-kubernetes-kms` plugin as a static pod on all control plane nodes
 * automate the deployment using your preferred automation method
