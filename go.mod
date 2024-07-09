@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/vault/api v1.14.0
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.32.0
-	github.com/testcontainers/testcontainers-go/modules/vault v0.31.0
+	github.com/testcontainers/testcontainers-go/modules/vault v0.32.0
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.65.0
 	gotest.tools/gotestsum v1.12.0
@@ -48,7 +48,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.6 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.8 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
