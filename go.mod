@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/vault/api v1.14.0
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.32.0
-	github.com/testcontainers/testcontainers-go/modules/vault v0.31.0
+	github.com/testcontainers/testcontainers-go/modules/vault v0.32.0
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.65.0
 	gotest.tools/gotestsum v1.12.0

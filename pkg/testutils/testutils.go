@@ -8,7 +8,10 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/vault"
 )
 
-var token = "root"
+var (
+	image = "hashicorp/vault:1.16.0"
+	token = "root"
+)
 
 // TestContainer vault dev container wrapper.
 type TestContainer struct {
@@ -21,7 +24,8 @@ type TestContainer struct {
 func StartTestContainer(commands ...string) (*TestContainer, error) {
 	ctx := context.Background()
 
-	vaultContainer, err := vault.RunContainer(ctx,
+	vaultContainer, err := vault.Run(ctx,
+		image,
 		vault.WithToken(token),
 		vault.WithInitCommand(commands...),
 	)
