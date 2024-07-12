@@ -43,15 +43,13 @@ type Options struct {
 
 // NewPlugin instantiates the plugin.
 // nolint: funlen, cyclop
-func NewPlugin() error {
+func NewPlugin(version string) error {
 	opts := &Options{}
 
 	// first parse any env vars
 	if err := utils.ParseEnvs("VAULT_KMS_", opts); err != nil {
 		return fmt.Errorf("error parsing env vars: %w", err)
 	}
-
-	fmt.Println(opts)
 
 	// then flags, since the have precedence over env vars
 	flag.StringVar(&opts.Socket, "socket", opts.Socket, "Destination path of the socket (required)")
@@ -69,18 +67,18 @@ func NewPlugin() error {
 	flag.StringVar(&opts.VaultTransitMount, "vault-transit-mount", opts.VaultTransitMount, "Vault Transit mount name")
 	flag.StringVar(&opts.VaultTransitKey, "vault-transit-key", opts.VaultTransitKey, "Vault Transit key name")
 
-	flag.BoolVar(&opts.Version, "version", opts.Version, "")
+	flag.BoolVar(&opts.Version, "version", opts.Version, "prints out the plugins version")
 
 	flag.Parse()
 
-	if err := opts.validateFlags(); err != nil {
-		return fmt.Errorf("error validating args: %w", err)
-	}
-
 	if opts.Version {
-		fmt.Fprintln(os.Stdout, "version")
+		fmt.Fprintf(os.Stdout, "vault-kubernetes-kms v%s\n", version)
 
 		os.Exit(0)
+	}
+
+	if err := opts.validateFlags(); err != nil {
+		return fmt.Errorf("error validating args: %w", err)
 	}
 
 	logLevel := zapcore.InfoLevel
