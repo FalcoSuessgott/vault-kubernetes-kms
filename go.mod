@@ -1,8 +1,7 @@
 module github.com/FalcoSuessgott/vault-kubernetes-kms
 
 go 1.21
-
-toolchain go1.21.1
+toolchain go1.22.5
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
@@ -13,7 +12,7 @@ require (
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.65.0
 	gotest.tools/gotestsum v1.12.0
-	k8s.io/kms v0.29.4
+	k8s.io/kms v0.30.2
 )
 
 require (
