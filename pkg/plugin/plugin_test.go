@@ -70,7 +70,7 @@ func (p *PluginSuite) SetupSubTest() {
 
 	vault, err := vault.NewClient(
 		vault.WithVaultAddress(tc.URI),
-		vault.WithVaultToken(tc.Token),
+		vault.WithTokenAuth(tc.Token),
 		vault.WithTransit("transit", "kms"),
 	)
 	if err != nil {

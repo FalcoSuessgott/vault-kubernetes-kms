@@ -13,33 +13,41 @@ func TestValidateFlags(t *testing.T) {
 		err  bool
 	}{
 		{
-			name: "token & k8s auth",
-			err:  true,
-			opts: &Options{
-				VaultAddress: "e2e",
-				VaultToken:   "abc",
-				VaultK8sRole: "abc",
-			},
-		},
-		{
-			name: "token & k8s auth",
-			err:  true,
-			opts: &Options{
-				VaultAddress: "e2e",
-			},
-		},
-		{
 			name: "no vault address",
 			err:  true,
 			opts: &Options{
-				VaultToken: "abc",
+				Token: "abc",
 			},
 		},
 		{
-			name: "k8s auth",
+			name: "invalid auth method",
+			err:  true,
+			opts: &Options{
+				AuthMethod: "invalid",
+			},
+		},
+		{
+			name: "token auth, but no token",
+			err:  true,
 			opts: &Options{
 				VaultAddress: "e2e",
-				VaultK8sRole: "kms",
+				AuthMethod:   "token",
+			},
+		},
+		{
+			name: "approle auth, but no approle creds",
+			err:  true,
+			opts: &Options{
+				VaultAddress: "e2e",
+				AuthMethod:   "approle",
+			},
+		},
+		{
+			name: "k8s auth, but no k8s creds",
+			err:  true,
+			opts: &Options{
+				VaultAddress: "e2e",
+				AuthMethod:   "k8s",
 			},
 		},
 	}

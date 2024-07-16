@@ -89,67 +89,51 @@ $> vault write auth/kubernetes/role/kms
 
 ## Deploying `vault-kubernetes-kms`
 ### CLI Args & Environment Variables
-You can either pass the required arguments as command line args or as environment variables (using a ConfigMap or Secrets)
+List of required and optional CLI args/env vars. **Furthermore, all of Vaults [Env Vars](https://developer.hashicorp.com/vault/docs/commands#environment-variables) are supported**:
 
-**Required**:
+**Vault Server**:
 
-* `--vault-address` (`VAULT_KMS_VAULT_ADDR`)
+* **(Required)**: `-vault-address` (`VAULT_KMS_VAULT_ADDR`)
+* **(Optional)**: `-vault-namespace` (`VAULT_KMS_VAULT_NAMESPACE`)
 
-**and either one of:**
+**Vault Transit Engine**:
 
-* `--vault-token` (`VAULT_KMS_VAULT_TOKEN`)
-* `--vault-k8s-role` (`VAULT_KMS_VAULT_K8S_ROLE`)
+* **(Optional)**: `-transit-mount` (`VAULT_KMS_VAULT_TRANSIT_MOUNT`); default: `"transit"`
+* **(Optional)**: `-transit-key` (`VAULT_KMS_VAULT_TRANSIT_KEY`); default: `"kms"`
 
+
+**If Vault Token Auth**:
+
+* **(Required)**: `-auth-method="token"` (`VAULT_KMS_AUTH_METHOD`)
+* **(Required)**: `-token` (`VAULT_KMS_VAULT_TOKEN`)
+
+**If Vault Approle Auth**:
+
+* **(Required)**: `-auth-method="approle"` (`VAULT_KMS_AUTH_METHOD`)
+* **(Required)**: `-approle-role-id` (`VAULT_KMS_APPROLE_ROLE_ID`)
+* **(Required)**: `-approle-secret-id` (`VAULT_KMS_APPROLE_SECRET_ID`)
+* **(Optional)**: `-approle-mount` (`VAULT_KMS_APPROLE_MOUNT`); default: `"approle"`
+
+**If Vault Kubernetes Auth**:
+
+* **(Required)**: `-auth-method="kubernetes"` (`VAULT_KMS_AUTH_METHOD`)
+* **(Required)**: `-k8s-role` (`VAULT_KMS_K8S_ROLE`)
+* **(Optional)**: `-k8s-mount` (`VAULT_KMS_K8S_MOUNT`); default: `"k8s"`
 
 **Optional**:
 
-* `--socket` (`VAULT_KMS_SOCKET`); default: `unix:///opt/kms/vaultkms.socket"`
-* `--vault-namespace` (`VAULT_KMS_VAULT_NAMESPACE`); default: `""`
-* `--vault-k8s-mount` (`VAULT_KMS_VAULT_K8S_MOUNT`); default: `kubernetes`
-* `--vault-transit-mount` (`VAULT_KMS_VAULT_TRANSIT_MOUNT`); default: `transit`
-* `--vault-transit-key` (`VAULT_KMS_VAULT_TRANSIT_KEY`); default: `kms`
+* **(Optional)**: `-socket` (`VAULT_KMS_SOCKET`); default: `unix:///opt/kms/vaultkms.socket"`
+* **(Optional)**: `-debug` (`VAULT_KMS_DEBUG`)
 
-**Furthermore most of [Vaults Environment Variables](https://developer.hashicorp.com/vault/docs/commands#environment-variables) are supported.**
-
-### Vault Kubernetes Auth (recommended)
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: vault-kubernetes-kms
-  namespace: kube-system
-spec:
-  priorityClassName: system-node-critical
-  hostNetwork: true
-  containers:
-    - name: vault-kubernetes-kms
-      image: falcosuessgott/vault-kubernetes-kms:latest
-      command:
-        - /vault-kubernetes-kms
-        - --vault-address=https://vault.server.de # change to your vault API address
-        - --vault-k8s-mount=kubernetes
-        - --vault-k8s-role=kms
-      volumeMounts:
-        # mount the hostpath volume to enable the kms socket to the node
-        - name: kms
-          mountPath: /opt/kms
-      resources:
-        requests:
-          cpu: 100m
-          memory: 128Mi
-        limits:
-          cpu: "2"
-          memory: 1Gi
-  volumes:
-    - name: kms
-      hostPath:
-        path: /opt/kms
-```
-
-### Vault Token Auth (not recommended)
+### Example Vault Token Auth (not recommended)
 
 !!! info
-    It is recommended, that the Vault token used for authentication is an orphaned and periodic token. Periodic tokens can be renewed within the period.  An orphan token does not have a parent token and will not be revoked when the token that created it expires. Example: `vault token create -orphan -policy="kms" -period=24h`
+    It is recommended, that the Vault token used for authentication is **an orphaned and periodic token**.
+
+    Periodic tokens can be renewed within the period.
+    An orphan token does not have a parent token and will not be revoked when the token that created it expires.
+
+    Example: `vault token create -orphan -policy="kms" -period=24h`
 
 ```yaml
 apiVersion: v1
@@ -163,12 +147,13 @@ spec:
   containers:
     - name: vault-kubernetes-kms
       image: falcosuessgott/vault-kubernetes-kms:latest
+      # either specify CLI Args or env vars (look above)
       command:
         - /vault-kubernetes-kms
-        - --vault-address=https://vault.server.d # change to your vault API address
-        - --vault-token=hvs.ABC123
+        - -vault-address=https://vault.server.d
+        - -auth-method=token
+        - -token=hvs.ABC123
       volumeMounts:
-        # mount the hostpath volume to enable the kms socket to the node
         - name: kms
           mountPath: /opt/kms
       resources:
@@ -184,8 +169,86 @@ spec:
         path: /opt/kms
 ```
 
+### Example Vault Approle Auth (recommended)
 
-### TLS Configuration
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vault-kubernetes-kms
+  namespace: kube-system
+spec:
+  priorityClassName: system-node-critical
+  hostNetwork: true
+  containers:
+    - name: vault-kubernetes-kms
+      image: falcosuessgott/vault-kubernetes-kms:latest
+        # either specify CLI Args or env vars (look above)
+      command:
+        - /vault-kubernetes-kms
+        - -vault-address=https://vault.server.d
+        - -auth-method=approle
+        - -approle-role-id=XXXX
+        - -approle-secret-id=XXXX
+      volumeMounts:
+        - name: kms
+          mountPath: /opt/kms
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: "2"
+          memory: 1Gi
+  volumes:
+    - name: kms
+      hostPath:
+        path: /opt/kms
+```
+
+### Example Vault Kubernetes Auth
+!!! warning
+    **A static pod cannot reference any API objects (see [kubernetes/kubelet#103587](https://github.com/kubernetes/kubernetes/issues/103587)) such as a Service Account, which is required for Vaults Kubernetes Authentication.**
+
+    As a result, you cannot deploy this plugin as a static pod (see [falcosuessgott/vault-kubernetes-kms#80](https://github.com/FalcoSuessgott/vault-kubernetes-kms/issues/80)).
+
+    Either use Approle Authentication (see above), or don't deploy this plugin as a static pod (use a DaemonSet instead)
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vault-kubernetes-kms
+  namespace: kube-system
+spec:
+  priorityClassName: system-node-critical
+  hostNetwork: true
+  containers:
+    - name: vault-kubernetes-kms
+      image: falcosuessgott/vault-kubernetes-kms:latest
+      # either specify CLI Args or env vars (look above)
+      command:
+        - /vault-kubernetes-kms
+        - -vault-address=https://vault.server.de
+        - -auth-method=k8s
+        - -k8s-role=kms
+      volumeMounts:
+        - name: kms
+          mountPath: /opt/kms
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: "2"
+          memory: 1Gi
+  volumes:
+    - name: kms
+      hostPath:
+        path: /opt/kms
+```
+
+### Example TLS Configuration
 It is recommended, to specify the CA cert that issued the vault server certificate. To do so, you would have to create a Kubernetes secret containing Vaults CA certificate PEM encoded.
 
 Example:
@@ -202,11 +265,12 @@ spec:
   containers:
     - name: vault-kubernetes-kms
       image: falcosuessgott/vault-kubernetes-kms:latest
+      # either specify CLI Args or env vars (look above)
       command:
         - /vault-kubernetes-kms
         - --vault-address=https://vault.server.de
-        - --vault-k8s-mount=minikube-cluster
-        - --vault-k8s-role=kms
+        - -auth-method=k8s
+        - -k8s-role=kms
       env:
         # add vaults CA file via env vars
         - name: VAULT_CACERT

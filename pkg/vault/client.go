@@ -1,6 +1,7 @@
 package vault
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -11,6 +12,15 @@ import (
 // Client Vault API wrapper.
 type Client struct {
 	*api.Client
+
+	Token string
+
+	AppRoleMount    string
+	AppRoleID       string
+	AppRoleSecretID string
+
+	KubernetesMount string
+	KubernetesRole  string
 
 	TransitEngine string
 	TransitKey    string
@@ -37,6 +47,12 @@ func NewClient(opts ...Option) (*Client, error) {
 		}
 	}
 
+	// perform a self lookup to verify the token
+	_, err = c.Auth().Token().LookupSelf()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to vault: %w", err)
+	}
+
 	return client, nil
 }
 
@@ -44,17 +60,6 @@ func NewClient(opts ...Option) (*Client, error) {
 func WithVaultAddress(address string) Option {
 	return func(c *Client) error {
 		return c.SetAddress(address)
-	}
-}
-
-// WithVaultToken sets the specified token.
-func WithVaultToken(token string) Option {
-	return func(c *Client) error {
-		if token != "" {
-			c.SetToken(token)
-		}
-
-		return nil
 	}
 }
 
@@ -79,12 +84,51 @@ func WithTransit(mount, key string) Option {
 	}
 }
 
+// WithTokenAuth sets the specified token.
+func WithTokenAuth(token string) Option {
+	return func(c *Client) error {
+		c.Token = token
+
+		if token != "" {
+			c.SetToken(token)
+		}
+
+		return nil
+	}
+}
+
+// WitAppRoleAuth performs a approle auth login.
+func WitAppRoleAuth(mount, roleID, secretID string) Option {
+	return func(c *Client) error {
+		c.AppRoleID = roleID
+		c.AppRoleMount = mount
+		c.AppRoleSecretID = secretID
+
+		opts := map[string]interface{}{
+			"role_id":   roleID,
+			"secret_id": secretID,
+		}
+
+		s, err := c.Logical().Write(fmt.Sprintf(authLoginPath, mount), opts)
+		if err != nil {
+			return fmt.Errorf("error performing approle auth: %w", err)
+		}
+
+		c.SetToken(s.Auth.ClientToken)
+
+		return nil
+	}
+}
+
 // WithK8sAuth performs a k8s auth login.
 func WithK8sAuth(mount, role string) Option {
 	return func(c *Client) error {
 		if role == "" {
-			return nil
+			return errors.New("role is required")
 		}
+
+		c.KubernetesMount = mount
+		c.KubernetesRole = role
 
 		jwt, err := os.ReadFile(serviceAccountTokenLocation)
 		if err != nil {
@@ -96,7 +140,7 @@ func WithK8sAuth(mount, role string) Option {
 			"jwt":  string(jwt),
 		}
 
-		s, err := c.Logical().Write(fmt.Sprintf(k8sLoginPath, mount), opts)
+		s, err := c.Logical().Write(fmt.Sprintf(authLoginPath, mount), opts)
 		if err != nil {
 			return fmt.Errorf("error performing k8s auth: %w", err)
 		}

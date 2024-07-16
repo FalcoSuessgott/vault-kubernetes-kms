@@ -12,8 +12,9 @@ spec:
       imagePullPolicy: IfNotPresent
       command:
         - /vault-kubernetes-kms
-        - --vault-address=http://172.17.0.1:8200
-        - --vault-token=root
+        - -vault-address=http://172.17.0.1:8200
+        - -auth-method=token
+        - -token=root
       volumeMounts:
         # mount /opt/kms host directory
         - name: kms

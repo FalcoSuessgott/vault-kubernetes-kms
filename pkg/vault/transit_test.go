@@ -56,7 +56,7 @@ func (s *VaultSuite) TestTransitKeyVersion() {
 		s.Run(tc.name, func() {
 			vault, err := NewClient(
 				WithVaultAddress(s.tc.URI),
-				WithVaultToken(s.tc.Token),
+				WithTokenAuth(s.tc.Token),
 				tc.transit,
 			)
 

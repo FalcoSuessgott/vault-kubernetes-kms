@@ -1,7 +1,7 @@
 package vault
 
 const (
-	k8sLoginPath = "auth/%s/login"
+	authLoginPath = "auth/%s/login"
 
 	encryptDataPath = "%s/encrypt/%s"
 	decryptDataPath = "%s/decrypt/%s"
