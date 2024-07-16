@@ -102,8 +102,6 @@ func NewPlugin(version string) error {
 		zap.String("vault-address", opts.VaultAddress),
 		zap.String("vault-namespace", opts.VaultNamespace),
 
-		zap.String("vault-token", opts.VaultToken),
-
 		zap.String("vault-k8s-mount", opts.VaultK8sMount),
 		zap.String("vault-k8s-role", opts.VaultK8sRole),
 
