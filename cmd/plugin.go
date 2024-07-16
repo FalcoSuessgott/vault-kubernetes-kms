@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"slices"
+	"strings"
 	"syscall"
 
 	g "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/grpc"
@@ -29,14 +31,24 @@ type Options struct {
 	VaultAddress   string `env:"VAULT_ADDR"`
 	VaultNamespace string `env:"VAULT_NAMESPACE"`
 
-	// vault auth
-	VaultToken    string `env:"VAULT_TOKEN"`
-	VaultK8sMount string `env:"VAULT_K8S_MOUNT" envDefault:"kubernetes"`
-	VaultK8sRole  string `env:"VAULT_K8S_ROLE"`
+	// auth
+	AuthMethod string `env:"AUTH_METHOD"`
 
-	// vault transit
-	VaultTransitKey   string `env:"VAULT_TRANSIT_KEY"   envDefault:"kms"`
-	VaultTransitMount string `env:"VAULT_TRANSIT_MOUNT" envDefault:"transit"`
+	// token auth
+	Token string `env:"TOKEN"`
+
+	// k8s auth
+	K8sMount string `env:"K8S_MOUNT" envDefault:"kubernetes"`
+	K8sRole  string `env:"K8S_ROLE"`
+
+	// approle auth
+	AppRoleRoleID       string `env:"APPROLE_ROLE_ID"`
+	AppRoleRoleSecretID string `env:"APPROLE_SECRET_ID"`
+	AppRoleMount        string `env:"APPROLE_MOUNT"     envDefault:"approle"`
+
+	// transit
+	TransitKey   string `env:"TRANSIT_KEY"   envDefault:"kms"`
+	TransitMount string `env:"TRANSIT_MOUNT" envDefault:"transit"`
 
 	Version bool
 }
@@ -59,13 +71,19 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.VaultAddress, "vault-address", opts.VaultAddress, "Vault API address (required)")
 	flag.StringVar(&opts.VaultNamespace, "vault-namespace", opts.VaultNamespace, "Vault Namespace (only when Vault Enterprise)")
 
-	flag.StringVar(&opts.VaultToken, "vault-token", opts.VaultToken, "Vault Token (when Token auth) ")
+	flag.StringVar(&opts.AuthMethod, "auth-method", opts.AuthMethod, "Auth Method. Supported: token, approle, k8s")
 
-	flag.StringVar(&opts.VaultK8sMount, "vault-k8s-mount", opts.VaultK8sMount, "Vault Kubernetes mount name (when Kubernetes auth)")
-	flag.StringVar(&opts.VaultK8sRole, "vault-k8s-role", opts.VaultK8sRole, "Vault Kubernetes role name (when Kubernetes auth)")
+	flag.StringVar(&opts.Token, "token", opts.Token, "Vault Token (when Token auth)")
 
-	flag.StringVar(&opts.VaultTransitMount, "vault-transit-mount", opts.VaultTransitMount, "Vault Transit mount name")
-	flag.StringVar(&opts.VaultTransitKey, "vault-transit-key", opts.VaultTransitKey, "Vault Transit key name")
+	flag.StringVar(&opts.AppRoleMount, "approle-mount", opts.AppRoleMount, "Vault Approle mount name (when approle auth)")
+	flag.StringVar(&opts.AppRoleRoleID, "approle-role-id", opts.AppRoleRoleID, "Vault Approle role ID (when approle auth)")
+	flag.StringVar(&opts.AppRoleRoleSecretID, "approle-secret-id", opts.AppRoleRoleSecretID, "Vault Approle Secret ID (when approle auth)")
+
+	flag.StringVar(&opts.K8sMount, "k8s-mount", opts.K8sMount, "Vault Kubernetes mount name (when Kubernetes auth)")
+	flag.StringVar(&opts.K8sRole, "k8s-role", opts.K8sRole, "Vault Kubernetes role name (when Kubernetes auth)")
+
+	flag.StringVar(&opts.TransitMount, "transit-mount", opts.TransitMount, "Vault Transit mount name")
+	flag.StringVar(&opts.TransitKey, "transit-key", opts.TransitKey, "Vault Transit key name")
 
 	flag.BoolVar(&opts.Version, "version", opts.Version, "prints out the plugins version")
 
@@ -94,35 +112,48 @@ func NewPlugin(version string) error {
 
 	zap.ReplaceGlobals(l)
 
-	zap.L().Info("starting kms plugin",
+	var (
+		authMethod vault.Option
+		logfields  []zapcore.Field
+	)
+
+	logfields = append(logfields,
+		zap.String("auth-method", opts.AuthMethod),
 		zap.String("socket", opts.Socket),
-
 		zap.Bool("debug", opts.Debug),
-
 		zap.String("vault-address", opts.VaultAddress),
 		zap.String("vault-namespace", opts.VaultNamespace),
-
-		zap.String("vault-k8s-mount", opts.VaultK8sMount),
-		zap.String("vault-k8s-role", opts.VaultK8sRole),
-
-		zap.String("vault-transit-mount", opts.VaultTransitMount),
-		zap.String("vault-transit-key", opts.VaultTransitKey),
 	)
+
+	switch strings.ToLower(opts.AuthMethod) {
+	case "token":
+		authMethod = vault.WithTokenAuth(opts.Token)
+	case "k8s", "kubernetes":
+		authMethod = vault.WithK8sAuth(opts.K8sMount, opts.K8sRole)
+
+		logfields = append(logfields,
+			zap.String("k8s-mount", opts.K8sMount),
+			zap.String("k8s-role", opts.K8sRole))
+	case "approle":
+		authMethod = vault.WitAppRoleAuth(opts.AppRoleMount, opts.AppRoleRoleID, opts.AppRoleRoleSecretID)
+		logfields = append(logfields,
+			zap.String("approle-mount", opts.AppRoleMount),
+			zap.String("approle-role-id", opts.AppRoleRoleID),
+			zap.String("approle-role-secret-id", opts.AppRoleRoleSecretID))
+	default:
+		return fmt.Errorf("invalid auth method: %s", opts.AuthMethod)
+	}
+
+	zap.L().Info("starting kms plugin", logfields...)
 
 	vc, err := vault.NewClient(
 		vault.WithVaultAddress(opts.VaultAddress),
-		vault.WithVaultToken(opts.VaultToken),
 		vault.WithVaultNamespace(opts.VaultNamespace),
-		vault.WithK8sAuth(opts.VaultK8sMount, opts.VaultK8sRole),
-		vault.WithTransit(opts.VaultTransitMount, opts.VaultTransitKey),
+		vault.WithTransit(opts.TransitMount, opts.TransitKey),
+		authMethod,
 	)
 	if err != nil {
 		zap.L().Fatal("Failed to create vault client", zap.Error(err))
-	}
-
-	_, err = vc.Client.Auth().Token().LookupSelf()
-	if err != nil {
-		zap.L().Fatal("Failed to connect to vault", zap.Error(err))
 	}
 
 	zap.L().Info("Successfully authenticated to vault")
@@ -177,14 +208,26 @@ func NewPlugin(version string) error {
 	return nil
 }
 
+// nolint: cyclop
 func (o *Options) validateFlags() error {
 	switch {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
-	case o.VaultToken != "" && o.VaultK8sRole != "":
-		return errors.New("cannot use vault-token with vault-k8s-role")
-	case o.VaultToken == "" && o.VaultK8sRole == "":
-		return errors.New("either vault-token or vault-k8s-role required")
+	// check auth method
+	case !slices.Contains([]string{"token", "kubernetes", "k8s", "approle"}, o.AuthMethod):
+		return errors.New("invalid auth method. Supported: token, k8s, approle")
+
+	// validate token auth
+	case o.AuthMethod == "token" && o.Token == "":
+		return errors.New("token required when using token auth")
+
+	// validate k8s auth
+	case (o.AuthMethod == "k8s" || o.AuthMethod == "kubernetes") && o.K8sRole == "":
+		return errors.New("k8s role required when using k8s auth")
+
+	// validate approle auth
+	case o.AuthMethod == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
+		return errors.New("approle role id and secret id required when using approle auth")
 	}
 
 	return nil
