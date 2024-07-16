@@ -75,6 +75,10 @@ func (c *Client) GetKeyVersions() (map[string]interface{}, error) {
 		return nil, err
 	}
 
+	if resp == nil {
+		return nil, fmt.Errorf("could not get key versions of transit key: %s/%s. Check transit engine and key and permissions", c.TransitEngine, c.TransitKey)
+	}
+
 	keys, ok := resp.Data["keys"].(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("could not get key_versions of transit key: %s/%s", c.TransitEngine, c.TransitKey)
