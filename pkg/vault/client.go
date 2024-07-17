@@ -1,9 +1,7 @@
 package vault
 
 import (
-	"errors"
 	"fmt"
-	"os"
 
 	"github.com/hashicorp/vault/api"
 	"go.uber.org/zap"
@@ -18,9 +16,6 @@ type Client struct {
 	AppRoleMount    string
 	AppRoleID       string
 	AppRoleSecretID string
-
-	KubernetesMount string
-	KubernetesRole  string
 
 	TransitEngine string
 	TransitKey    string
@@ -112,37 +107,6 @@ func WitAppRoleAuth(mount, roleID, secretID string) Option {
 		s, err := c.Logical().Write(fmt.Sprintf(authLoginPath, mount), opts)
 		if err != nil {
 			return fmt.Errorf("error performing approle auth: %w", err)
-		}
-
-		c.SetToken(s.Auth.ClientToken)
-
-		return nil
-	}
-}
-
-// WithK8sAuth performs a k8s auth login.
-func WithK8sAuth(mount, role string) Option {
-	return func(c *Client) error {
-		if role == "" {
-			return errors.New("role is required")
-		}
-
-		c.KubernetesMount = mount
-		c.KubernetesRole = role
-
-		jwt, err := os.ReadFile(serviceAccountTokenLocation)
-		if err != nil {
-			return err
-		}
-
-		opts := map[string]interface{}{
-			"role": role,
-			"jwt":  string(jwt),
-		}
-
-		s, err := c.Logical().Write(fmt.Sprintf(authLoginPath, mount), opts)
-		if err != nil {
-			return fmt.Errorf("error performing k8s auth: %w", err)
 		}
 
 		c.SetToken(s.Auth.ClientToken)
