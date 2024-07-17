@@ -1,4 +1,4 @@
-FROM golang:1.23rc1 as builder
+FROM golang:1.23rc2 as builder
 WORKDIR /usr/src/vault-kubernetes-kms
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
