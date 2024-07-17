@@ -157,8 +157,6 @@ $> kubectl get secret secret -o json | jq '.data | map_values(@base64d)'
 ## Some last thoughts
 For production usage you should consider:
 
-* use Vaults Kubernetes Auth Method (see [https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/))
-* deploy the `vault-kubernetes-kms` Pod using a dedicated Service Account, instead of `default` (also adjust the kubernetes auth role)
 * use HTTPS for the communication between Kubernetes & HashiCorp Vault (see [https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/))
 * deploy the `vault-kubernetes-kms` plugin as a static pod on all control plane nodes
-* automate the deployment using your preferred automation method
+* automate the deployment using your preferred automation method (see [https://falcosuessgott.github.io/vault-kubernetes-kms/integration/](https://falcosuessgott.github.io/vault-kubernetes-kms/integration/)

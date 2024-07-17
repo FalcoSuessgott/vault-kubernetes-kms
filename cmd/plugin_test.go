@@ -42,14 +42,6 @@ func TestValidateFlags(t *testing.T) {
 				AuthMethod:   "approle",
 			},
 		},
-		{
-			name: "k8s auth, but no k8s creds",
-			err:  true,
-			opts: &Options{
-				VaultAddress: "e2e",
-				AuthMethod:   "k8s",
-			},
-		},
 	}
 
 	for _, tc := range testCases {

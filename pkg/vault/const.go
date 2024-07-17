@@ -10,7 +10,4 @@ const (
 	transitKeyPath  = "%s/keys/%s"
 
 	tokenRefreshIntervall = 3600
-
-	//nolint: gosec
-	serviceAccountTokenLocation = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 )

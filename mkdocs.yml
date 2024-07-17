@@ -52,6 +52,7 @@ nav:
     - quickstart.md
     - configuration.md
     - concepts.md
+    - integration.md
     - troubleshooting.md
     - development.md
 theme:

@@ -37,10 +37,6 @@ type Options struct {
 	// token auth
 	Token string `env:"TOKEN"`
 
-	// k8s auth
-	K8sMount string `env:"K8S_MOUNT" envDefault:"kubernetes"`
-	K8sRole  string `env:"K8S_ROLE"`
-
 	// approle auth
 	AppRoleRoleID       string `env:"APPROLE_ROLE_ID"`
 	AppRoleRoleSecretID string `env:"APPROLE_SECRET_ID"`
@@ -78,9 +74,6 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.AppRoleMount, "approle-mount", opts.AppRoleMount, "Vault Approle mount name (when approle auth)")
 	flag.StringVar(&opts.AppRoleRoleID, "approle-role-id", opts.AppRoleRoleID, "Vault Approle role ID (when approle auth)")
 	flag.StringVar(&opts.AppRoleRoleSecretID, "approle-secret-id", opts.AppRoleRoleSecretID, "Vault Approle Secret ID (when approle auth)")
-
-	flag.StringVar(&opts.K8sMount, "k8s-mount", opts.K8sMount, "Vault Kubernetes mount name (when Kubernetes auth)")
-	flag.StringVar(&opts.K8sRole, "k8s-role", opts.K8sRole, "Vault Kubernetes role name (when Kubernetes auth)")
 
 	flag.StringVar(&opts.TransitMount, "transit-mount", opts.TransitMount, "Vault Transit mount name")
 	flag.StringVar(&opts.TransitKey, "transit-key", opts.TransitKey, "Vault Transit key name")
@@ -128,12 +121,6 @@ func NewPlugin(version string) error {
 	switch strings.ToLower(opts.AuthMethod) {
 	case "token":
 		authMethod = vault.WithTokenAuth(opts.Token)
-	case "k8s", "kubernetes":
-		authMethod = vault.WithK8sAuth(opts.K8sMount, opts.K8sRole)
-
-		logfields = append(logfields,
-			zap.String("k8s-mount", opts.K8sMount),
-			zap.String("k8s-role", opts.K8sRole))
 	case "approle":
 		authMethod = vault.WitAppRoleAuth(opts.AppRoleMount, opts.AppRoleRoleID, opts.AppRoleRoleSecretID)
 		logfields = append(logfields,
@@ -214,16 +201,12 @@ func (o *Options) validateFlags() error {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
 	// check auth method
-	case !slices.Contains([]string{"token", "kubernetes", "k8s", "approle"}, o.AuthMethod):
+	case !slices.Contains([]string{"token", "approle"}, o.AuthMethod):
 		return errors.New("invalid auth method. Supported: token, k8s, approle")
 
 	// validate token auth
 	case o.AuthMethod == "token" && o.Token == "":
 		return errors.New("token required when using token auth")
-
-	// validate k8s auth
-	case (o.AuthMethod == "k8s" || o.AuthMethod == "kubernetes") && o.K8sRole == "":
-		return errors.New("k8s role required when using k8s auth")
 
 	// validate approle auth
 	case o.AuthMethod == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
