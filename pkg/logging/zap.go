@@ -7,6 +7,7 @@ import (
 
 // NewStandardLogger creates a new zap.Logger based on common configuration
 // https://github.com/kubernetes-sigs/aws-encryption-provider/blob/master/pkg/logging/zap.go
+// nolint: mnd
 func NewStandardLogger(logLevel zapcore.Level) (*zap.Logger, error) {
 	return zap.Config{
 		Level:       zap.NewAtomicLevelAt(logLevel),

@@ -17,6 +17,7 @@ func NewSocket(str string) (*Socket, error) {
 	socket := &Socket{}
 
 	if strings.HasPrefix(strings.ToLower(str), "unix://") {
+		//nolint: mnd
 		s := strings.SplitN(str, "://", 2)
 		if s[1] != "" {
 			socket.Network, socket.Path = s[0], s[1]

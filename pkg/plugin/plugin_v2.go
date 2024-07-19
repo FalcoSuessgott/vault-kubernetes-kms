@@ -2,9 +2,7 @@ package plugin
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"sort"
 	"strconv"
 	"time"
 
@@ -61,7 +59,7 @@ func (p *PluginV2) Health() error {
 
 // Status performs a simple health check and returns ok if encryption / decryption was successful
 // https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#developing-a-kms-plugin-gRPC-server-notes-kms-v2
-func (p *PluginV2) Status(_ context.Context, _ *pb.StatusRequest) (*pb.StatusResponse, error) {
+func (p *PluginV2) Status(ctx context.Context, _ *pb.StatusRequest) (*pb.StatusResponse, error) {
 	health := "ok"
 
 	if err := p.vc.TokenRefresh(); err != nil {
@@ -70,18 +68,10 @@ func (p *PluginV2) Status(_ context.Context, _ *pb.StatusRequest) (*pb.StatusRes
 		zap.L().Info(err.Error())
 	}
 
-	keyVersions, err := p.vc.GetKeyVersions()
+	kv, err := p.vc.GetKeyVersion(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []string{}
-	for _, k := range keyVersions {
-		//nolint: forcetypeassert
-		keys = append(keys, k.(json.Number).String())
-	}
-
-	sort.Strings(keys)
 
 	//nolint: contextcheck
 	if err := p.Health(); err != nil {
@@ -91,7 +81,7 @@ func (p *PluginV2) Status(_ context.Context, _ *pb.StatusRequest) (*pb.StatusRes
 	}
 
 	zap.L().Info("health status",
-		zap.String("key_id", keys[len(keys)-1]),
+		zap.String("key_id", kv),
 		zap.String("healthz", health),
 		zap.String("version", "v2"),
 	)
@@ -99,7 +89,7 @@ func (p *PluginV2) Status(_ context.Context, _ *pb.StatusRequest) (*pb.StatusRes
 	return &pb.StatusResponse{
 		Version: "v2",
 		Healthz: "ok",
-		KeyId:   keys[len(keys)-1],
+		KeyId:   kv,
 	}, nil
 }
 

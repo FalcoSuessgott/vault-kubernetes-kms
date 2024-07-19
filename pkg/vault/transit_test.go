@@ -39,11 +39,13 @@ func (s *VaultSuite) TestTransitKeyVersion() {
 	testCases := []struct {
 		name    string
 		transit Option
+		exp     string
 		err     bool
 	}{
 		{
 			name:    "should work",
 			transit: WithTransit("transit", "kms"),
+			exp:     "1",
 		},
 		{
 			name:    "should fail",
@@ -62,9 +64,14 @@ func (s *VaultSuite) TestTransitKeyVersion() {
 
 			s.Suite.Require().NoError(err)
 
-			_, err = vault.GetKeyVersions()
+			v, err := vault.GetKeyVersion(context.Background())
 
-			s.Suite.Require().Equal(tc.err, err != nil)
+			if tc.err {
+				s.Suite.Require().Error(err, tc.name)
+			} else {
+				s.Suite.Require().NoError(err, tc.name)
+				s.Suite.Require().Equal(tc.exp, v, "version "+tc.name)
+			}
 		})
 	}
 }
