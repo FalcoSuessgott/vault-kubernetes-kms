@@ -1,5 +1,5 @@
 # Integrations
-Collection of snippets to deploy the `vault-kubernetes-kms` plugin
+Collection of snippets to automate & deploy the `vault-kubernetes-kms` plugin
 
 ## kubeadm
 * [https://kubernetes.io/docs/reference/config-api/kubeadm-config.v1beta3/#kubeadm-k8s-io-v1beta3-ClusterConfiguration](https://kubernetes.io/docs/reference/config-api/kubeadm-config.v1beta3/#kubeadm-k8s-io-v1beta3-ClusterConfiguration):
@@ -69,7 +69,7 @@ spec:
   fileAssets:
     - name: scripts/encryption_provider_config_v2.yml
       path: /etc/kubernetes/encryption_provider_config_v2.yaml
-      roles:   
+      roles:
         - Master
       content: |
         kind: EncryptionConfiguration
@@ -123,3 +123,47 @@ spec:
             hostPath:
                 path: /opt/kms
 ```
+
+## k3s
+* Place following file under `var/lib/rancher/k3s/server/manifests/encryption_provider_config_v2.yml` on the server node:
+
+```yaml
+{!../scripts/encryption_provider_config_v2.yml!}
+```
+
+
+* Place following file under `var/lib/rancher/k3s/server/manifests/vault-kubernetes-kms.yaml` on the server node, so it gets deployed by `kubelet`
+
+```yaml
+{!../scripts/vault-kubernetes-kms.yml!}
+```
+
+* bootstrap cluster by running:
+
+```bash
+$> k3s server '--kube-apiserver-arg="encryption-provider-config=/etc/kubernetes/encryption_provider_config_v2.yml"'
+```
+
+## k3d
+
+```yaml
+options:
+  k3s:
+    extraArgs:
+      - arg: --kube-apiserver-arg="encryption-provider-config=/etc/kubernetes/encryption_provider_config_v2.yml"
+
+```
+
+## minikube
+```
+$>  minikube start \
+  --vm-driver="docker" \
+  --mount="true" \
+  --mount-string="./assets:/etc/kubernetes/manifests" \
+  --extra-config="apiserver.encryption-provider-config=/etc/kubernetes/manifests/encryption_provider_config_v2.yml"
+```
+
+
+* AKS
+* EKS
+* GKE
