@@ -196,7 +196,12 @@ spec:
 ```
 
 ### Example TLS Configuration
-It is recommended, to specify the CA cert that issued the vault server certificate. To do so, you would have to create a Kubernetes secret containing Vaults CA certificate PEM encoded.
+It is recommended, to specify the CA cert that issued the vault server certificate, to connect to the Vault Server using HTTPS.
+
+To do sou you would have to copy the PEM-encoded CA Cert on the node where the plugin is running and then adjust the manifest to mount that directory as a volume and then use that path and specify it in the [`"VAULT_CACERT"`](https://developer.hashicorp.com/vault/docs/commands#vault_cacert) environment variable.
+
+!!! note
+    Note that you cant reference a secret here, because static Pod cant reference any other Kubernetes API Objects.
 
 Example:
 
@@ -221,15 +226,11 @@ spec:
       env:
         # add vaults CA file via env vars
         - name: VAULT_CACERT
-          value: /opt/ca/ca.crt
+          value: /opt/kms/ca.crt
       volumeMounts:
-        # mount the hostpath volume to enable the kms socket to the node
+        # mount the volume
         - name: kms
           mountPath: /opt/kms
-        # mount the ca cert under /opt/ca/ca.crt
-        - name: ca-cert
-          mountPath: /opt/ca/ca.crt
-          subPath: ca.crt
       resources:
         requests:
           cpu: 100m
@@ -240,13 +241,8 @@ spec:
   volumes:
     - name: kms
       hostPath:
+        # CA cert is located on node at /opt/kms/ca.crt
         path: /opt/kms
-    - name: ca-cert
-      secret:
-        secretName: ca-cert # secret name containing the Vault CA certificate
-        items:
-          - key: ca.crt # key of the PEM encoded certificate
-            path: ca.crt
 ```
 
 After applying you check the pods logs for any errors:
