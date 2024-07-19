@@ -1,8 +1,7 @@
 module github.com/FalcoSuessgott/vault-kubernetes-kms
 
 go 1.21
-
-toolchain go1.21.1
+toolchain go1.22.5
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
@@ -13,7 +12,7 @@ require (
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.65.0
 	gotest.tools/gotestsum v1.12.0
-	k8s.io/kms v0.29.4
+	k8s.io/kms v0.30.3
 )
 
 require (
@@ -21,7 +20,6 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/Microsoft/hcsshim v0.11.5 // indirect
-	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
 	github.com/bitfield/gotestdox v0.2.2 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
