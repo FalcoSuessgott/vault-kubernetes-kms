@@ -14,7 +14,14 @@ Since the key used for encrypting secrets is not stored in Kubernetes, an attack
 ## How does it work?
 ![img](arch.svg)
 
-`vault-kubernetes-kms` is supposed to run as a static pod on every control plane node. It will create a unix socket and receive encryption requests through the socket from the `kube-apiserver`. The plugin will use a specified Vault transit encryption key to encrypt the data and send it back to the `kube-apiserver`, who will then send the encrypted response to `etcd`. To do so, you will have to configure the `kube-apiserver` to use a `EncryptionConfiguration` (See [https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/) for more details).
+
+`vault-kubernetes-kms` is supposed to run as a static pod on every control plane node or on  that node where the `kube-apiserver` will run.
+
+The plugin creates a Unix-Socket and receive encryption requests through that socket from the `kube-apiserver`. The plugin will then use the specified Vault transit encryption key to encrypt the data and send it back to the `kube-apiserver`, who will then store the encrypted response in `etcd`.
+
+To do so, you will have to enable Data at Rest encryption, by configuring the `kube-apiserver` to use a `EncryptionConfiguration` (See [https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/) for more details).
+
+:warning: As a result of that, **the `kube-apiserver` requires the `vault-kubernetes-kms` plugin to be up & running before the `kube-apiserver` starts**. To ensure this, setting a priority class in the plugins manifest (`"priorityClassName: system-node-critical"`) is recommended. :warning:
 
 :warning: **`vault-kubernetes-kms` is in early stage! Running it in Production is not yet recommended. Im looking for early adopters in order to  gather important feedback.** :warning:
 

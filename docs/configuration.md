@@ -101,8 +101,8 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 
 **Vault Transit Engine**:
 
-* **(Optional)**: `-transit-mount` (`VAULT_KMS_VAULT_TRANSIT_MOUNT`); default: `"transit"`
-* **(Optional)**: `-transit-key` (`VAULT_KMS_VAULT_TRANSIT_KEY`); default: `"kms"`
+* **(Optional)**: `-transit-mount` (`VAULT_KMS_TRANSIT_MOUNT`); default: `"transit"`
+* **(Optional)**: `-transit-key` (`VAULT_KMS_TRANSIT_KEY`); default: `"kms"`
 
 
 **If Vault Token Auth**:
