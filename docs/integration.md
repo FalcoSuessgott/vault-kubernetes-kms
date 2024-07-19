@@ -69,7 +69,7 @@ spec:
   fileAssets:
     - name: scripts/encryption_provider_config_v2.yml
       path: /etc/kubernetes/encryption_provider_config_v2.yaml
-      roles:   
+      roles:
         - Master
       content: |
         kind: EncryptionConfiguration

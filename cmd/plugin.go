@@ -116,6 +116,8 @@ func NewPlugin(version string) error {
 		zap.Bool("debug", opts.Debug),
 		zap.String("vault-address", opts.VaultAddress),
 		zap.String("vault-namespace", opts.VaultNamespace),
+		zap.String("transit-engine", opts.TransitMount),
+		zap.String("transit-key", opts.TransitKey),
 	)
 
 	switch strings.ToLower(opts.AuthMethod) {
@@ -125,8 +127,7 @@ func NewPlugin(version string) error {
 		authMethod = vault.WitAppRoleAuth(opts.AppRoleMount, opts.AppRoleRoleID, opts.AppRoleRoleSecretID)
 		logfields = append(logfields,
 			zap.String("approle-mount", opts.AppRoleMount),
-			zap.String("approle-role-id", opts.AppRoleRoleID),
-			zap.String("approle-role-secret-id", opts.AppRoleRoleSecretID))
+			zap.String("approle-role-id", opts.AppRoleRoleID))
 	default:
 		return fmt.Errorf("invalid auth method: %s", opts.AuthMethod)
 	}
