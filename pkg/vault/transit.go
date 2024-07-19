@@ -26,20 +26,15 @@ func (c *Client) Encrypt(ctx context.Context, data []byte) ([]byte, string, erro
 		return nil, "", errors.New("invalid response")
 	}
 
-	keyVersions, err := c.GetKeyVersions()
+	kv, err := c.GetKeyVersion(ctx)
 	if err != nil {
 		return nil, "", err
 	}
 
-	v, ok := keyVersions[resp.Data["key_version"].(json.Number).String()].(json.Number)
-	if !ok {
-		return nil, "", fmt.Errorf("did not find key_version for transit key: %s", c.TransitKey)
-	}
-
-	return []byte(res), v.String(), nil
+	return []byte(res), kv, nil
 }
 
-// Decrypt takes any encrypted data and denrypts it using the specified vaults transit engine.
+// Decrypt takes any encrypted data and decrypts it using the specified vaults transit engine.
 func (c *Client) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
 	p := fmt.Sprintf(decryptDataPath, c.TransitEngine, c.TransitKey)
 
@@ -65,24 +60,24 @@ func (c *Client) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
 	return decoded, nil
 }
 
-// GetKeyVersions returns the key_versions aka the timestamp the key version was created.
+// GetKeyVersions returns the latest_version aka the timestamp the key version was created.
 // https://developer.hashicorp.com/vault/api-docs/secret/transit#read-key
-func (c *Client) GetKeyVersions() (map[string]interface{}, error) {
+func (c *Client) GetKeyVersion(ctx context.Context) (string, error) {
 	p := fmt.Sprintf(transitKeyPath, c.TransitEngine, c.TransitKey)
 
-	resp, err := c.Logical().Read(p)
+	resp, err := c.Logical().ReadWithContext(ctx, p)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if resp == nil {
-		return nil, fmt.Errorf("could not get key versions of transit key: %s/%s. Check transit engine and key and permissions", c.TransitEngine, c.TransitKey)
+		return "", fmt.Errorf("could not read transit key: %s/%s. Check transit engine and key and permissions", c.TransitEngine, c.TransitKey)
 	}
 
-	keys, ok := resp.Data["keys"].(map[string]interface{})
+	kv, ok := resp.Data["latest_version"].(json.Number)
 	if !ok {
-		return nil, fmt.Errorf("could not get key_versions of transit key: %s/%s", c.TransitEngine, c.TransitKey)
+		return "", fmt.Errorf("could not get latest_version of transit key: %s/%s", c.TransitEngine, c.TransitKey)
 	}
 
-	return keys, nil
+	return kv.String(), nil
 }

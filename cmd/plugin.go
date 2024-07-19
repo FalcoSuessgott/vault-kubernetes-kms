@@ -203,7 +203,7 @@ func (o *Options) validateFlags() error {
 		return errors.New("vault address required")
 	// check auth method
 	case !slices.Contains([]string{"token", "approle"}, o.AuthMethod):
-		return errors.New("invalid auth method. Supported: token, k8s, approle")
+		return errors.New("invalid auth method. Supported: token, approle")
 
 	// validate token auth
 	case o.AuthMethod == "token" && o.Token == "":
