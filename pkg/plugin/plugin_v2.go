@@ -62,7 +62,7 @@ func (p *PluginV2) Health() error {
 func (p *PluginV2) Status(ctx context.Context, _ *pb.StatusRequest) (*pb.StatusResponse, error) {
 	health := "ok"
 
-	if err := p.vc.TokenRefresh(); err != nil {
+	if err := p.vc.TokenRenew(); err != nil {
 		health = "err"
 
 		zap.L().Info(err.Error())

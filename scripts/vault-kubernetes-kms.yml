@@ -15,6 +15,7 @@ spec:
         - -vault-address=http://172.17.0.1:8200
         - -auth-method=token
         - -token=root
+        - -token-renewal=60
       volumeMounts:
         # mount /opt/kms host directory
         - name: kms

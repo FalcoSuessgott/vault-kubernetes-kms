@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/vault/api"
-	"go.uber.org/zap"
 )
 
 // Client Vault API wrapper.
@@ -12,6 +11,8 @@ type Client struct {
 	*api.Client
 
 	Token string
+
+	TokenRenewalInterval int
 
 	AppRoleMount    string
 	AppRoleID       string
@@ -115,16 +116,30 @@ func WitAppRoleAuth(mount, roleID, secretID string) Option {
 	}
 }
 
-// TokenRefresh renews the token for 24h.
-func (c *Client) TokenRefresh() error {
-	token, err := c.Auth().Token().RenewSelf(tokenRefreshIntervall)
+// WithTokenRenewal sets the specified namespace.
+func WithTokenRenewal(d int) Option {
+	return func(c *Client) error {
+		c.TokenRenewalInterval = d
+
+		return nil
+	}
+}
+
+func (c *Client) TokenTTL() (int, error) {
+	lookup, err := c.Auth().Token().LookupSelf()
+	if err != nil {
+		return 0, fmt.Errorf("error looking up token: %w", err)
+	}
+
+	return lookup.Data["ttl"].(int), nil
+}
+
+// TokenRenew renews the token by the specified interval.
+func (c *Client) TokenRenew() error {
+	_, err := c.Auth().Token().RenewSelf(c.TokenRenewalInterval)
 	if err != nil {
 		return fmt.Errorf("error renewing token: %w", err)
 	}
-
-	c.SetToken(token.Auth.ClientToken)
-
-	zap.L().Info("successfully refreshed token")
 
 	return nil
 }

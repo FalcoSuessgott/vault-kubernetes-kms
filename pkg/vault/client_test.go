@@ -147,6 +147,27 @@ func (s *VaultSuite) TestAuthMethods() {
 	}
 }
 
+func (s *VaultSuite) TestTokenRenew() {
+	s.Run("", func() {
+		// create non root token
+		_, r, err := s.tc.Container.Exec(context.Background(), []string{"vault", "token", "create", "-policy=default", "-field=token"})
+		s.Require().NoError(err, "token creation")
+
+		token, err := io.ReadAll(r)
+		s.Require().NoError(err, "parse token")
+
+		fmt.Println(string(token[8:]))
+
+		v, err := NewClient(WithVaultAddress(s.tc.URI), WithTokenAuth(string(token[8:])))
+		s.Require().NoError(err, "token auth")
+
+		err = v.TokenRenew()
+		s.Require().NoError(err, "token renew")
+
+		s.Suite.T().Fail()
+	})
+}
+
 func TestVaultSuite(t *testing.T) {
 	// github actions doesn't offer the docker sock, which we require for testing
 	if runtime.GOOS == "linux" {

@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 	"syscall"
+	"time"
 
 	g "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/grpc"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/logging"
@@ -36,6 +37,8 @@ type Options struct {
 
 	// token auth
 	Token string `env:"TOKEN"`
+
+	TokenRenewalInterval int `env:"TOKEN_RENEWAL_INTERVAL"     envDefault:"3600"`
 
 	// approle auth
 	AppRoleRoleID       string `env:"APPROLE_ROLE_ID"`
@@ -70,6 +73,8 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.AuthMethod, "auth-method", opts.AuthMethod, "Auth Method. Supported: token, approle, k8s")
 
 	flag.StringVar(&opts.Token, "token", opts.Token, "Vault Token (when Token auth)")
+
+	flag.IntVar(&opts.TokenRenewalInterval, "token-renewal", opts.TokenRenewalInterval, "Token renewal interval in seconds (when Token auth)")
 
 	flag.StringVar(&opts.AppRoleMount, "approle-mount", opts.AppRoleMount, "Vault Approle mount name (when approle auth)")
 	flag.StringVar(&opts.AppRoleRoleID, "approle-role-id", opts.AppRoleRoleID, "Vault Approle role ID (when approle auth)")
@@ -137,6 +142,7 @@ func NewPlugin(version string) error {
 	vc, err := vault.NewClient(
 		vault.WithVaultAddress(opts.VaultAddress),
 		vault.WithVaultNamespace(opts.VaultNamespace),
+		vault.WithTokenRenewal(opts.TokenRenewalInterval),
 		vault.WithTransit(opts.TransitMount, opts.TransitKey),
 		authMethod,
 	)
@@ -174,6 +180,31 @@ func NewPlugin(version string) error {
 	pluginV2.Register(grpc)
 
 	zap.L().Info("Successfully registered kms plugin v2")
+
+	// vault token refresh logic
+	// ticker that performs a token renewal at startup and
+	// then refresh the token at halftime of the tokens TTL
+
+	// ticker that performs a token renewal at startup and then refresh the token at halftime of the tokens TTL
+	ticker := time.NewTicker(time.Second * time.Duration(opts.TokenRenewalInterval/2))
+	defer ticker.Stop()
+
+	go func() {
+		if err := vc.TokenRenew(); err != nil {
+			zap.L().Fatal("Failed to renew token", zap.Error(err))
+		}
+
+		zap.L().Info("Successfully renewed token")
+
+		for t := range ticker.C {
+			if err := vc.TokenRenew(); err != nil {
+				zap.L().Error("Failed to renew token",
+					zap.Error(err),
+					zap.Time("time", t),
+				)
+			}
+		}
+	}()
 
 	go func() {
 		if err := grpc.Serve(listener); err != nil {
