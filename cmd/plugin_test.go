@@ -17,6 +17,7 @@ import (
 func TestNewPlugin(t *testing.T) {
 	testCases := []struct {
 		name      string
+		envVars   map[string]string
 		args      []string
 		vaultCmd  []string
 		extraArgs func(c *testutils.TestContainer) ([]string, error)
@@ -64,6 +65,37 @@ func TestNewPlugin(t *testing.T) {
 				}, nil
 			},
 		},
+		{
+			name: "mixed with env vars",
+			envVars: map[string]string{
+				"VAULT_KMS_TRANSIT_KEY":   "abc",
+				"VAULT_KMS_TRANSIT_MOUNT": "transit",
+				"VAULT_KMS_AUTH_METHOD":   "approle",
+			},
+			vaultCmd: []string{
+				"secrets enable transit",
+				"write -f transit/keys/abc",
+				"auth enable -path=approle2 approle",
+				"write auth/approle2/role/kms token_ttl=1h",
+			},
+			args: []string{
+				"vault-kubernetes-kms",
+				"-approle-mount=approle2",
+				fmt.Sprintf("-socket=unix:///%s/vaultkms.socket", t.TempDir()),
+			},
+			extraArgs: func(c *testutils.TestContainer) ([]string, error) {
+				roleID, secretID, err := c.GetApproleCreds("approle2", "kms")
+				if err != nil {
+					return nil, err
+				}
+
+				return []string{
+					fmt.Sprintf("-vault-address=%s", c.URI),
+					fmt.Sprintf("-approle-role-id=%s", roleID),
+					fmt.Sprintf("-approle-secret-id=%s", secretID),
+				}, nil
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -74,12 +106,19 @@ func TestNewPlugin(t *testing.T) {
 			//nolint: errcheck
 			defer vc.Terminate()
 
+			for k, v := range tc.envVars {
+				t.Setenv(k, v)
+			}
+
 			if tc.extraArgs != nil {
 				extraArgs, err := tc.extraArgs(vc)
 				require.NoError(t, err, "failed to perform extra args func: %w", err)
 
 				tc.args = append(tc.args, extraArgs...)
 			}
+
+			fmt.Println("args", tc.args)
+			fmt.Println("env", tc.envVars)
 
 			os.Args = tc.args
 

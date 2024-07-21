@@ -3,7 +3,6 @@ package plugin
 import (
 	"context"
 	"log"
-	"net"
 	"runtime"
 	"testing"
 	"time"
@@ -13,7 +12,6 @@ import (
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/vault"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	v1beta1 "k8s.io/kms/apis/v1beta1"
 	v2 "k8s.io/kms/apis/v2"
 )
@@ -23,9 +21,8 @@ var socketPath = "/opt/vault/vaultkms.sock"
 type PluginSuite struct {
 	suite.Suite
 
-	connection *grpc.ClientConn
-	tc         *testutils.TestContainer
-	vault      *vault.Client
+	tc    *testutils.TestContainer
+	vault *vault.Client
 }
 
 func TestVaultSuite(t *testing.T) {
@@ -41,20 +38,6 @@ func (p *PluginSuite) SetupAllSuite() {
 	if err != nil {
 		p.T().Fatal("cannot create socket: %w", err)
 	}
-
-	// grpc connection with socket
-	conn, err := grpc.NewClient(
-		socketPath,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
-			return (&net.Dialer{}).DialContext(ctx, "unix", addr)
-		}),
-	)
-	if err != nil {
-		p.T().Fatal("cannot set up grpc connection: %w", err)
-	}
-
-	p.connection = conn
 }
 
 func (p *PluginSuite) SetupSubTest() {
@@ -86,7 +69,7 @@ func (p *PluginSuite) TearDownSubTest() {
 	}
 }
 
-// nolint: funlen
+// nolint: funlen, dupl
 func (p *PluginSuite) TestPluginEncryptDecrypt() {
 	testCases := []struct {
 		name string
@@ -107,6 +90,8 @@ func (p *PluginSuite) TestPluginEncryptDecrypt() {
 	}
 
 	for _, tc := range testCases {
+		grpc := grpc.NewServer()
+
 		p.Run(tc.name, func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			p.T().Cleanup(cancel)
@@ -114,6 +99,19 @@ func (p *PluginSuite) TestPluginEncryptDecrypt() {
 			// v1
 			if tc.v1 {
 				pluginV1 := NewPluginV1(p.vault)
+
+				pluginV1.Register(grpc)
+
+				//nolint: staticcheck
+				vResp, err := pluginV1.Version(ctx, &v1beta1.VersionRequest{})
+				p.Require().NoError(err, tc.name)
+
+				//nolint: staticcheck
+				p.Require().Equal(&v1beta1.VersionResponse{
+					Version:        "v1beta1",
+					RuntimeName:    "vault",
+					RuntimeVersion: "0.0.1",
+				}, vResp, tc.name)
 
 				// encrypt
 				//nolint: staticcheck
@@ -137,6 +135,18 @@ func (p *PluginSuite) TestPluginEncryptDecrypt() {
 				p.Require().Equal(tc.data, res.GetPlain(), tc.name)
 			} else {
 				pluginV2 := NewPluginV2(p.vault)
+
+				pluginV2.Register(grpc)
+
+				vResp, err := pluginV2.Status(ctx, &v2.StatusRequest{})
+				p.Require().NoError(err, tc.name)
+
+				//nolint: staticcheck
+				p.Require().Equal(&v2.StatusResponse{
+					Version: "v2",
+					Healthz: "ok",
+					KeyId:   "1",
+				}, vResp, tc.name)
 
 				// encrypt
 				encryptRequest := &v2.EncryptRequest{
