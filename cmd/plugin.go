@@ -59,7 +59,8 @@ func NewPlugin(version string) error {
 		return fmt.Errorf("error parsing env vars: %w", err)
 	}
 
-	// then flags, since the have precedence over env vars
+	flag := flag.FlagSet{}
+	// then flags, since they have precedence over env vars
 	flag.StringVar(&opts.Socket, "socket", opts.Socket, "Destination path of the socket (required)")
 
 	flag.BoolVar(&opts.Debug, "debug", opts.Debug, "Enable debug logs")
@@ -80,7 +81,9 @@ func NewPlugin(version string) error {
 
 	flag.BoolVar(&opts.Version, "version", opts.Version, "prints out the plugins version")
 
-	flag.Parse()
+	if err := flag.Parse(os.Args[1:]); err != nil {
+		return fmt.Errorf("error parsing flags: %w", err)
+	}
 
 	if opts.Version {
 		fmt.Fprintf(os.Stdout, "vault-kubernetes-kms v%s\n", version)

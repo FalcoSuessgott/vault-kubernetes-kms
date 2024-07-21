@@ -2,8 +2,6 @@ package vault
 
 import (
 	"context"
-	"fmt"
-	"io"
 	"log"
 	"runtime"
 	"strings"
@@ -66,28 +64,12 @@ func (s *VaultSuite) TestAuthMethods() {
 				"vault write auth/approle/role/kms token_ttl=1h",
 			},
 			auth: func() (Option, error) {
-				_, r, err := s.tc.Container.Exec(context.Background(), []string{"vault", "read", "-field=role_id", "auth/approle/role/kms/role-id"})
+				roleID, secretID, err := s.tc.GetApproleCreds("approle", "kms")
 				if err != nil {
-					return nil, fmt.Errorf("error creating role_id: %w", err)
+					return nil, err
 				}
 
-				roleID, err := io.ReadAll(r)
-				if err != nil {
-					return nil, fmt.Errorf("error reading role_id: %w", err)
-				}
-
-				_, r, err = s.tc.Container.Exec(context.Background(), []string{"vault", "write", "-field=secret_id", "-force", "auth/approle/role/kms/secret-id"})
-				if err != nil {
-					return nil, fmt.Errorf("error creating secret_id: %w", err)
-				}
-
-				secretID, err := io.ReadAll(r)
-				if err != nil {
-					return nil, fmt.Errorf("error reading secret_id: %w", err)
-				}
-
-				// removing the first 8 bytes, which is the shell prompt
-				return WitAppRoleAuth("approle", string(roleID[8:]), string(secretID[8:])), nil
+				return WitAppRoleAuth("approle", roleID, secretID), nil
 			},
 		},
 		{
@@ -100,18 +82,12 @@ func (s *VaultSuite) TestAuthMethods() {
 		{
 			name: "token auth",
 			auth: func() (Option, error) {
-				_, r, err := s.tc.Container.Exec(context.Background(), []string{"vault", "token", "create", "-field=token"})
+				token, err := s.tc.GetToken("default")
 				if err != nil {
-					return nil, fmt.Errorf("error creating role_id: %w", err)
+					return nil, err
 				}
 
-				token, err := io.ReadAll(r)
-				if err != nil {
-					return nil, fmt.Errorf("error reading role_id: %w", err)
-				}
-
-				// removing the first 8 bytes, which is the shell prompt
-				return WithTokenAuth(string(token[8:])), nil
+				return WithTokenAuth(token), nil
 			},
 		},
 		{
