@@ -11,7 +11,6 @@ import (
 	"strings"
 	"syscall"
 
-	g "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/grpc"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/logging"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/plugin"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/socket"
@@ -163,11 +162,7 @@ func NewPlugin(version string) error {
 
 	zap.L().Info("Listening for connection")
 
-	grpcOpts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(g.UnaryServerInterceptor),
-	}
-
-	grpc := grpc.NewServer(grpcOpts...)
+	grpc := grpc.NewServer()
 	pluginV1 := plugin.NewPluginV1(vc)
 	pluginV1.Register(grpc)
 
