@@ -1,3 +1,5 @@
+version: 2
+
 builds:
   -
     env:
@@ -58,6 +60,42 @@ docker_manifests:
 - name_template: 'falcosuessgott/{{.ProjectName}}:latest'
   image_templates:
   - 'falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
+
+gomod:
+  proxy: true
+
+source:
+  enabled: true
+
+sboms:
+  - artifacts: archive
+  - id: source
+    artifacts: source
+
+signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--output-certificate=${certificate}"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
+
+docker_signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    artifacts: images
+    output: true
+    args:
+      - "sign"
+      - "${artifact}"
+      - "--yes"
 
 checksum:
   name_template: "checksums.txt"
