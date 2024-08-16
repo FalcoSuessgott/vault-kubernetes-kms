@@ -74,11 +74,11 @@ sboms:
 
 signs:
   - cmd: cosign
-    env:
-      - COSIGN_EXPERIMENTAL=1
     certificate: "${artifact}.pem"
+    stdin: "{{ .Env.COSIGN_PASSWORD }}"
     args:
       - sign-blob
+      - "--key=env://COSIGN_PRIVATE_KEY"
       - "--output-certificate=${certificate}"
       - "--output-signature=${signature}"
       - "${artifact}"
@@ -88,12 +88,12 @@ signs:
 
 docker_signs:
   - cmd: cosign
-    env:
-      - COSIGN_EXPERIMENTAL=1
     artifacts: images
     output: true
+    stdin: "{{ .Env.COSIGN_PASSWORD }}"
     args:
       - "sign"
+      - "--key=env://COSIGN_PRIVATE_KEY"
       - "${artifact}"
       - "--yes"
 
