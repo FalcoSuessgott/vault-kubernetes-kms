@@ -4,11 +4,12 @@ on:
   push:
     tags:
       - '*'
-  pull_request_target:
+  pull_request:
 
 permissions:
   contents: write
   packages: write
+  id-token: write 
 
 jobs:
   goreleaser:
@@ -60,6 +61,7 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
       # if no tag test release build
       -
         name: Run GoReleaser skip publishing
@@ -70,3 +72,4 @@ jobs:
           args: release --snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
