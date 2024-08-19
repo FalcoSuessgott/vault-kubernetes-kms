@@ -85,6 +85,15 @@ $> vault token create -orphan -policy="kms" -period=24h
 ```
 
 ## Deploying `vault-kubernetes-kms`
+#### Container Images
+`vault-kubernetes-kms` is published on:
+
+- ghcr.io: [https://github.com/FalcoSuessgott/vault-kubernetes-kms/pkgs/container/vault-kubernetes-kms](https://github.com/FalcoSuessgott/vault-kubernetes-kms/pkgs/container/vault-kubernetes-kms)
+- Docker Hub: [https://hub.docker.com/r/falcosuessgott/vault-kubernetes-kms](https://hub.docker.com/r/falcosuessgott/vault-kubernetes-kms)
+
+As of now, only `amd` (x86_64) images are published. If you need `arm` images, raise an issue.
+
+
 !!! info
     The plugin creates a Unix-Socket that is referenced in a `EncryptionConfiguration` manifest, which the `kube-apiserver` points to.
 

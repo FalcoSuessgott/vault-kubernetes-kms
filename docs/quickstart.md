@@ -10,6 +10,13 @@ This Guide will walk you through the required steps of installing and configurin
 ## Requirements
 In order to run this guide, you will need to have `kind`, `kubectl` and `vault` installed on your system. This guide has been tested on MacOS and Linux.
 
+!!! note
+    `vault-kubernetes-kms` is only published as `amd` (x86_64) images.
+    
+    You will make sure, you actually pull `amd` images. You can test it, by using `docker run -it ubuntu /usr/bin/uname -p` which, should output `86_64`.
+
+    If you need `arm` images, raise an issue.
+
 ## Clone the repository
 ```bash
 $> git clone --depth 1 https://github.com/FalcoSuessgott/vault-kubernetes-kms.git

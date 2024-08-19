@@ -62,6 +62,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+
+      - 
+        name: Docker Hub Description
+        uses: peter-evans/dockerhub-description@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: falcosuessgott/vault-kubernetes-kms
+
       # if no tag test release build
       -
         name: Run GoReleaser skip publishing
