@@ -1,4 +1,4 @@
-# Getting Started
+# Quickstart
 This Guide will walk you through the required steps of installing and configuring the `vault-kms-plugin` for Kubernetes. It currently uses token based authentication and HTTP communication, which is not secure enough when running in production.
 
 !!! tip
@@ -8,24 +8,24 @@ This Guide will walk you through the required steps of installing and configurin
     This guide uses the new version of the Kubernetes KMS Plugin API, which was introduced in Kubernetes v1.29.0 ([https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-v2](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-v2)).
 
 ## Requirements
-In order to run this guide, you will need to have `kind`, `kubectl` and `vault` installed on your system.
-Also it is recommended that you are using either MacOS or Linux as the operating system.
+In order to run this guide, you will need to have `kind`, `kubectl` and `vault` installed on your system. This guide has been tested on MacOS and Linux.
 
 ## Clone the repository
-This guide will:
-
 ```bash
-$> git clone https://github.com/FalcoSuessgott/vault-kubernetes-kms.git
+$> git clone --depth 1 https://github.com/FalcoSuessgott/vault-kubernetes-kms.git
 $> cd vault-kubernetes-kms
 ```
 
 ## Setup a Vault in development mode
 ```bash
-# calls ./scripts/setup.vault.sh
+# invokes ./scripts/setup.vault.sh
 $> make setup-vault
 
-# test vault connection
-$> source .envrc && vault status
+# point your vault CLI to the local Vault server
+$> export VAULT_ADDR="http://127.0.0.1:8200"
+$> export VAULT_SKIP_VERIFY="true"
+$> export VAULT_TOKEN="root"
+$> vault status
 Key             Value
 ---             -----
 Seal Type       shamir
@@ -51,6 +51,7 @@ kms
 Now, we have a local running Vault server, lets start a local running Kubernetes cluster using `kind`, which will deploy the `vault-kubernetes-kms` plugin as a static pod on the control plane as well as its required `encryption_provider_config` (see [https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/) for the required configuration steps):
 
 ```bash
+# can take up to 2 minutes
 $> kind create cluster --name=kms --config assets/kind-config.yaml
 Creating cluster "kms" ...
  ✓ Ensuring node image (kindest/node:v1.29.2) 🖼
@@ -82,7 +83,6 @@ vault-kubernetes-kms-kms-control-plane      1/1     Running   0          116s # 
 ## Creating Kubernetes secrets encrypted on etcd disk
 Time for creating new Kubernetes secrets and check how they are now stored in etcd storage due to a kms encryption provider configured:
 
-
 ```bash
 # create any secret
 $> kubectl create secret generic secret-encrypted -n default --from-literal=key=value
@@ -94,12 +94,13 @@ secret/secret-encrypted created
   "key": "value"
 }
 
+# show secret in etcd storage
 $> kubectl -n kube-system exec etcd-kms-control-plane -- sh -c "ETCDCTL_API=3 etcdctl \
     --endpoints=https://127.0.0.1:2379 \
     --cert /etc/kubernetes/pki/etcd/server.crt \
     --key /etc/kubernetes/pki/etcd/server.key \
     --cacert /etc/kubernetes/pki/etcd/ca.crt \
-    get /registry/secrets/default/secret" | hexdump -C
+    get /registry/secrets/default/secret-encrypted" | hexdump -C 
 00000000  2f 72 65 67 69 73 74 72  79 2f 73 65 63 72 65 74  |/registry/secret|
 00000010  73 2f 64 65 66 61 75 6c  74 2f 73 65 63 72 65 74  |s/default/secret|
 00000020  2d 65 6e 63 72 79 70 74  65 64 0a 6b 38 73 3a 65  |-encrypted.k8s:e|
@@ -137,21 +138,30 @@ $> kubectl -n kube-system exec etcd-kms-control-plane -- sh -c "ETCDCTL_API=3 et
 You can encrypt all previous existing secrets using:
 
 ```bash
-$> kubectl get secrets --all-namespaces -o json | kubectl replace -f -`
+$> kubectl get secrets --all-namespaces -o json | kubectl replace -f -
 ```
 
 ## Verify decryption after restart
-If we restart the kube-apiserver the secrets have been Successfully decrypted:
+If we restart the `kube-apiserver` the secrets have been Successfully decrypted:
 
 ```bash
 $> kubectl delete pod/etcd-kms-control-plane -n kube-system
 pod "kube-apiserver-minikube" deleted
 
-# secrets have been successfully decrypted
-$> kubectl get secret secret -o json | jq '.data | map_values(@base64d)'
+# secret has been successfully decrypted
+$> kubectl get secret secret-encrypted -o json | jq '.data | map_values(@base64d)'
 {
   "key": "value"
 }
+```
+
+## Teardown
+```bash
+# kind cluster
+$> kind delete cluster -n kms
+
+# vault
+$> kill $(pgrep -x vault) 
 ```
 
 ## Some last thoughts
@@ -159,4 +169,4 @@ For production usage you should consider:
 
 * use HTTPS for the communication between Kubernetes & HashiCorp Vault (see [https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/))
 * deploy the `vault-kubernetes-kms` plugin as a static pod on all control plane nodes
-* automate the deployment using your preferred automation method (see [https://falcosuessgott.github.io/vault-kubernetes-kms/integration/](https://falcosuessgott.github.io/vault-kubernetes-kms/integration/)
+* automate the deployment using your preferred automation method (see [https://falcosuessgott.github.io/vault-kubernetes-kms/integration/](https://falcosuessgott.github.io/vault-kubernetes-kms/integration/))

@@ -1,11 +1,5 @@
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
-containerdConfigPatches:
-# add a local docker registry to containerd
-# the registry is run via  a separated docker container
-- |-
-  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5000"]
-    endpoint = ["http://registry:5000"]
 nodes:
 - role: control-plane
   extraMounts:
