@@ -3,6 +3,8 @@ kind: Pod
 metadata:
   name: vault-kubernetes-kms
   namespace: kube-system
+  labels:
+    app: vault-kubernetes-kms
 spec:
   priorityClassName: system-node-critical
   hostNetwork: true
@@ -12,20 +14,28 @@ spec:
       imagePullPolicy: IfNotPresent
       command:
         - /vault-kubernetes-kms
-        - -vault-address=http://172.17.0.1:8200
+        - -vault-address=http://host.docker.internal:8200
         - -auth-method=token
         - -token=root
       volumeMounts:
         # mount /opt/kms host directory
         - name: kms
           mountPath: /opt/kms
+      livenessProbe:
+      httpGet:
+          path: /health
+          port: 8080
+      readinessProbe:
+        httpGet:
+          path: /live
+          port: 8080
       resources:
         requests:
           cpu: 100m
           memory: 128Mi
         limits:
-          cpu: "2"
-          memory: 1Gi
+          cpu: 2
+          memory: 256Mi
   volumes:
     # mount /opt/kms host directory
     - name: kms

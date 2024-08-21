@@ -27,7 +27,7 @@ type PluginSuite struct {
 
 func TestVaultSuite(t *testing.T) {
 	// github actions doesn't offer the docker sock, which we require for testing
-	if runtime.GOOS == "linux" {
+	if runtime.GOOS != "windows" {
 		suite.Run(t, new(PluginSuite))
 	}
 }

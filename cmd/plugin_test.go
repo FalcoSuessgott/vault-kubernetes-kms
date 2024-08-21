@@ -33,6 +33,7 @@ func TestNewPlugin(t *testing.T) {
 				"vault-kubernetes-kms",
 				"-auth-method=token",
 				"-token=root",
+				"-health-port=8081",
 				fmt.Sprintf("-socket=unix:///%s/vaultkms.socket", t.TempDir()),
 			},
 			extraArgs: func(c *testutils.TestContainer) ([]string, error) {
@@ -50,6 +51,7 @@ func TestNewPlugin(t *testing.T) {
 			args: []string{
 				"vault-kubernetes-kms",
 				"-auth-method=approle",
+				"-health-port=8082",
 				fmt.Sprintf("-socket=unix:///%s/vaultkms.socket", t.TempDir()),
 			},
 			extraArgs: func(c *testutils.TestContainer) ([]string, error) {
@@ -81,6 +83,7 @@ func TestNewPlugin(t *testing.T) {
 			args: []string{
 				"vault-kubernetes-kms",
 				"-approle-mount=approle2",
+				"-health-port=8083",
 				fmt.Sprintf("-socket=unix:///%s/vaultkms.socket", t.TempDir()),
 			},
 			extraArgs: func(c *testutils.TestContainer) ([]string, error) {
@@ -116,9 +119,6 @@ func TestNewPlugin(t *testing.T) {
 
 				tc.args = append(tc.args, extraArgs...)
 			}
-
-			fmt.Println("args", tc.args)
-			fmt.Println("env", tc.envVars)
 
 			os.Args = tc.args
 

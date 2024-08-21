@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/vault/api"
-	"go.uber.org/zap"
 )
 
 // Client Vault API wrapper.
@@ -17,6 +16,10 @@ type Client struct {
 	AppRoleID       string
 	AppRoleSecretID string
 
+	AuthMethodFunc Option
+
+	TokenRenewalSeconds int
+
 	TransitEngine string
 	TransitKey    string
 }
@@ -26,15 +29,15 @@ type Option func(*Client) error
 
 // NewClient returns a new vault client wrapper.
 func NewClient(opts ...Option) (*Client, error) {
+	cfg := api.DefaultConfig()
+
 	// read all vault env vars
-	c, err := api.NewClient(api.DefaultConfig())
+	c, err := api.NewClient(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	client := &Client{
-		Client: c,
-	}
+	client := &Client{Client: c}
 
 	for _, opt := range opts {
 		if err := opt(client); err != nil {
@@ -88,12 +91,25 @@ func WithTokenAuth(token string) Option {
 			c.SetToken(token)
 		}
 
+		if c.AuthMethodFunc == nil {
+			c.AuthMethodFunc = WithTokenAuth(token)
+		}
+
+		return nil
+	}
+}
+
+// WithTokenAuth sets the specified token.
+func WithTokenRenewalSeconds(seconds int) Option {
+	return func(c *Client) error {
+		c.TokenRenewalSeconds = seconds
+
 		return nil
 	}
 }
 
 // WitAppRoleAuth performs a approle auth login.
-func WitAppRoleAuth(mount, roleID, secretID string) Option {
+func WithAppRoleAuth(mount, roleID, secretID string) Option {
 	return func(c *Client) error {
 		c.AppRoleID = roleID
 		c.AppRoleMount = mount
@@ -111,20 +127,10 @@ func WitAppRoleAuth(mount, roleID, secretID string) Option {
 
 		c.SetToken(s.Auth.ClientToken)
 
+		if c.AuthMethodFunc == nil {
+			c.AuthMethodFunc = WithAppRoleAuth(mount, roleID, secretID)
+		}
+
 		return nil
 	}
-}
-
-// TokenRefresh renews the token for 24h.
-func (c *Client) TokenRefresh() error {
-	token, err := c.Auth().Token().RenewSelf(tokenRefreshIntervall)
-	if err != nil {
-		return fmt.Errorf("error renewing token: %w", err)
-	}
-
-	c.SetToken(token.Auth.ClientToken)
-
-	zap.L().Info("successfully refreshed token")
-
-	return nil
 }

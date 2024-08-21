@@ -17,7 +17,7 @@ Since the key used for encrypting secrets is not stored in Kubernetes, an attack
 
 `vault-kubernetes-kms` is supposed to run as a static pod on every control plane node or on  that node where the `kube-apiserver` will run.
 
-The plugin creates a Unix-Socket and receive encryption requests through that socket from the `kube-apiserver`. The plugin will then use the specified Vault transit encryption key to encrypt the data and send it back to the `kube-apiserver`, who will then store the encrypted response in `etcd`.
+`vault-kubernetes-kms` will start a UNIX domain socket and listens for encryption requests from the `kube-apiserver`. The plugin will then use the specified Vault transit encryption key to encrypt the data and send it back to the `kube-apiserver`, who will then store the encrypted response in `etcd`.
 
 To do so, you will have to enable Data at Rest encryption, by configuring the `kube-apiserver` to use a `EncryptionConfiguration` (See [https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/) for more details).
 
@@ -31,6 +31,7 @@ To do so, you will have to enable Data at Rest encryption, by configuring the `k
 * support [Vault Token](https://developer.hashicorp.com/vault/docs/auth/token), [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle) authentication (Since a static pod cannot reference any other Kubernetes API-Objects, Vaults Kubernetes Authentication is not possible.)
 * support Kubernetes [KMS Plugin v1 (deprecated since `v1.28.0`) & v2 (stable in `v1.29.0`)](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#before-you-begin)
 * automatic Token Renewal for avoiding Token expiry
+* Exposes useful Prometheus Metrics
 
 ## Without a KMS Provider
 ```bash

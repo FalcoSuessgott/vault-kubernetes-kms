@@ -1,0 +1,18 @@
+# https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus/values.yaml
+alertmanager:
+  enabled: false
+
+kube-state-metrics:
+  enabled: false
+
+prometheus-node-exporter:
+  enabled: false
+
+prometheus-pushgateway:
+  enabled: false
+
+extraScrapeConfigs: |
+  - job_name: vault-kubernetes-kms
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["vault-kubernetes-kms.kube-system.svc.cluster.local:80"]
