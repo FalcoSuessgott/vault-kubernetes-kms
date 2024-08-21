@@ -15,7 +15,7 @@ The `vault-kms-plugin` requires a Vault Authentication, that allows encrypting a
 The following steps enable a transit engine `transit` and create transit key `kms`:
 ```bash
 $> export VAULT_ADDR="https://vault.tld.de"   # change to your Vaults API Address
-$> export VAULT_TOKEN="hhvs.XXXX"             # change to a token allowed to create a transit engine and a transit key
+$> export VAULT_TOKEN="hvs.XXXX"             # change to a token allowed to create a transit engine and a transit key
 $> vault secrets enable transit
 $> vault write -f transit/keys/kms
 ```
@@ -113,7 +113,6 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 * **(Optional)**: `-transit-mount` (`VAULT_KMS_TRANSIT_MOUNT`); default: `"transit"`
 * **(Optional)**: `-transit-key` (`VAULT_KMS_TRANSIT_KEY`); default: `"kms"`
 
-
 **If Vault Token Auth**:
 
 * **(Required)**: `-auth-method="token"` (`VAULT_KMS_AUTH_METHOD`)
@@ -130,6 +129,8 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 
 * **(Optional)**: `-socket` (`VAULT_KMS_SOCKET`); default: `unix:///opt/kms/vaultkms.socket"`
 * **(Optional)**: `-debug` (`VAULT_KMS_DEBUG`)
+* **(Optional)**: `-health-port` (`VAULT_KMS_HEALTH_PORT`); default: `":8080"`
+* **(Optional)**: `-disable-v1` (`VAULT_KMS_DISABLE_V1`); default: `"false"`
 
 ### Example Vault Token Auth
 
@@ -148,18 +149,26 @@ spec:
       # either specify CLI Args or env vars (look above)
       command:
         - /vault-kubernetes-kms
-        - -vault-address=https://vault.server.d
+        - -vault-address=https://vault.server.de
         - -auth-method=token
         - -token=hvs.ABC123
       volumeMounts:
         - name: kms
           mountPath: /opt/kms
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 8080
+      readinessProbe:
+        httpGet:
+          path: /livez
+          port: 8080
       resources:
         requests:
           cpu: 100m
           memory: 128Mi
         limits:
-          cpu: "2"
+          cpu: 2
           memory: 1Gi
   volumes:
     - name: kms
@@ -184,19 +193,27 @@ spec:
         # either specify CLI Args or env vars (look above)
       command:
         - /vault-kubernetes-kms
-        - -vault-address=https://vault.server.d
+        - -vault-address=https://vault.server.de
         - -auth-method=approle
         - -approle-role-id=XXXX
         - -approle-secret-id=XXXX
       volumeMounts:
         - name: kms
           mountPath: /opt/kms
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 8080
+      readinessProbe:
+        httpGet:
+          path: /livez
+          port: 8080
       resources:
         requests:
           cpu: 100m
           memory: 128Mi
         limits:
-          cpu: "2"
+          cpu: 2
           memory: 1Gi
   volumes:
     - name: kms
@@ -240,12 +257,20 @@ spec:
         # mount the volume
         - name: kms
           mountPath: /opt/kms
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 8080
+      readinessProbe:
+        httpGet:
+          path: /livez
+          port: 8080
       resources:
         requests:
           cpu: 100m
           memory: 128Mi
         limits:
-          cpu: "2"
+          cpu: 2
           memory: 1Gi
   volumes:
     - name: kms

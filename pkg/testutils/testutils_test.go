@@ -21,6 +21,7 @@ func TestVaultConnection(t *testing.T) {
 	require.NoError(t, err, "token creation")
 
 	tokenVault, err := vault.NewClient(
+		nil,
 		vault.WithVaultAddress(tc.URI),
 		vault.WithTokenAuth(token),
 		vault.WithTransit("transit", "kms"),
@@ -38,9 +39,10 @@ func TestVaultConnection(t *testing.T) {
 	require.NoError(t, err, "approle creation")
 
 	_, err = vault.NewClient(
+		nil,
 		vault.WithVaultAddress(tc.URI),
 		vault.WithTokenAuth(tc.Token),
-		vault.WitAppRoleAuth("approle", roleID, secretID),
+		vault.WithAppRoleAuth("approle", roleID, secretID),
 		vault.WithTransit("transit", "kms"),
 	)
 
