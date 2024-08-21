@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+set -xeu
 
-set -eu
+command -v docker >/dev/null 2>&1 || { echo "docker is not installed.  Aborting." >&2; exit 1; }
 
 REGISTRY_NAME=registry
 REGISTRY_PORT=5000

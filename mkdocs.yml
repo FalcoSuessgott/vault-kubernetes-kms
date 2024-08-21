@@ -53,6 +53,7 @@ nav:
     - configuration.md
     - concepts.md
     - sign.md
+    - metrics.md
     - integration.md
     - troubleshooting.md
     - development.md

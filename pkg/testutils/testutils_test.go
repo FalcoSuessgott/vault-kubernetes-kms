@@ -17,7 +17,7 @@ func TestVaultConnection(t *testing.T) {
 	require.NoError(t, err, "start")
 
 	// create token
-	token, err := tc.GetToken("default")
+	token, err := tc.GetToken("default", "1h")
 	require.NoError(t, err, "token creation")
 
 	tokenVault, err := vault.NewClient(
@@ -40,7 +40,7 @@ func TestVaultConnection(t *testing.T) {
 	_, err = vault.NewClient(
 		vault.WithVaultAddress(tc.URI),
 		vault.WithTokenAuth(tc.Token),
-		vault.WitAppRoleAuth("approle", roleID, secretID),
+		vault.WithAppRoleAuth("approle", roleID, secretID),
 		vault.WithTransit("transit", "kms"),
 	)
 

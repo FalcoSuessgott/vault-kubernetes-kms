@@ -9,7 +9,6 @@ import (
 
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/testutils"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go/exec"
 )
 
 type VaultSuite struct {
@@ -51,11 +50,10 @@ func (s *VaultSuite) SetupSubTest() {
 // nolint: funlen
 func (s *VaultSuite) TestAuthMethods() {
 	testCases := []struct {
-		name       string
-		prepCmd    []string
-		cmdOptions []exec.ProcessOption
-		auth       func() (Option, error)
-		err        bool
+		name    string
+		prepCmd []string
+		auth    func() (Option, error)
+		err     bool
 	}{
 		{
 			name: "basic approle auth",
@@ -69,20 +67,20 @@ func (s *VaultSuite) TestAuthMethods() {
 					return nil, err
 				}
 
-				return WitAppRoleAuth("approle", roleID, secretID), nil
+				return WithAppRoleAuth("approle", roleID, secretID), nil
 			},
 		},
 		{
 			name: "invalid approle auth",
 			err:  true,
 			auth: func() (Option, error) {
-				return WitAppRoleAuth("approle", "invalid", "invalid"), nil
+				return WithAppRoleAuth("approle", "invalid", "invalid"), nil
 			},
 		},
 		{
 			name: "token auth",
 			auth: func() (Option, error) {
-				token, err := s.tc.GetToken("default")
+				token, err := s.tc.GetToken("default", "1h")
 				if err != nil {
 					return nil, err
 				}
@@ -125,7 +123,7 @@ func (s *VaultSuite) TestAuthMethods() {
 
 func TestVaultSuite(t *testing.T) {
 	// github actions doesn't offer the docker sock, which we require for testing
-	if runtime.GOOS == "linux" {
+	if runtime.GOOS != "windows" {
 		suite.Run(t, new(VaultSuite))
 	}
 }

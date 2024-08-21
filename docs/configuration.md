@@ -15,7 +15,7 @@ The `vault-kms-plugin` requires a Vault Authentication, that allows encrypting a
 The following steps enable a transit engine `transit` and create transit key `kms`:
 ```bash
 $> export VAULT_ADDR="https://vault.tld.de"   # change to your Vaults API Address
-$> export VAULT_TOKEN="hhvs.XXXX"             # change to a token allowed to create a transit engine and a transit key
+$> export VAULT_TOKEN="hvs.XXXX"             # change to a token allowed to create a transit engine and a transit key
 $> vault secrets enable transit
 $> vault write -f transit/keys/kms
 ```
@@ -113,7 +113,6 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 * **(Optional)**: `-transit-mount` (`VAULT_KMS_TRANSIT_MOUNT`); default: `"transit"`
 * **(Optional)**: `-transit-key` (`VAULT_KMS_TRANSIT_KEY`); default: `"kms"`
 
-
 **If Vault Token Auth**:
 
 * **(Required)**: `-auth-method="token"` (`VAULT_KMS_AUTH_METHOD`)
@@ -126,17 +125,34 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 * **(Required)**: `-approle-secret-id` (`VAULT_KMS_APPROLE_SECRET_ID`)
 * **(Optional)**: `-approle-mount` (`VAULT_KMS_APPROLE_MOUNT`); default: `"approle"`
 
+**Lease Refreshing Settings**:
+
+* **(Optional)**: `-token-refresh-interval` (`VAULT_KMS_TOKEN_REFRESH_INTERVAL`); default: `"60s"`
+* **(Optional)**: `-token-renewal` (`VAULT_KMS_TOKEN_RENEWAL`); default: `"3600"`
+
+!!! warning
+      `vault_kubernetes_kms` automatically renewals the lease to avoid expired/revoked leases.
+
+      It does so by periodically comparing the current TTL with the tokens creation TTL (See [https://developer.hashicorp.com/vault/tutorials/get-started/introduction-tokens#token-metadata](https://developer.hashicorp.com/vault/tutorials/get-started/introduction-tokens#token-metadata)). The check will be run periodically in the interval specified with `-token-refresh-interval` (default: `60s`).
+
+      **If the current TTL is less than half of the creation TTL, then the current lease will be renewed for the amount of seconds defined in `-token-renewal` (default: `3600` seconds, `1h`).**
+
+      **If, for whatever reason the token renewal fails, then the configured auth method will be executed again**. Meanwhile this works well with Approle authentication, token auth will most likely fail, due to the token being revoked. In that case, you should make sure to provide a [periodic token](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/#token-auth).
+
 **General**:
 
 * **(Optional)**: `-socket` (`VAULT_KMS_SOCKET`); default: `unix:///opt/kms/vaultkms.socket"`
 * **(Optional)**: `-force-socket-overwrite` (`FORCE_SOCKET_OVERWRITE`); default: `false`.
 
-!!! note
-      Use `-force-socket-overwrite` with caution. This will delete whatever filetype exists at the value specified in `-socket`.
+!!! warning
+      Use `-force-socket-overwrite` with caution. **This will delete whatever filetype exists at the value specified in `-socket` path on the Control plane node**.
 
       When `vault-kubernetes-kms` crashes, it is not guaranteed that the socket-file will always be removed. For those scenarios `-force-socket-overwrite` was introduced to allow a smooth re-deployment of the plugin and not having to manually delete the stale socket file on the control plane node.
 
 * **(Optional)**: `-debug` (`VAULT_KMS_DEBUG`)
+* **(Optional)**: `-health-port` (`VAULT_KMS_HEALTH_PORT`); default: `":8080"`
+* **(Optional)**: `-disable-v1` (`VAULT_KMS_DISABLE_V1`); default: `"false"`
+
 
 ### Example Vault Token Auth
 
@@ -155,19 +171,27 @@ spec:
       # either specify CLI Args or env vars (look above)
       command:
         - /vault-kubernetes-kms
-        - -vault-address=https://vault.server.d
+        - -vault-address=https://vault.server.de
         - -auth-method=token
         - -token=hvs.ABC123
       volumeMounts:
         - name: kms
           mountPath: /opt/kms
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 8080
+      readinessProbe:
+        httpGet:
+          path: /live
+          port: 8080
       resources:
         requests:
           cpu: 100m
           memory: 128Mi
         limits:
-          cpu: "2"
-          memory: 1Gi
+          cpu: 2
+          memory: 256Mi
   volumes:
     - name: kms
       hostPath:
@@ -191,20 +215,28 @@ spec:
         # either specify CLI Args or env vars (look above)
       command:
         - /vault-kubernetes-kms
-        - -vault-address=https://vault.server.d
+        - -vault-address=https://vault.server.de
         - -auth-method=approle
         - -approle-role-id=XXXX
         - -approle-secret-id=XXXX
       volumeMounts:
         - name: kms
           mountPath: /opt/kms
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 8080
+      readinessProbe:
+        httpGet:
+          path: /live
+          port: 8080
       resources:
         requests:
           cpu: 100m
           memory: 128Mi
         limits:
-          cpu: "2"
-          memory: 1Gi
+          cpu: 2
+          memory: 256Mi
   volumes:
     - name: kms
       hostPath:
@@ -247,13 +279,21 @@ spec:
         # mount the volume
         - name: kms
           mountPath: /opt/kms
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 8080
+      readinessProbe:
+        httpGet:
+          path: /live
+          port: 8080
       resources:
         requests:
           cpu: 100m
           memory: 128Mi
         limits:
-          cpu: "2"
-          memory: 1Gi
+          cpu: 2
+          memory: 256Mi
   volumes:
     - name: kms
       hostPath:
