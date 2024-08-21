@@ -17,7 +17,7 @@ Since the key used for encrypting secrets is not stored in Kubernetes, an attack
 
 `vault-kubernetes-kms` is supposed to run as a static pod on every control plane node or on  that node where the `kube-apiserver` will run.
 
-The plugin creates a Unix-Socket and receive encryption requests through that socket from the `kube-apiserver`. The plugin will then use the specified Vault transit encryption key to encrypt the data and send it back to the `kube-apiserver`, who will then store the encrypted response in `etcd`.
+`vault-kubernetes-kms` will start a UNIX domain socket and listens for encryption requests from the `kube-apiserver`. The plugin will then use the specified Vault transit encryption key to encrypt the data and send it back to the `kube-apiserver`, who will then store the encrypted response in `etcd`.
 
 To do so, you will have to enable Data at Rest encryption, by configuring the `kube-apiserver` to use a `EncryptionConfiguration` (See [https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/) for more details).
 

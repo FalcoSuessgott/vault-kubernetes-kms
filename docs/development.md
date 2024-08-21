@@ -1,28 +1,51 @@
 # Development
+This guide walks you through the required steps of building and running this plugin locally with and without Kubernetes.
+
+## Local Development without Kubernetes
+You don't have to deploy the plugin in a Kubernetes Cluster, you can just execute it locally, given you have a Vault running:
+
+```bash
+$> make setup-vault
+$> go run main.go -vault-address=http://127.0.0.1:8200 -auth-method=token -token=root -socket=unix:///tmp/kms.socket
+{"level":"info","timestamp":"2024-08-25T15:36:19.233+1000","caller":"cmd/plugin.go:154","message":"starting kms plugin","auth-method":"token","socket":"unix:///tmp/kms.socket","debug":false,"vault-address":"http://127.0.0.1:8200","vault-namespace":"","transit-engine":"transit","transit-key":"kms","health-port":":8080","disable-v1":false}
+{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:167","message":"Successfully authenticated to vault"}
+{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:174","message":"Successfully dialed to unix domain socket","socket":"unix:///tmp/kms.socket"}
+{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:184","message":"Successfully registered kms plugin v1"}
+{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:191","message":"Successfully registered kms plugin v2"}
+```
+
+In order to send encryption and decryption requests you can use the client CLI tool in `cmd/v2_Client/main.go`. This tool simply connects to the plugin and encrypts a given string and decrypts it back to its plaintext version:
+
+```bash
+$> go run cmd/v2_client/main.go encrypt this string
+"encrypt this string" -> "dmF1bHQ6djE6VzJMcHp4UmJMdHV4TWNnUnVWMWJQQzBHMWZ0VkwvZFVUMldLRzQ0RUtCa1VJcjVwVjgxMFd3T29pRmVhQzVNPQ==" -> "encrypt this string"
+```
+
+## Local Development with Kubernetes
 
 The following steps describe how to build & run the vault-kubernetes-kms completely locally using `docker`, `vault` & `kind`.
 
-## Requirements
-Obviously you will need all the tools mentioned above installed. Also this setup is only tested on Linux & x86
+### Requirements
+Obviously you will need all the tools mentioned above installed. Also this setup is only tested on Linux and MacOS.
 
-## Components
+### Components
 Basically, we will need:
 
 1. A local Vault server initialized & unsealed and with a transit engine enabled as well as a transit key created.
 2. A local (docker) registry so kind can pull the currently unreleased `vault-kubernetes-kms` image.
 3. A local Kubernetes Cluster (kind) configured to use the local registry as well as the required settings for the kube-apiservers encryption provider config.
 
-### 1. Local Vault Server using `vault`
-The following snippets sets up a local vault development server and creates a transit engine as well as a key.
+#### 1. Local Vault Server using `vault`
+The following snippets sets up a local vault development server and creates a transit engine as well as a transit key.
 
-This script is located in `scripts/vault.sh` and available via `make setup-vault`:
+This script is located in `scripts/vault.sh` and is available via `make setup-vault`:
 
 ```bash
 {!../scripts/vault.sh!}
 ```
 
 
-### 2. Local Container/Docker Registry using `docker`
+#### 2. Local Container/Docker Registry using `docker`
 The following snippet, starts a local container registry, builds the current commits `vault-kubernetes-kms` image and tags & pushes the image to the local registry.
 
 This script is located in `scripts/local-registry.sh` and is available via `make setup-registry`:
@@ -31,7 +54,7 @@ This script is located in `scripts/local-registry.sh` and is available via `make
 {!../scripts/local-registry.sh!}
 ```
 
-### 3. Local Kubernetes Cluster using `kind`
+#### 3. Local Kubernetes Cluster using `kind`
 Last but not least, we combine the above mentioned tools and consume them with `kind`
 
 The following `kind`-config configures the local running registry, copies the encryption provider config and the `vault-kubernetes-kms` static pod manifest to the Kubernetes host and patches the `kube-apiserver` for using the provided encryption provider config.
@@ -42,8 +65,9 @@ This can be run via `make setup-kind`, which runs `kind create cluster --name=km
 {!../scripts/kind-config_v2.yaml!}
 ```
 
-#### the `vault-kubernetes-kms` manifest
-for development purposes, we use the vault dev servers configured root token (`"root"`) as well as the docker ip of the localhost, where the vault server is running (`172.18.0.1`):
+**the `vault-kubernetes-kms` manifest:**
+
+for development purposes, we use the vault dev servers configured root token (`"root"`):
 
 ```yaml
 {!../scripts/vault-kubernetes-kms.yml!}

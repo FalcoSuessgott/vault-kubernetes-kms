@@ -19,6 +19,14 @@ spec:
         # mount /opt/kms host directory
         - name: kms
           mountPath: /opt/kms
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 8080
+      readinessProbe:
+        httpGet:
+          path: /livez
+          port: 8080
       resources:
         requests:
           cpu: 100m

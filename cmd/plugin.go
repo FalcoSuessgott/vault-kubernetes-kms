@@ -4,18 +4,22 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"slices"
 	"strings"
 	"syscall"
 
+	customHTTP "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/http"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/logging"
+	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/metrics"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/plugin"
+	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/probes"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/socket"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/utils"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/vault"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -44,6 +48,12 @@ type Options struct {
 	// transit
 	TransitKey   string `env:"TRANSIT_KEY"   envDefault:"kms"`
 	TransitMount string `env:"TRANSIT_MOUNT" envDefault:"transit"`
+
+	// healthz check
+	HealthPort string `env:"HEALTH_PORT" envDefault:":8080"`
+
+	// Disable KMSv1 Plugin
+	DisableV1 bool `env:"DISABLE_V1" envDefault:"false"`
 
 	Version bool
 }
@@ -78,6 +88,10 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.TransitMount, "transit-mount", opts.TransitMount, "Vault Transit mount name")
 	flag.StringVar(&opts.TransitKey, "transit-key", opts.TransitKey, "Vault Transit key name")
 
+	flag.StringVar(&opts.HealthPort, "health-port", opts.HealthPort, "Health Check Port")
+
+	flag.BoolVar(&opts.DisableV1, "disable-v1", opts.DisableV1, "disable the v1 kms plugin")
+
 	flag.BoolVar(&opts.Version, "version", opts.Version, "prints out the plugins version")
 
 	if err := flag.Parse(os.Args[1:]); err != nil {
@@ -108,11 +122,12 @@ func NewPlugin(version string) error {
 	zap.ReplaceGlobals(l)
 
 	var (
-		authMethod vault.Option
-		logfields  []zapcore.Field
+		authMethod   vault.Option
+		logFields    []zapcore.Field
+		healthChecks = []probes.Prober{}
 	)
 
-	logfields = append(logfields,
+	logFields = append(logFields,
 		zap.String("auth-method", opts.AuthMethod),
 		zap.String("socket", opts.Socket),
 		zap.Bool("debug", opts.Debug),
@@ -120,23 +135,26 @@ func NewPlugin(version string) error {
 		zap.String("vault-namespace", opts.VaultNamespace),
 		zap.String("transit-engine", opts.TransitMount),
 		zap.String("transit-key", opts.TransitKey),
+		zap.String("health-port", opts.HealthPort),
+		zap.Bool("disable-v1", opts.DisableV1),
 	)
 
 	switch strings.ToLower(opts.AuthMethod) {
 	case "token":
 		authMethod = vault.WithTokenAuth(opts.Token)
 	case "approle":
-		authMethod = vault.WitAppRoleAuth(opts.AppRoleMount, opts.AppRoleRoleID, opts.AppRoleRoleSecretID)
-		logfields = append(logfields,
+		authMethod = vault.WithAppRoleAuth(opts.AppRoleMount, opts.AppRoleRoleID, opts.AppRoleRoleSecretID)
+		logFields = append(logFields,
 			zap.String("approle-mount", opts.AppRoleMount),
 			zap.String("approle-role-id", opts.AppRoleRoleID))
 	default:
 		return fmt.Errorf("invalid auth method: %s", opts.AuthMethod)
 	}
 
-	zap.L().Info("starting kms plugin", logfields...)
+	zap.L().Info("starting kms plugin", logFields...)
 
 	vc, err := vault.NewClient(
+		customHTTP.NewHTTPClient().Client,
 		vault.WithVaultAddress(opts.VaultAddress),
 		vault.WithVaultNamespace(opts.VaultNamespace),
 		vault.WithTransit(opts.TransitMount, opts.TransitKey),
@@ -148,34 +166,49 @@ func NewPlugin(version string) error {
 
 	zap.L().Info("Successfully authenticated to vault")
 
-	s, err := socket.NewSocket(opts.Socket)
+	listener, err := socket.Listen(opts.Socket)
 	if err != nil {
-		zap.L().Fatal("Cannot create socket", zap.Error(err))
+		zap.L().Fatal("Cannot listen on socket", zap.Error(err))
 	}
 
-	zap.L().Info("Successfully created unix socket", zap.String("socket", s.Path))
-
-	listener, err := s.Listen()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	zap.L().Info("Listening for connection")
+	zap.L().Info("Successfully dialed to unix domain socket", zap.String("socket", opts.Socket))
 
 	grpc := grpc.NewServer()
-	pluginV1 := plugin.NewPluginV1(vc)
-	pluginV1.Register(grpc)
 
-	zap.L().Info("Successfully registered kms plugin v1")
+	if !opts.DisableV1 {
+		pluginV1 := plugin.NewPluginV1(vc)
+		pluginV1.Register(grpc)
+
+		healthChecks = append(healthChecks, pluginV1)
+
+		zap.L().Info("Successfully registered kms plugin v1")
+	}
 
 	pluginV2 := plugin.NewPluginV2(vc)
 	pluginV2.Register(grpc)
+	healthChecks = append(healthChecks, pluginV2)
 
 	zap.L().Info("Successfully registered kms plugin v2")
 
 	go func() {
 		if err := grpc.Serve(listener); err != nil {
 			zap.L().Fatal("Failed to start kms plugin", zap.Error(err))
+		}
+	}()
+
+	go func() {
+		promReg := metrics.RegisterPrometheusMetrics()
+
+		http.HandleFunc("GET /healthz", probes.HealthZ(healthChecks))
+		http.HandleFunc("GET /livez", probes.HealthZ(healthChecks))
+		http.HandleFunc("GET /metrics", promhttp.HandlerFor(promReg,
+			promhttp.HandlerOpts{
+				EnableOpenMetrics: false,
+			}).ServeHTTP)
+
+		//nolint:gosec
+		if err := http.ListenAndServe(opts.HealthPort, nil); err != nil {
+			zap.L().Fatal("Failed to start health check handlers", zap.Error(err))
 		}
 	}()
 
