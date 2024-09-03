@@ -24,6 +24,36 @@ func NewPluginV2(vc *vault.Client) *PluginV2 {
 	return &PluginV2{vc}
 }
 
+// Status performs a simple health check and returns ok if encryption / decryption was successful
+// https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#developing-a-kms-plugin-gRPC-server-notes-kms-v2
+func (p *PluginV2) Status(ctx context.Context, _ *pb.StatusRequest) (*pb.StatusResponse, error) {
+	health := "ok"
+
+	kv, err := p.Client.GetKeyVersion(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	//nolint: contextcheck
+	if err := p.Health(); err != nil {
+		health = "err"
+
+		zap.L().Info(err.Error())
+	}
+
+	zap.L().Info("health status",
+		zap.String("key_id", kv),
+		zap.String("healthz", health),
+		zap.String("version", "v2"),
+	)
+
+	return &pb.StatusResponse{
+		Version: "v2",
+		Healthz: "ok",
+		KeyId:   kv,
+	}, nil
+}
+
 // Health sends a simple plaintext for encryption and then compares the decrypted value.
 func (p *PluginV2) Health() error {
 	health := "health"
@@ -53,36 +83,6 @@ func (p *PluginV2) Health() error {
 	}
 
 	return nil
-}
-
-// Status performs a simple health check and returns ok if encryption / decryption was successful
-// https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#developing-a-kms-plugin-gRPC-server-notes-kms-v2
-func (p *PluginV2) Status(ctx context.Context, _ *pb.StatusRequest) (*pb.StatusResponse, error) {
-	health := "ok"
-
-	kv, err := p.Client.GetKeyVersion(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	//nolint: contextcheck
-	if err := p.Health(); err != nil {
-		health = "err"
-
-		zap.L().Info(err.Error())
-	}
-
-	zap.L().Info("health status",
-		zap.String("key_id", kv),
-		zap.String("healthz", health),
-		zap.String("version", "v2"),
-	)
-
-	return &pb.StatusResponse{
-		Version: "v2",
-		Healthz: "ok",
-		KeyId:   kv,
-	}, nil
 }
 
 func (p *PluginV2) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.EncryptResponse, error) {

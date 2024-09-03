@@ -51,7 +51,7 @@ func (p *PluginSuite) SetupSubTest() {
 
 	p.tc = tc
 
-	vault, err := vault.NewClient(nil,
+	vault, err := vault.NewClient(
 		vault.WithVaultAddress(tc.URI),
 		vault.WithTokenAuth(tc.Token),
 		vault.WithTransit("transit", "kms"),

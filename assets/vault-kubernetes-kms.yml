@@ -21,11 +21,11 @@ spec:
           mountPath: /opt/kms
       livenessProbe:
         httpGet:
-          path: /healthz
+          path: /health
           port: 8080
       readinessProbe:
         httpGet:
-          path: /livez
+          path: /live
           port: 8080
       resources:
         requests:

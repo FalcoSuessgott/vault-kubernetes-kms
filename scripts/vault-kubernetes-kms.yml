@@ -3,6 +3,8 @@ kind: Pod
 metadata:
   name: vault-kubernetes-kms
   namespace: kube-system
+  labels:
+    app: vault-kubernetes-kms
 spec:
   priorityClassName: system-node-critical
   hostNetwork: true

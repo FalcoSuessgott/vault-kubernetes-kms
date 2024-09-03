@@ -2,14 +2,15 @@ package vault
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/testutils"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go/exec"
 )
 
 type VaultSuite struct {
@@ -37,7 +38,6 @@ func (s *VaultSuite) SetupSubTest() {
 	s.tc = tc
 
 	vault, err := NewClient(
-		nil,
 		WithVaultAddress(tc.URI),
 		WithTokenAuth(tc.Token),
 		WithTransit("transit", "kms"),
@@ -49,14 +49,34 @@ func (s *VaultSuite) SetupSubTest() {
 	s.vault = vault
 }
 
+func (s *VaultSuite) TestTokenRefresher() {
+	s.Run("c", func() {
+		s.T().Fail()
+
+		token, err := s.tc.GetToken("default", "1h")
+		s.Require().NoError(err, "token creation")
+
+		vc, err := NewClient(
+			WithVaultAddress(s.tc.URI),
+			WithTokenAuth(token),
+		)
+		s.Require().NoError(err, "client")
+
+		vc.TokenRefresher(context.Background(), 5*time.Second)
+
+		fmt.Println(token)
+
+		s.T().Fail()
+	})
+}
+
 // nolint: funlen
 func (s *VaultSuite) TestAuthMethods() {
 	testCases := []struct {
-		name       string
-		prepCmd    []string
-		cmdOptions []exec.ProcessOption
-		auth       func() (Option, error)
-		err        bool
+		name    string
+		prepCmd []string
+		auth    func() (Option, error)
+		err     bool
 	}{
 		{
 			name: "basic approle auth",
@@ -83,7 +103,7 @@ func (s *VaultSuite) TestAuthMethods() {
 		{
 			name: "token auth",
 			auth: func() (Option, error) {
-				token, err := s.tc.GetToken("default")
+				token, err := s.tc.GetToken("default", "1h")
 				if err != nil {
 					return nil, err
 				}
@@ -113,7 +133,6 @@ func (s *VaultSuite) TestAuthMethods() {
 			s.Require().NoError(err, "auth "+tc.name)
 
 			_, err = NewClient(
-				nil,
 				WithVaultAddress(s.tc.URI),
 				WithTokenAuth(s.tc.Token),
 				auth,

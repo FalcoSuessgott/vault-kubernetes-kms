@@ -31,26 +31,6 @@ func (p *PluginV1) Version(ctx context.Context, request *pb.VersionRequest) (*pb
 	}, nil
 }
 
-// nolint: staticcheck
-func (p *PluginV1) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.EncryptResponse, error) {
-	timer := prometheus.NewTimer(metrics.EncryptionOperationDurationSeconds)
-
-	resp, _, err := p.Client.Encrypt(ctx, request.GetPlain())
-	if err != nil {
-		metrics.EncryptionErrorsTotal.Inc()
-
-		return nil, err
-	}
-
-	zap.L().Info("v1 encryption request")
-
-	timer.ObserveDuration()
-
-	return &pb.EncryptResponse{
-		Cipher: resp,
-	}, nil
-}
-
 // Health sends a simple plaintext for encryption and then compares the decrypted value.
 // nolint: staticcheck
 func (p *PluginV1) Health() error {
@@ -77,6 +57,26 @@ func (p *PluginV1) Health() error {
 	}
 
 	return nil
+}
+
+// nolint: staticcheck
+func (p *PluginV1) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.EncryptResponse, error) {
+	timer := prometheus.NewTimer(metrics.EncryptionOperationDurationSeconds)
+
+	resp, _, err := p.Client.Encrypt(ctx, request.GetPlain())
+	if err != nil {
+		metrics.EncryptionErrorsTotal.Inc()
+
+		return nil, err
+	}
+
+	zap.L().Info("v1 encryption request")
+
+	timer.ObserveDuration()
+
+	return &pb.EncryptResponse{
+		Cipher: resp,
+	}, nil
 }
 
 // nolint: staticcheck

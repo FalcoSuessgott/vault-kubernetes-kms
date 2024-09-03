@@ -1,0 +1,8 @@
+# https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server:80

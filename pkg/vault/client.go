@@ -1,8 +1,10 @@
 package vault
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
-	"net/http"
+	"time"
 
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/metrics"
 	"github.com/hashicorp/vault/api"
@@ -19,6 +21,10 @@ type Client struct {
 	AppRoleID       string
 	AppRoleSecretID string
 
+	AuthMethodFunc Option
+
+	TokenRenewalSeconds int
+
 	TransitEngine string
 	TransitKey    string
 }
@@ -27,14 +33,8 @@ type Client struct {
 type Option func(*Client) error
 
 // NewClient returns a new vault client wrapper.
-func NewClient(httpClient *http.Client, opts ...Option) (*Client, error) {
+func NewClient(opts ...Option) (*Client, error) {
 	cfg := api.DefaultConfig()
-
-	if httpClient == nil {
-		httpClient = &http.Client{}
-	}
-
-	cfg.HttpClient = httpClient
 
 	// read all vault env vars
 	c, err := api.NewClient(cfg)
@@ -96,6 +96,19 @@ func WithTokenAuth(token string) Option {
 			c.SetToken(token)
 		}
 
+		if c.AuthMethodFunc == nil {
+			c.AuthMethodFunc = WithTokenAuth(token)
+		}
+
+		return nil
+	}
+}
+
+// WithTokenAuth sets the specified token.
+func WithTokenRenewalSeconds(seconds int) Option {
+	return func(c *Client) error {
+		c.TokenRenewalSeconds = seconds
+
 		return nil
 	}
 }
@@ -119,26 +132,89 @@ func WithAppRoleAuth(mount, roleID, secretID string) Option {
 
 		c.SetToken(s.Auth.ClientToken)
 
+		if c.AuthMethodFunc == nil {
+			c.AuthMethodFunc = WithAppRoleAuth(mount, roleID, secretID)
+		}
+
 		return nil
 	}
 }
 
-// TokenRefresh renews the token for 24h.
-func (c *Client) TokenRefresh() error {
-	metrics.VaultTokenRenewalMetricTotal.Inc()
+// TokenRefresher periodically checks the ttl of the current token and attempts to renew it if the ttl is less than half of the creation ttl.
+// if the token renewal fails, a new login with the configured auth method is performed
+// this func is supposed to run as a goroutine.
+// nolint: funlen, gocognit, cyclop
+func (c *Client) TokenRefresher(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
 
-	token, err := c.Auth().Token().RenewSelf(tokenRefreshInterval)
-	if err != nil {
-		return fmt.Errorf("error renewing token: %w", err)
+	for {
+		select {
+		case <-ticker.C:
+			token, err := c.Auth().Token().LookupSelf()
+			if err != nil {
+				zap.L().Error("failed to lookup token", zap.Error(err))
+
+				continue
+			}
+
+			creationTTL, ok := token.Data["creation_ttl"].(json.Number)
+			if !ok {
+				zap.L().Error("failed to assert creation_ttl type")
+
+				continue
+			}
+
+			ttl, ok := token.Data["ttl"].(json.Number)
+			if !ok {
+				zap.L().Error("failed to assert ttl type")
+
+				continue
+			}
+
+			creationTTLFloat, err := creationTTL.Float64()
+			if err != nil {
+				zap.L().Error("failed to parse creation_ttl", zap.Error(err))
+
+				continue
+			}
+
+			ttlFloat, err := ttl.Float64()
+			if err != nil {
+				zap.L().Error("failed to parse ttl", zap.Error(err))
+
+				continue
+			}
+
+			metrics.VaultTokenExpirySeconds.Set(ttlFloat)
+
+			zap.L().Info("checking token renewal", zap.Float64("creation_ttl", creationTTLFloat), zap.Float64("ttl", ttlFloat))
+
+			//nolint: nestif
+			if ttlFloat < creationTTLFloat/2 {
+				zap.L().Info("attempting token renewal", zap.Int("renewal_seconds", c.TokenRenewalSeconds))
+
+				if _, err := c.Auth().Token().RenewSelf(c.TokenRenewalSeconds); err != nil {
+					zap.L().Error("failed to renew token, performing new authentication", zap.Error(err))
+
+					if err := c.AuthMethodFunc(c); err != nil {
+						zap.L().Error("failed to authenticate", zap.Error(err))
+					} else {
+						zap.L().Info("successfully re-authenticated")
+					}
+				} else {
+					zap.L().Info("successfully refreshed token")
+				}
+
+				metrics.VaultTokenRenewalTotal.Inc()
+			} else {
+				zap.L().Info("skipping token renewal")
+			}
+
+		case <-ctx.Done():
+			zap.L().Info("token refresher shutting down")
+
+			return
+		}
 	}
-
-	if ttl, err := token.TokenTTL(); err == nil && ttl != 0 {
-		metrics.VaultTokenExpirySeconds.Add(ttl.Seconds())
-	}
-
-	c.SetToken(token.Auth.ClientToken)
-
-	zap.L().Info("successfully refreshed token")
-
-	return nil
 }

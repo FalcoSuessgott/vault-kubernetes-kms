@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -10,8 +11,8 @@ import (
 	"slices"
 	"strings"
 	"syscall"
+	"time"
 
-	customHTTP "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/http"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/logging"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/metrics"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/plugin"
@@ -45,15 +46,19 @@ type Options struct {
 	AppRoleRoleSecretID string `env:"APPROLE_SECRET_ID"`
 	AppRoleMount        string `env:"APPROLE_MOUNT"     envDefault:"approle"`
 
+	// token refresh
+	TokenRefreshInterval string `env:"TOKEN_REFRESH_INTERVAL" envDefault:"60s"`
+	TokenRenewalSeconds  int    `env:"TOKEN_RENEWAL_SECONDS"  envDefault:"3600"`
+
 	// transit
 	TransitKey   string `env:"TRANSIT_KEY"   envDefault:"kms"`
 	TransitMount string `env:"TRANSIT_MOUNT" envDefault:"transit"`
 
 	// healthz check
-	HealthPort string `env:"HEALTH_PORT" envDefault:":8080"`
+	HealthPort string `env:"HEALTH_PORT" envDefault:"8080"`
 
 	// Disable KMSv1 Plugin
-	DisableV1 bool `env:"DISABLE_V1" envDefault:"false"`
+	DisableV1 bool `env:"DISABLE_V1" envDefault:"true"`
 
 	Version bool
 }
@@ -85,6 +90,9 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.AppRoleRoleID, "approle-role-id", opts.AppRoleRoleID, "Vault Approle role ID (when approle auth)")
 	flag.StringVar(&opts.AppRoleRoleSecretID, "approle-secret-id", opts.AppRoleRoleSecretID, "Vault Approle Secret ID (when approle auth)")
 
+	flag.StringVar(&opts.TokenRefreshInterval, "token-refresh-interval", opts.TokenRefreshInterval, "Interval to check for a token renewal")
+	flag.IntVar(&opts.TokenRenewalSeconds, "token-renewal", opts.TokenRenewalSeconds, "The number of seconds to renew the token")
+
 	flag.StringVar(&opts.TransitMount, "transit-mount", opts.TransitMount, "Vault Transit mount name")
 	flag.StringVar(&opts.TransitKey, "transit-key", opts.TransitKey, "Vault Transit key name")
 
@@ -101,7 +109,7 @@ func NewPlugin(version string) error {
 	if opts.Version {
 		fmt.Fprintf(os.Stdout, "vault-kubernetes-kms v%s\n", version)
 
-		os.Exit(0)
+		return nil
 	}
 
 	if err := opts.validateFlags(); err != nil {
@@ -125,6 +133,7 @@ func NewPlugin(version string) error {
 		authMethod   vault.Option
 		logFields    []zapcore.Field
 		healthChecks = []probes.Prober{}
+		ctx          = shutDownSignal(context.Background())
 	)
 
 	logFields = append(logFields,
@@ -136,6 +145,8 @@ func NewPlugin(version string) error {
 		zap.String("transit-engine", opts.TransitMount),
 		zap.String("transit-key", opts.TransitKey),
 		zap.String("health-port", opts.HealthPort),
+		zap.String("token-refresh-interval", opts.TokenRefreshInterval),
+		zap.Int("token-renewal-seconds", opts.TokenRenewalSeconds),
 		zap.Bool("disable-v1", opts.DisableV1),
 	)
 
@@ -154,10 +165,10 @@ func NewPlugin(version string) error {
 	zap.L().Info("starting kms plugin", logFields...)
 
 	vc, err := vault.NewClient(
-		customHTTP.NewHTTPClient().Client,
 		vault.WithVaultAddress(opts.VaultAddress),
 		vault.WithVaultNamespace(opts.VaultNamespace),
 		vault.WithTransit(opts.TransitMount, opts.TransitKey),
+		vault.WithTokenRenewalSeconds(opts.TokenRenewalSeconds),
 		authMethod,
 	)
 	if err != nil {
@@ -165,6 +176,17 @@ func NewPlugin(version string) error {
 	}
 
 	zap.L().Info("Successfully authenticated to vault")
+
+	go func() {
+		zap.L().Info("Starting token refresher",
+			zap.String("interval", opts.TokenRefreshInterval),
+			zap.Int("renewal-seconds", opts.TokenRenewalSeconds),
+		)
+
+		t, _ := time.ParseDuration(opts.TokenRefreshInterval)
+
+		vc.TokenRefresher(ctx, t)
+	}()
 
 	listener, err := socket.Listen(opts.Socket)
 	if err != nil {
@@ -197,28 +219,25 @@ func NewPlugin(version string) error {
 	}()
 
 	go func() {
-		promReg := metrics.RegisterPrometheusMetrics()
+		mux := &http.ServeMux{}
 
-		http.HandleFunc("GET /healthz", probes.HealthZ(healthChecks))
-		http.HandleFunc("GET /livez", probes.HealthZ(healthChecks))
-		http.HandleFunc("GET /metrics", promhttp.HandlerFor(promReg,
-			promhttp.HandlerOpts{
-				EnableOpenMetrics: false,
-			}).ServeHTTP)
+		mux.HandleFunc("/metrics", promhttp.HandlerFor(metrics.RegisterPrometheusMetrics(), promhttp.HandlerOpts{}).ServeHTTP)
+		mux.HandleFunc("/health", probes.HealthZ(healthChecks))
+		mux.HandleFunc("/live", probes.HealthZ(healthChecks))
 
-		//nolint:gosec
-		if err := http.ListenAndServe(opts.HealthPort, nil); err != nil {
+		//nolint: mnd
+		server := &http.Server{
+			Addr:              ":" + opts.HealthPort,
+			Handler:           mux,
+			ReadHeaderTimeout: 3 * time.Second,
+		}
+
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			zap.L().Fatal("Failed to start health check handlers", zap.Error(err))
 		}
 	}()
 
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-
-	signal := <-signals
-
-	zap.L().Info("Received signal", zap.Stringer("signal", signal))
-	zap.L().Info("Shutting down server")
+	<-ctx.Done()
 
 	grpc.GracefulStop()
 
@@ -245,5 +264,27 @@ func (o *Options) validateFlags() error {
 		return errors.New("approle role id and secret id required when using approle auth")
 	}
 
+	if _, err := time.ParseDuration(o.TokenRefreshInterval); err != nil {
+		return fmt.Errorf("invalid token refresh interval: %w", err)
+	}
+
 	return nil
+}
+
+func shutDownSignal(ctx context.Context) context.Context {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
+
+	parentCtx, cancel := context.WithCancel(ctx)
+
+	go func() {
+		signal := <-signalChan
+
+		cancel()
+
+		zap.L().Info("Received signal", zap.Stringer("signal", signal))
+		zap.L().Info("Shutting down server")
+	}()
+
+	return parentCtx
 }

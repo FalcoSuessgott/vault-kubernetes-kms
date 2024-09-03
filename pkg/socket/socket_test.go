@@ -15,7 +15,7 @@ func TestNewSocket(t *testing.T) {
 	}{
 		{
 			name: "basic",
-			str:  "unix:///opt/vaultkms.socket",
+			str:  "unix:///tmp/vaultkms.socket",
 		},
 		{
 			name: "invalid",
@@ -25,8 +25,10 @@ func TestNewSocket(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := Listen(tc.str)
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Listen(tc.str)
 
-		require.Equal(t, tc.err, err != nil, fmt.Sprintf("%s: %v", tc.name, err))
+			require.Equal(t, tc.err, err != nil, fmt.Sprintf("%s: %v", tc.name, err))
+		})
 	}
 }

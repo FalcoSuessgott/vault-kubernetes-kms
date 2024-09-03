@@ -72,15 +72,15 @@ func (v *TestContainer) GetApproleCreds(mount, role string) (string, string, err
 }
 
 // nolint: perfsprint
-func (v *TestContainer) GetToken(policy string) (string, error) {
-	_, r, err := v.Container.Exec(context.Background(), []string{"vault", "token", "create", "-field=token", fmt.Sprintf("-policy=%s", policy)})
+func (v *TestContainer) GetToken(policy string, ttl string) (string, error) {
+	_, r, err := v.Container.Exec(context.Background(), []string{"vault", "token", "create", "-field=token", "-policy=" + policy, "-ttl=" + ttl})
 	if err != nil {
-		return "", fmt.Errorf("error creating role_id: %w", err)
+		return "", fmt.Errorf("error creating token: %w", err)
 	}
 
 	token, err := io.ReadAll(r)
 	if err != nil {
-		return "", fmt.Errorf("error reading role_id: %w", err)
+		return "", fmt.Errorf("error reading token: %w", err)
 	}
 
 	// removing the first 8 bytes, which is the shell prompt

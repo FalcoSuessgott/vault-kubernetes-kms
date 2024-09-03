@@ -27,13 +27,8 @@ jobs:
         with:
           go-version: '1.22.6'
           cache: false
-<<<<<<< HEAD
-          
-      - uses: sigstore/cosign-installer@v3.7.0
-=======
 
       - uses: sigstore/cosign-installer@v3.6.0
->>>>>>> 4a4e163 (feat(healthchecks): introduce healtchecks and simple metrics)
       - uses: anchore/sbom-action/download-syft@v0.17.2
       -
         name: Set up QEMU
