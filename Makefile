@@ -31,6 +31,38 @@ setup-vault: ## setup a local vault dev server with transit engine + key
 setup-registry: ## setup a local docker registry for pulling in kind
 	./scripts/local-registry.sh
 
+.PHONY: setup-prometheus
+setup-prometheus: ## setup prometheus locally
+	docker run \
+		--rm \
+		-v "${PWD}/assets/prometheus.yml:/etc/prometheus/prometheus.yml" \
+		--name prometheus \
+		-p 9090:9090 \
+		prom/prometheus:latest
+
+.PHONY: gen-load
+gen-load: ## generate load on KMS plugin
+	while true; do \
+		go run cmd/v2_client/main.go $(shell openssl rand -base64 12);\
+	done;
+
+.PHONY: gen-secrets
+gen-secrets: ## generate secrets on KMS plugin
+	while true; do \
+		kubectl create secret generic $(shell openssl rand -base64 12) -n default --from-literal=$(shell openssl rand -base64 12)=$(shell openssl rand -base64 12);\
+	done;
+
+.PHONY: setup-grafana
+setup-grafana: ## setup grafana locally
+	docker run \
+		--rm \
+		-v "${PWD}/assets/grafana_datasource.yml:/etc/grafana/provisioning/datasources/grafana_datasource.yml" \
+		-v "${PWD}/assets/grafana_dashboard.yml:/etc/grafana/provisioning/dashboards/grafana_dashboard.yml" \
+		-v "${PWD}/assets/dashboard.json:/var/lib/grafana/dashboards/dashboard.json" \
+		--name grafana \
+		-p 3000:3000 \
+		grafana/grafana:latest
+
 .PHONY: setup-kind
 setup-kind: ## setup kind cluster with encrpytion provider configured
 	kind delete cluster --name=kms || true

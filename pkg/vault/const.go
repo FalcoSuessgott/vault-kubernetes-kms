@@ -9,5 +9,5 @@ const (
 	mountEnginePath = "sys/mounts/%s"
 	transitKeyPath  = "%s/keys/%s"
 
-	tokenRefreshIntervall = 3600
+	tokenRefreshInterval = 3600
 )

@@ -37,6 +37,7 @@ func (s *VaultSuite) SetupSubTest() {
 	s.tc = tc
 
 	vault, err := NewClient(
+		nil,
 		WithVaultAddress(tc.URI),
 		WithTokenAuth(tc.Token),
 		WithTransit("transit", "kms"),
@@ -69,14 +70,14 @@ func (s *VaultSuite) TestAuthMethods() {
 					return nil, err
 				}
 
-				return WitAppRoleAuth("approle", roleID, secretID), nil
+				return WithAppRoleAuth("approle", roleID, secretID), nil
 			},
 		},
 		{
 			name: "invalid approle auth",
 			err:  true,
 			auth: func() (Option, error) {
-				return WitAppRoleAuth("approle", "invalid", "invalid"), nil
+				return WithAppRoleAuth("approle", "invalid", "invalid"), nil
 			},
 		},
 		{
@@ -112,6 +113,7 @@ func (s *VaultSuite) TestAuthMethods() {
 			s.Require().NoError(err, "auth "+tc.name)
 
 			_, err = NewClient(
+				nil,
 				WithVaultAddress(s.tc.URI),
 				WithTokenAuth(s.tc.Token),
 				auth,

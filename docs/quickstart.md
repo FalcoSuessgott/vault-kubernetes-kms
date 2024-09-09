@@ -12,7 +12,7 @@ In order to run this guide, you will need to have `kind`, `kubectl` and `vault` 
 
 !!! note
     `vault-kubernetes-kms` is only published as `amd` (x86_64) images.
-    
+
     You will make sure, you actually pull `amd` images. You can test it, by using `docker run -it ubuntu /usr/bin/uname -p` which, should output `86_64`.
 
     If you need `arm` images, raise an issue.
@@ -107,7 +107,7 @@ $> kubectl -n kube-system exec etcd-kms-control-plane -- sh -c "ETCDCTL_API=3 et
     --cert /etc/kubernetes/pki/etcd/server.crt \
     --key /etc/kubernetes/pki/etcd/server.key \
     --cacert /etc/kubernetes/pki/etcd/ca.crt \
-    get /registry/secrets/default/secret-encrypted" | hexdump -C 
+    get /registry/secrets/default/secret-encrypted" | hexdump -C
 00000000  2f 72 65 67 69 73 74 72  79 2f 73 65 63 72 65 74  |/registry/secret|
 00000010  73 2f 64 65 66 61 75 6c  74 2f 73 65 63 72 65 74  |s/default/secret|
 00000020  2d 65 6e 63 72 79 70 74  65 64 0a 6b 38 73 3a 65  |-encrypted.k8s:e|
@@ -168,7 +168,7 @@ $> kubectl get secret secret-encrypted -o json | jq '.data | map_values(@base64d
 $> kind delete cluster -n kms
 
 # vault
-$> kill $(pgrep -x vault) 
+$> kill $(pgrep -x vault)
 ```
 
 ## Some last thoughts
