@@ -6,7 +6,7 @@ COPY . .
 RUN CGO_ENABLED=0 go build -v -o /vault-kubernetes-kms main.go
 
 # https://github.com/GoogleContainerTools/distroless/issues/1360#issuecomment-1646667145
-FROM gcr.io/distroless/static-debian12@sha256:95eb83a44a62c1c27e5f0b38d26085c486d71ece83dd64540b7209536bb13f6d
+FROM gcr.io/distroless/static-debian12@sha256:b033683de7de51d8cce5aa4b47c1b9906786f6256017ca8b17b2551947fcf6d8
 WORKDIR /
 COPY --from=builder /vault-kubernetes-kms .
 
