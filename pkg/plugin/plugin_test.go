@@ -34,7 +34,7 @@ func TestVaultSuite(t *testing.T) {
 
 func (p *PluginSuite) SetupAllSuite() {
 	// create unix socket
-	_, err := socket.NewSocket(socketPath)
+	_, err := socket.Listen(socketPath)
 	if err != nil {
 		p.T().Fatal("cannot create socket: %w", err)
 	}

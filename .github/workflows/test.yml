@@ -24,8 +24,7 @@ jobs:
         run: go get ./...
 
       - name: Run coverage
-        run: |
-          gotestsum -- -v -race -coverprofile="coverage.out" -covermode=atomic ./...
+        run: make test
         env:
           # https://github.com/testcontainers/testcontainers-go/issues/1782
           TESTCONTAINERS_RYUK_DISABLED: true

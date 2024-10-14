@@ -10,7 +10,7 @@ jobs:
   E2E:
     strategy:
       matrix:
-        vault: [1.15, 1.16, 1.17]
+        vault: [1.16, 1.17, 1.18]
         versions:
           - k8s_version: v1.28.0
             kind_cfg: kind-config_v1.yaml
@@ -54,7 +54,7 @@ jobs:
       - name: setup go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22.1'
+          go-version: '1.22.6'
           cache: false
 
       - name: setup qemu
