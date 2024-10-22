@@ -1,0 +1,1060 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Encrypt Kubernetes Secrets using Hashicorp Vault as the KMS Provider">
+      
+      
+        <meta name="author" content="FalcoSuessgott">
+      
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../configuration/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.17">
+    
+    
+      
+        <title>Quickstart - vault-kms-plugin</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.bcfcd587.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#quickstart" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="vault-kms-plugin" class="md-header__button md-logo" aria-label="vault-kms-plugin" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            vault-kms-plugin
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Quickstart
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3m0-4.5c5 0 9.27 3.11 11 7.5-1.73 4.39-6 7.5-11 7.5S2.73 16.39 1 12c1.73-4.39 6-7.5 11-7.5M3.18 12a9.821 9.821 0 0 0 17.64 0 9.821 9.821 0 0 0-17.64 0Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/FalcoSuessgott/vault-kubernetes-kms" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    FalcoSuessgott/vault-kms-plugin
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href=".." class="md-tabs__link">
+          
+  
+    
+  
+  vault-kubernetes-kms
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="vault-kms-plugin" class="md-nav__button md-logo" aria-label="vault-kms-plugin" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    vault-kms-plugin
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/FalcoSuessgott/vault-kubernetes-kms" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    FalcoSuessgott/vault-kms-plugin
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href=".." class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    vault-kubernetes-kms
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            vault-kubernetes-kms
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Quickstart
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Quickstart
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Requirements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clone-the-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clone the repository
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup-a-vault-in-development-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup a Vault in development mode
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup-vault-with-encryption-provider-config-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      setup vault with encryption provider config usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-kubernetes-secrets-encrypted-on-etcd-disk" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating Kubernetes secrets encrypted on etcd disk
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#encrypt-all-existing-secrets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Encrypt all existing secrets
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-decryption-after-restart" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify decryption after restart
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#teardown" class="md-nav__link">
+    <span class="md-ellipsis">
+      Teardown
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#some-last-thoughts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Some last thoughts
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Concepts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sign/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Artifact signing and SBOMs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Integrations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Development
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Requirements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clone-the-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clone the repository
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup-a-vault-in-development-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup a Vault in development mode
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup-vault-with-encryption-provider-config-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      setup vault with encryption provider config usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-kubernetes-secrets-encrypted-on-etcd-disk" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating Kubernetes secrets encrypted on etcd disk
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#encrypt-all-existing-secrets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Encrypt all existing secrets
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-decryption-after-restart" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify decryption after restart
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#teardown" class="md-nav__link">
+    <span class="md-ellipsis">
+      Teardown
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#some-last-thoughts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Some last thoughts
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/FalcoSuessgott/vault-kubernetes-kms/edit/master/docs/quickstart.md" title="Edit this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="quickstart">Quickstart<a class="headerlink" href="#quickstart" title="Permanent link">&para;</a></h1>
+<p>This Guide will walk you through the required steps of installing and configuring the <code>vault-kms-plugin</code> for Kubernetes. It currently uses token based authentication and HTTP communication, which is not secure enough when running in production.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Checkout <a href="https://falcosuessgott.github.io/hashicorp-vault-playground/home/">https://falcosuessgott.github.io/hashicorp-vault-playground/home/</a> a project that helps you quickly setting up HashiCorp Vault locally with many useful Kubernetes Labs already pre configured.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This guide uses the new version of the Kubernetes KMS Plugin API, which was introduced in Kubernetes v1.29.0 (<a href="https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-v2">https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-v2</a>).</p>
+</div>
+<h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
+<p>In order to run this guide, you will need to have <code>kind</code>, <code>kubectl</code> and <code>vault</code> installed on your system. This guide has been tested on MacOS and Linux.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>vault-kubernetes-kms</code> is only published as <code>amd</code> (x86_64) images.</p>
+<p>You will make sure, you actually pull <code>amd</code> images. You can test it, by using <code>docker run -it ubuntu /usr/bin/uname -p</code> which, should output <code>86_64</code>.</p>
+<p>If you need <code>arm</code> images, raise an issue.</p>
+</div>
+<h2 id="clone-the-repository">Clone the repository<a class="headerlink" href="#clone-the-repository" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$&gt;<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/FalcoSuessgott/vault-kubernetes-kms.git
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>vault-kubernetes-kms
+</span></code></pre></div>
+<h2 id="setup-a-vault-in-development-mode">Setup a Vault in development mode<a class="headerlink" href="#setup-a-vault-in-development-mode" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># invokes ./scripts/setup.vault.sh</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>$&gt;<span class="w"> </span>make<span class="w"> </span>setup-vault
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># point your vault CLI to the local Vault server</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_ADDR</span><span class="o">=</span><span class="s2">&quot;http://127.0.0.1:8200&quot;</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_SKIP_VERIFY</span><span class="o">=</span><span class="s2">&quot;true&quot;</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_TOKEN</span><span class="o">=</span><span class="s2">&quot;root&quot;</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>$&gt;<span class="w"> </span>vault<span class="w"> </span>status
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>Key<span class="w">             </span>Value
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>---<span class="w">             </span>-----
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>Seal<span class="w"> </span>Type<span class="w">       </span>shamir
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>Initialized<span class="w">     </span><span class="nb">true</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>Sealed<span class="w">          </span><span class="nb">false</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>Total<span class="w"> </span>Shares<span class="w">    </span><span class="m">1</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>Threshold<span class="w">       </span><span class="m">1</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>Version<span class="w">         </span><span class="m">1</span>.15.6
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>Build<span class="w"> </span>Date<span class="w">      </span><span class="m">2024</span>-02-28T17:07:34Z
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>Storage<span class="w"> </span>Type<span class="w">    </span>inmem
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>Cluster<span class="w"> </span>Name<span class="w">    </span>vault-cluster-32a0c10b
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>Cluster<span class="w"> </span>ID<span class="w">      </span>2081a49b-8372-3857-3754-b576e0877682
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>HA<span class="w"> </span>Enabled<span class="w">      </span><span class="nb">false</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="c1"># a transit engine `transit` &amp; key `kms` has been created</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>$&gt;<span class="w"> </span>vault<span class="w"> </span>list<span class="w"> </span>transit/keys
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>Keys
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>----
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>kms
+</span></code></pre></div>
+<h2 id="setup-vault-with-encryption-provider-config-usage">setup vault with encryption provider config usage<a class="headerlink" href="#setup-vault-with-encryption-provider-config-usage" title="Permanent link">&para;</a></h2>
+<p>Now, we have a local running Vault server, lets start a local running Kubernetes cluster using <code>kind</code>, which will deploy the <code>vault-kubernetes-kms</code> plugin as a static pod on the control plane as well as its required <code>encryption_provider_config</code> (see <a href="https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/">https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/</a> for the required configuration steps):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># can take up to 2 minutes</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>$&gt;<span class="w"> </span>kind<span class="w"> </span>create<span class="w"> </span>cluster<span class="w"> </span>--name<span class="o">=</span>kms<span class="w"> </span>--config<span class="w"> </span>assets/kind-config.yaml
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>Creating<span class="w"> </span>cluster<span class="w"> </span><span class="s2">&quot;kms&quot;</span><span class="w"> </span>...
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w"> </span>✓<span class="w"> </span>Ensuring<span class="w"> </span>node<span class="w"> </span>image<span class="w"> </span><span class="o">(</span>kindest/node:v1.29.2<span class="o">)</span><span class="w"> </span>🖼
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w"> </span>✓<span class="w"> </span>Preparing<span class="w"> </span>nodes<span class="w"> </span>📦
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w"> </span>✓<span class="w"> </span>Writing<span class="w"> </span>configuration<span class="w"> </span>📜
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w"> </span>✓<span class="w"> </span>Starting<span class="w"> </span>control-plane<span class="w"> </span>🕹️
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w"> </span>✓<span class="w"> </span>Installing<span class="w"> </span>CNI<span class="w"> </span>🔌
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w"> </span>✓<span class="w"> </span>Installing<span class="w"> </span>StorageClass<span class="w"> </span>💾
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>Set<span class="w"> </span>kubectl<span class="w"> </span>context<span class="w"> </span>to<span class="w"> </span><span class="s2">&quot;kind-kms&quot;</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>You<span class="w"> </span>can<span class="w"> </span>now<span class="w"> </span>use<span class="w"> </span>your<span class="w"> </span>cluster<span class="w"> </span>with:
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>kubectl<span class="w"> </span>cluster-info<span class="w"> </span>--context<span class="w"> </span>kind-kms
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>Have<span class="w"> </span>a<span class="w"> </span>nice<span class="w"> </span>day!<span class="w"> </span>👋
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>$&gt;<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pod<span class="w"> </span>-n<span class="w"> </span>kube-system
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>NAME<span class="w">                                        </span>READY<span class="w">   </span>STATUS<span class="w">    </span>RESTARTS<span class="w">   </span>AGE
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>coredns-76f75df574-q9nvb<span class="w">                    </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>97s
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>coredns-76f75df574-vwmxz<span class="w">                    </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>97s
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>etcd-kms-control-plane<span class="w">                      </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>2m
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>kindnet-wngbr<span class="w">                               </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>98s
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>kube-apiserver-kms-control-plane<span class="w">            </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>118s
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>kube-controller-manager-kms-control-plane<span class="w">   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>118s
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>kube-proxy-rvl9z<span class="w">                            </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>98s
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>kube-scheduler-kms-control-plane<span class="w">            </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>2m
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>vault-kubernetes-kms-kms-control-plane<span class="w">      </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>116s<span class="w"> </span><span class="c1"># vaul-kubernetes-kms pod</span>
+</span></code></pre></div>
+<h2 id="creating-kubernetes-secrets-encrypted-on-etcd-disk">Creating Kubernetes secrets encrypted on etcd disk<a class="headerlink" href="#creating-kubernetes-secrets-encrypted-on-etcd-disk" title="Permanent link">&para;</a></h2>
+<p>Time for creating new Kubernetes secrets and check how they are now stored in etcd storage due to a kms encryption provider configured:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># create any secret</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>$&gt;<span class="w"> </span>kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>secret-encrypted<span class="w"> </span>-n<span class="w"> </span>default<span class="w"> </span>--from-literal<span class="o">=</span><span class="nv">key</span><span class="o">=</span>value
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>secret/secret-encrypted<span class="w"> </span>created
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1"># show the secret</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>§&gt;<span class="w">  </span>kubectl<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>secret-encrypted<span class="w"> </span>-o<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.data | map_values(@base64d)&#39;</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="o">{</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="s2">&quot;key&quot;</span>:<span class="w"> </span><span class="s2">&quot;value&quot;</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="o">}</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1"># show secret in etcd storage</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>$&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>etcd-kms-control-plane<span class="w"> </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;ETCDCTL_API=3 etcdctl \</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="s2">    --endpoints=https://127.0.0.1:2379 \</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="s2">    --cert /etc/kubernetes/pki/etcd/server.crt \</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="s2">    --key /etc/kubernetes/pki/etcd/server.key \</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="s2">    --cacert /etc/kubernetes/pki/etcd/ca.crt \</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="s2">    get /registry/secrets/default/secret-encrypted&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>hexdump<span class="w"> </span>-C<span class="w"> </span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="m">00000000</span><span class="w">  </span>2f<span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">67</span><span class="w"> </span><span class="m">69</span><span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">74</span><span class="w"> </span><span class="m">72</span><span class="w">  </span><span class="m">79</span><span class="w"> </span>2f<span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="p">|</span>/registry/secret<span class="p">|</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="m">00000010</span><span class="w">  </span><span class="m">73</span><span class="w"> </span>2f<span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">66</span><span class="w"> </span><span class="m">61</span><span class="w"> </span><span class="m">75</span><span class="w"> </span>6c<span class="w">  </span><span class="m">74</span><span class="w"> </span>2f<span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="p">|</span>s/default/secret<span class="p">|</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="m">00000020</span><span class="w">  </span>2d<span class="w"> </span><span class="m">65</span><span class="w"> </span>6e<span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">79</span><span class="w"> </span><span class="m">70</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="m">65</span><span class="w"> </span><span class="m">64</span><span class="w"> </span>0a<span class="w"> </span>6b<span class="w"> </span><span class="m">38</span><span class="w"> </span><span class="m">73</span><span class="w"> </span>3a<span class="w"> </span><span class="m">65</span><span class="w">  </span><span class="p">|</span>-encrypted.k8s:e<span class="p">|</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="m">00000030</span><span class="w">  </span>6e<span class="w"> </span><span class="m">63</span><span class="w"> </span>3a<span class="w"> </span>6b<span class="w"> </span>6d<span class="w"> </span><span class="m">73</span><span class="w"> </span>3a<span class="w"> </span><span class="m">76</span><span class="w">  </span><span class="m">32</span><span class="w"> </span>3a<span class="w"> </span><span class="m">76</span><span class="w"> </span><span class="m">61</span><span class="w"> </span><span class="m">75</span><span class="w"> </span>6c<span class="w"> </span><span class="m">74</span><span class="w"> </span>2d<span class="w">  </span><span class="p">|</span>nc:kms:v2:vault-<span class="p">|</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="m">00000040</span><span class="w">  </span>6b<span class="w"> </span><span class="m">75</span><span class="w"> </span><span class="m">62</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">72</span><span class="w"> </span>6e<span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="m">65</span><span class="w"> </span><span class="m">73</span><span class="w"> </span>2d<span class="w"> </span>6b<span class="w"> </span>6d<span class="w"> </span><span class="m">73</span><span class="w"> </span>3a<span class="w"> </span>0a<span class="w">  </span><span class="p">|</span>kubernetes-kms:.<span class="p">|</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="m">00000050</span><span class="w">  </span>a4<span class="w"> </span><span class="m">02</span><span class="w"> </span>7f<span class="w"> </span>fe<span class="w"> </span>e1<span class="w"> </span>bb<span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">29</span><span class="w">  </span><span class="m">71</span><span class="w"> </span><span class="m">62</span><span class="w"> </span>b6<span class="w"> </span>1f<span class="w"> </span>c0<span class="w"> </span>be<span class="w"> </span>d5<span class="w"> </span>a0<span class="w">  </span><span class="p">|</span>......c<span class="o">)</span>qb......<span class="p">|</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="m">00000060</span><span class="w">  </span>a8<span class="w"> </span><span class="m">38</span><span class="w"> </span>0b<span class="w"> </span>e6<span class="w"> </span>a1<span class="w"> </span>bc<span class="w"> </span>4b<span class="w"> </span>bb<span class="w">  </span><span class="m">16</span><span class="w"> </span>ff<span class="w"> </span>3f<span class="w"> </span>d3<span class="w"> </span>3f<span class="w"> </span><span class="m">14</span><span class="w"> </span>e4<span class="w"> </span>be<span class="w">  </span><span class="p">|</span>.8....K...?.?...<span class="p">|</span>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="m">00000070</span><span class="w">  </span>7e<span class="w"> </span>fa<span class="w"> </span><span class="m">53</span><span class="w"> </span>de<span class="w"> </span>d5<span class="w"> </span><span class="m">06</span><span class="w"> </span><span class="m">75</span><span class="w"> </span><span class="m">08</span><span class="w">  </span>3a<span class="w"> </span>fd<span class="w"> </span>5f<span class="w"> </span>fb<span class="w"> </span>e9<span class="w"> </span>a3<span class="w"> </span>b1<span class="w"> </span><span class="m">29</span><span class="w">  </span><span class="p">|</span>~.S...u.:._....<span class="o">)</span><span class="p">|</span>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="m">00000080</span><span class="w">  </span>e2<span class="w"> </span>9f<span class="w"> </span><span class="m">26</span><span class="w"> </span>1c<span class="w"> </span>ef<span class="w"> </span>bb<span class="w"> </span>1b<span class="w"> </span><span class="m">24</span><span class="w">  </span><span class="m">37</span><span class="w"> </span>bc<span class="w"> </span>f3<span class="w"> </span>ab<span class="w"> </span>9c<span class="w"> </span>df<span class="w"> </span><span class="m">46</span><span class="w"> </span>c4<span class="w">  </span><span class="p">|</span>..<span class="p">&amp;</span>....<span class="nv">$7</span>.....F.<span class="p">|</span>
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a><span class="m">00000090</span><span class="w">  </span>8f<span class="w"> </span><span class="m">47</span><span class="w"> </span><span class="m">33</span><span class="w"> </span>e5<span class="w"> </span>c0<span class="w"> </span><span class="m">76</span><span class="w"> </span><span class="m">54</span><span class="w"> </span>3b<span class="w">  </span>e7<span class="w"> </span>f4<span class="w"> </span>3b<span class="w"> </span>da<span class="w"> </span>0d<span class="w"> </span>bf<span class="w"> </span><span class="m">80</span><span class="w"> </span>e0<span class="w">  </span><span class="p">|</span>.G3..vT<span class="p">;</span>..<span class="p">;</span>.....<span class="p">|</span>
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>000000a0<span class="w">  </span><span class="m">52</span><span class="w"> </span><span class="m">88</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>1a<span class="w"> </span>6f<span class="w"> </span>c6<span class="w"> </span>ec<span class="w"> </span>7f<span class="w">  </span>bb<span class="w"> </span><span class="m">51</span><span class="w"> </span>4b<span class="w"> </span>ef<span class="w"> </span>0c<span class="w"> </span>c7<span class="w"> </span>b6<span class="w"> </span>8f<span class="w">  </span><span class="p">|</span>R...o....QK.....<span class="p">|</span>
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>000000b0<span class="w">  </span><span class="m">31</span><span class="w"> </span>2d<span class="w"> </span>6b<span class="w"> </span><span class="m">96</span><span class="w"> </span>3d<span class="w"> </span><span class="m">37</span><span class="w"> </span>ee<span class="w"> </span>cb<span class="w">  </span>f0<span class="w"> </span><span class="m">56</span><span class="w"> </span><span class="m">83</span><span class="w"> </span><span class="m">40</span><span class="w"> </span>d8<span class="w"> </span>b4<span class="w"> </span><span class="m">21</span><span class="w"> </span><span class="m">75</span><span class="w">  </span><span class="p">|</span><span class="m">1</span>-k.<span class="o">=</span><span class="m">7</span>...V.@..!u<span class="p">|</span>
+</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>000000c0<span class="w">  </span><span class="m">31</span><span class="w"> </span><span class="m">78</span><span class="w"> </span>e7<span class="w"> </span>ab<span class="w"> </span>ec<span class="w"> </span>5f<span class="w"> </span>6e<span class="w"> </span>f7<span class="w">  </span>bf<span class="w"> </span><span class="m">84</span><span class="w"> </span><span class="m">86</span><span class="w"> </span><span class="m">34</span><span class="w"> </span>2a<span class="w"> </span>aa<span class="w"> </span><span class="m">65</span><span class="w"> </span>1b<span class="w">  </span><span class="p">|</span>1x..._n....4*.e.<span class="p">|</span>
+</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>000000d0<span class="w">  </span>8a<span class="w"> </span>2b<span class="w"> </span>ce<span class="w"> </span>6c<span class="w"> </span>ae<span class="w"> </span>6f<span class="w"> </span>b6<span class="w"> </span>df<span class="w">  </span><span class="m">11</span><span class="w"> </span>5b<span class="w"> </span>ec<span class="w"> </span><span class="m">14</span><span class="w"> </span>9d<span class="w"> </span>b9<span class="w"> </span><span class="m">00</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="p">|</span>.+.l.o...<span class="o">[</span>.....t<span class="p">|</span>
+</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>000000e0<span class="w">  </span>9d<span class="w"> </span>0c<span class="w"> </span><span class="m">01</span><span class="w"> </span><span class="m">11</span><span class="w"> </span>c4<span class="w"> </span><span class="m">67</span><span class="w"> </span><span class="m">48</span><span class="w"> </span><span class="m">67</span><span class="w">  </span>3d<span class="w"> </span>d3<span class="w"> </span>8f<span class="w"> </span><span class="m">58</span><span class="w"> </span>1a<span class="w"> </span>0d<span class="w"> </span>da<span class="w"> </span><span class="m">34</span><span class="w">  </span><span class="p">|</span>.....gHg<span class="o">=</span>..X...4<span class="p">|</span>
+</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>000000f0<span class="w">  </span>0d<span class="w"> </span><span class="m">55</span><span class="w"> </span><span class="m">19</span><span class="w"> </span><span class="m">91</span><span class="w"> </span>cc<span class="w"> </span>7e<span class="w"> </span>db<span class="w"> </span>c3<span class="w">  </span><span class="m">36</span><span class="w"> </span>a2<span class="w"> </span>6d<span class="w"> </span>2f<span class="w"> </span>ea<span class="w"> </span><span class="m">28</span><span class="w"> </span><span class="m">10</span><span class="w"> </span>ab<span class="w">  </span><span class="p">|</span>.U...~..6.m/.<span class="o">(</span>..<span class="p">|</span>
+</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a><span class="m">00000100</span><span class="w">  </span>9b<span class="w"> </span>1e<span class="w"> </span><span class="m">71</span><span class="w"> </span>a9<span class="w"> </span>d4<span class="w"> </span>b1<span class="w"> </span><span class="m">74</span><span class="w"> </span>6b<span class="w">  </span>2f<span class="w"> </span>cc<span class="w"> </span>ef<span class="w"> </span>aa<span class="w"> </span><span class="m">30</span><span class="w"> </span>d9<span class="w"> </span>1a<span class="w"> </span>b8<span class="w">  </span><span class="p">|</span>..q...tk/...0...<span class="p">|</span>
+</span><span id="__span-3-35"><a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a><span class="m">00000110</span><span class="w">  </span><span class="m">68</span><span class="w"> </span><span class="m">30</span><span class="w"> </span>3b<span class="w"> </span>5b<span class="w"> </span>c5<span class="w"> </span>3a<span class="w"> </span><span class="m">32</span><span class="w"> </span><span class="m">69</span><span class="w">  </span>6a<span class="w"> </span><span class="m">75</span><span class="w"> </span>4d<span class="w"> </span><span class="m">43</span><span class="w"> </span><span class="m">68</span><span class="w"> </span>1f<span class="w"> </span><span class="m">33</span><span class="w"> </span><span class="m">23</span><span class="w">  </span><span class="p">|</span>h0<span class="p">;</span><span class="o">[</span>.:2ijuMCh.3#<span class="p">|</span>
+</span><span id="__span-3-36"><a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a><span class="m">00000120</span><span class="w">  </span>af<span class="w"> </span><span class="m">56</span><span class="w"> </span>8c<span class="w"> </span><span class="m">15</span><span class="w"> </span>c9<span class="w"> </span><span class="m">17</span><span class="w"> </span>cb<span class="w"> </span>8a<span class="w">  </span><span class="m">46</span><span class="w"> </span><span class="nb">fc</span><span class="w"> </span>9f<span class="w"> </span>5a<span class="w"> </span><span class="m">24</span><span class="w"> </span>da<span class="w"> </span><span class="m">25</span><span class="w"> </span><span class="m">16</span><span class="w">  </span><span class="p">|</span>.V......F..Z$.%.<span class="p">|</span>
+</span><span id="__span-3-37"><a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a><span class="m">00000130</span><span class="w">  </span><span class="m">15</span><span class="w"> </span><span class="m">31</span><span class="w"> </span>ce<span class="w"> </span><span class="m">41</span><span class="w"> </span><span class="m">59</span><span class="w"> </span>6b<span class="w"> </span>b8<span class="w"> </span>c6<span class="w">  </span>7d<span class="w"> </span>5e<span class="w"> </span>b3<span class="w"> </span>ee<span class="w"> </span><span class="m">07</span><span class="w"> </span>a7<span class="w"> </span><span class="m">65</span><span class="w"> </span>3b<span class="w">  </span><span class="p">|</span>.1.AYk..<span class="o">}</span>^....e<span class="p">;|</span>
+</span><span id="__span-3-38"><a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a><span class="m">00000140</span><span class="w">  </span>a8<span class="w"> </span>f2<span class="w"> </span>8a<span class="w"> </span>ab<span class="w"> </span>e7<span class="w"> </span>d0<span class="w"> </span><span class="m">37</span><span class="w"> </span>bc<span class="w">  </span>9c<span class="w"> </span>e6<span class="w"> </span>e6<span class="w"> </span><span class="m">33</span><span class="w"> </span><span class="m">71</span><span class="w"> </span><span class="m">57</span><span class="w"> </span>c5<span class="w"> </span>6c<span class="w">  </span><span class="p">|</span>......7....3qW.l<span class="p">|</span>
+</span><span id="__span-3-39"><a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a><span class="m">00000150</span><span class="w">  </span><span class="m">09</span><span class="w"> </span>ff<span class="w"> </span>e9<span class="w"> </span><span class="m">65</span><span class="w"> </span>c9<span class="w"> </span>8c<span class="w"> </span>9f<span class="w"> </span>aa<span class="w">  </span>1c<span class="w"> </span>e2<span class="w"> </span>df<span class="w"> </span>a4<span class="w"> </span>ad<span class="w"> </span><span class="nb">fc</span><span class="w"> </span>a0<span class="w"> </span><span class="m">02</span><span class="w">  </span><span class="p">|</span>...e............<span class="p">|</span>
+</span><span id="__span-3-40"><a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a><span class="m">00000160</span><span class="w">  </span>2b<span class="w"> </span>6d<span class="w"> </span><span class="m">93</span><span class="w"> </span>5e<span class="w"> </span><span class="m">44</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">28</span><span class="w">  </span>d7<span class="w"> </span>3f<span class="w"> </span>e1<span class="w"> </span><span class="m">98</span><span class="w"> </span>eb<span class="w"> </span><span class="m">84</span><span class="w"> </span>ab<span class="w"> </span><span class="m">22</span><span class="w">  </span><span class="p">|</span>+m.^D<span class="w"> </span>d<span class="o">(</span>.?.....<span class="s2">&quot;|</span>
+</span><span id="__span-3-41"><a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a><span class="s2">00000170  82 92 7a b6 b2 b8 12 0a  31 37 31 31 32 34 32 33  |..z.....17112423|</span>
+</span><span id="__span-3-42"><a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a><span class="s2">00000180  36 34 1a 59 76 61 75 6c  74 3a 76 31 3a 6d 42 41  |64.Yvault:v1:mBA|  # encrypted value</span>
+</span><span id="__span-3-43"><a id="__codelineno-3-43" name="__codelineno-3-43" href="#__codelineno-3-43"></a><span class="s2">00000190  4a 47 56 56 35 72 46 78  36 47 4c 4f 62 33 46 50  |JGVV5rFx6GLOb3FP|</span>
+</span><span id="__span-3-44"><a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a><span class="s2">000001a0  37 4a 38 73 5a 79 4a 38  2f 68 36 61 48 2b 46 57  |7J8sZyJ8/h6aH+FW|</span>
+</span><span id="__span-3-45"><a id="__codelineno-3-45" name="__codelineno-3-45" href="#__codelineno-3-45"></a><span class="s2">000001b0  55 46 2f 67 53 68 30 65  41 31 4e 51 45 47 6e 30  |UF/gSh0eA1NQEGn0|</span>
+</span><span id="__span-3-46"><a id="__codelineno-3-46" name="__codelineno-3-46" href="#__codelineno-3-46"></a><span class="s2">000001c0  5a 30 38 66 6a 59 45 53  30 4c 31 79 35 45 49 50  |Z08fjYES0L1y5EIP|</span>
+</span><span id="__span-3-47"><a id="__codelineno-3-47" name="__codelineno-3-47" href="#__codelineno-3-47"></a><span class="s2">000001d0  33 67 4c 72 77 61 35 4b  61 44 35 43 63 28 01 0a  |3gLrwa5KaD5Cc(..|</span>
+</span><span id="__span-3-48"><a id="__codelineno-3-48" name="__codelineno-3-48" href="#__codelineno-3-48"></a><span class="s2">000001e0</span>
+</span></code></pre></div>
+<h2 id="encrypt-all-existing-secrets">Encrypt all existing secrets<a class="headerlink" href="#encrypt-all-existing-secrets" title="Permanent link">&para;</a></h2>
+<p>You can encrypt all previous existing secrets using:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$&gt;<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>secrets<span class="w"> </span>--all-namespaces<span class="w"> </span>-o<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>kubectl<span class="w"> </span>replace<span class="w"> </span>-f<span class="w"> </span>-
+</span></code></pre></div>
+<h2 id="verify-decryption-after-restart">Verify decryption after restart<a class="headerlink" href="#verify-decryption-after-restart" title="Permanent link">&para;</a></h2>
+<p>If we restart the <code>kube-apiserver</code> the secrets have been Successfully decrypted:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$&gt;<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pod/etcd-kms-control-plane<span class="w"> </span>-n<span class="w"> </span>kube-system
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>pod<span class="w"> </span><span class="s2">&quot;kube-apiserver-minikube&quot;</span><span class="w"> </span>deleted
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># secret has been successfully decrypted</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>$&gt;<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>secret-encrypted<span class="w"> </span>-o<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.data | map_values(@base64d)&#39;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="o">{</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="s2">&quot;key&quot;</span>:<span class="w"> </span><span class="s2">&quot;value&quot;</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="o">}</span>
+</span></code></pre></div>
+<h2 id="teardown">Teardown<a class="headerlink" href="#teardown" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># kind cluster</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>$&gt;<span class="w"> </span>kind<span class="w"> </span>delete<span class="w"> </span>cluster<span class="w"> </span>-n<span class="w"> </span>kms
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># vault</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>$&gt;<span class="w"> </span><span class="nb">kill</span><span class="w"> </span><span class="k">$(</span>pgrep<span class="w"> </span>-x<span class="w"> </span>vault<span class="k">)</span><span class="w"> </span>
+</span></code></pre></div>
+<h2 id="some-last-thoughts">Some last thoughts<a class="headerlink" href="#some-last-thoughts" title="Permanent link">&para;</a></h2>
+<p>For production usage you should consider:</p>
+<ul>
+<li>use HTTPS for the communication between Kubernetes &amp; HashiCorp Vault (see <a href="https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/">https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/</a>)</li>
+<li>deploy the <code>vault-kubernetes-kms</code> plugin as a static pod on all control plane nodes</li>
+<li>automate the deployment using your preferred automation method (see <a href="https://falcosuessgott.github.io/vault-kubernetes-kms/integration/">https://falcosuessgott.github.io/vault-kubernetes-kms/integration/</a>)</li>
+</ul>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 22, 2024</span>
+  </span>
+
+    
+    
+    
+      
+  
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Contributors">
+      
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 4a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4Z"/></svg>
+      
+    </span>
+    <nav>
+      
+        <a href="mailto:49699333+dependabot[bot]@users.noreply.github.com">dependabot[bot]</a>
+    </nav>
+  </span>
+
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href=".." class="md-footer__link md-footer__link--prev" aria-label="Previous: vault-kms-plugin">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                vault-kms-plugin
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../configuration/" class="md-footer__link md-footer__link--next" aria-label="Next: Configuration">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Configuration
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "content.code.copy", "content.action.edit", "navigation.top", "navigation.expand", "navigation.footer"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.1e8ae164.min.js"></script>
+      
+    
+  </body>
+</html>
