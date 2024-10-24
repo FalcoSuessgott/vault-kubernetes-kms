@@ -13,7 +13,7 @@ require (
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.67.1
 	gotest.tools/gotestsum v1.12.0
-	k8s.io/kms v0.31.1
+	k8s.io/kms v0.31.2
 )
 
 require (
