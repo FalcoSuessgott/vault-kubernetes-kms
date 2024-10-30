@@ -126,9 +126,16 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 * **(Required)**: `-approle-secret-id` (`VAULT_KMS_APPROLE_SECRET_ID`)
 * **(Optional)**: `-approle-mount` (`VAULT_KMS_APPROLE_MOUNT`); default: `"approle"`
 
-**Optional**:
+**General**:
 
 * **(Optional)**: `-socket` (`VAULT_KMS_SOCKET`); default: `unix:///opt/kms/vaultkms.socket"`
+* **(Optional)**: `-force-socket-overwrite` (`FORCE_SOCKET_OVERWRITE`); default: `false`.
+
+!!! note
+      Use `-force-socket-overwrite` with caution. This will delete whatever filetype exists at the value specified in `-socket`.
+
+      When `vault-kubernetes-kms` crashes, it is not guaranteed that the socket-file will always be removed. For those scenarios `-force-socket-overwrite` was introduced to allow a smooth re-deployment of the plugin and not having to manually delete the stale socket file on the control plane node.
+
 * **(Optional)**: `-debug` (`VAULT_KMS_DEBUG`)
 
 ### Example Vault Token Auth

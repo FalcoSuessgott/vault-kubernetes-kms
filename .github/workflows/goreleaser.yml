@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
   packages: write
-  id-token: write 
+  id-token: write
 
 jobs:
   goreleaser:
@@ -27,7 +27,7 @@ jobs:
         with:
           go-version: '1.22.6'
           cache: false
-          
+
       - uses: sigstore/cosign-installer@v3.7.0
       - uses: anchore/sbom-action/download-syft@v0.17.6
       -
@@ -63,7 +63,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
 
-      - 
+      -
         name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v4
         if: startsWith(github.ref, 'refs/tags/v')
