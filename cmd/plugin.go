@@ -22,7 +22,8 @@ import (
 )
 
 type Options struct {
-	Socket string `env:"SOCKET" envDefault:"unix:///opt/kms/vaultkms.socket"`
+	Socket               string `env:"SOCKET"                 envDefault:"unix:///opt/kms/vaultkms.socket"`
+	ForceSocketOverwrite bool   `env:"FORCE_SOCKET_OVERWRITE"`
 
 	Debug bool `env:"DEBUG"`
 
@@ -61,6 +62,8 @@ func NewPlugin(version string) error {
 	flag := flag.FlagSet{}
 	// then flags, since they have precedence over env vars
 	flag.StringVar(&opts.Socket, "socket", opts.Socket, "Destination path of the socket (required)")
+	flag.BoolVar(&opts.ForceSocketOverwrite, "force-socket-overwrite", opts.ForceSocketOverwrite, "Force creation of the socket file."+
+		"Use with caution deletes whatever exists at -socket!")
 
 	flag.BoolVar(&opts.Debug, "debug", opts.Debug, "Enable debug logs")
 
@@ -155,9 +158,9 @@ func NewPlugin(version string) error {
 
 	zap.L().Info("Successfully created unix socket", zap.String("socket", s.Path))
 
-	listener, err := s.Listen()
+	listener, err := s.Listen(opts.ForceSocketOverwrite)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("failed to listen on socket: %w. Use -force-socket-overwrite (VAULT_KUBERNETES_KMS_FORCE_SOCKET_OVERWRITE)", err))
 	}
 
 	zap.L().Info("Listening for connection")
