@@ -14,7 +14,7 @@ spec:
       imagePullPolicy: IfNotPresent
       command:
         - /vault-kubernetes-kms
-        - -vault-address=http://host.docker.internal:8200
+        - -vault-address=http://172.17.0.1:8200
         - -auth-method=token
         - -token=root
       volumeMounts:
@@ -35,7 +35,7 @@ spec:
           memory: 128Mi
         limits:
           cpu: 2
-          memory: 256Mi
+          memory: 1Gi
   volumes:
     # mount /opt/kms host directory
     - name: kms

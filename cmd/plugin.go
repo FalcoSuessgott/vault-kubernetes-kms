@@ -59,7 +59,7 @@ type Options struct {
 	HealthPort string `env:"HEALTH_PORT" envDefault:"8080"`
 
 	// Disable KMSv1 Plugin
-	DisableV1 bool `env:"DISABLE_V1" envDefault:"true"`
+	DisableV1 bool `env:"DISABLE_V1" envDefault:"false"`
 
 	Version bool
 }

@@ -33,7 +33,7 @@ spec:
           memory: 128Mi
         limits:
           cpu: 2
-          memory: 256Mi
+          memory: 1Gi
   volumes:
     # mount /opt/kms host directory
     - name: kms

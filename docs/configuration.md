@@ -151,7 +151,7 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 
 * **(Optional)**: `-debug` (`VAULT_KMS_DEBUG`)
 * **(Optional)**: `-health-port` (`VAULT_KMS_HEALTH_PORT`); default: `":8080"`
-* **(Optional)**: `-disable-v1` (`VAULT_KMS_DISABLE_V1`); default: `"false"`
+* **(Optional)**: `-disable-v1` (`VAULT_KMS_DISABLE_V1`); default: `"true"`
 
 
 ### Example Vault Token Auth
@@ -191,7 +191,7 @@ spec:
           memory: 128Mi
         limits:
           cpu: 2
-          memory: 256Mi
+          memory: 1Gi
   volumes:
     - name: kms
       hostPath:
@@ -236,7 +236,7 @@ spec:
           memory: 128Mi
         limits:
           cpu: 2
-          memory: 256Mi
+          memory: 1Gi
   volumes:
     - name: kms
       hostPath:
@@ -293,7 +293,7 @@ spec:
           memory: 128Mi
         limits:
           cpu: 2
-          memory: 256Mi
+          memory: 1Gi
   volumes:
     - name: kms
       hostPath:

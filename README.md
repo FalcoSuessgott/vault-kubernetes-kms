@@ -23,15 +23,13 @@ To do so, you will have to enable Data at Rest encryption, by configuring the `k
 
 :warning: As a result of that, **the `kube-apiserver` requires the `vault-kubernetes-kms` plugin to be up & running before the `kube-apiserver` starts**. To ensure this, setting a priority class in the plugins manifest (`"priorityClassName: system-node-critical"`) is recommended. :warning:
 
-:warning: **`vault-kubernetes-kms` is in early stage! Running it in Production is not yet recommended. Im looking for early adopters in order to  gather important feedback.** :warning:
-
 **[Check out the official documentation](https://falcosuessgott.github.io/vault-kubernetes-kms/)**
 
 ## Features
 * support [Vault Token](https://developer.hashicorp.com/vault/docs/auth/token), [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle) authentication (Since a static pod cannot reference any other Kubernetes API-Objects, Vaults Kubernetes Authentication is not possible.)
 * support Kubernetes [KMS Plugin v1 (deprecated since `v1.28.0`) & v2 (stable in `v1.29.0`)](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#before-you-begin)
-* automatic Token Renewal for avoiding Token expiry
-* Exposes useful Prometheus Metrics
+* [automatic Token Renewal for avoiding Token expiry](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/#cli-args-environment-variables)
+* [Exposes useful Prometheus Metrics](https://falcosuessgott.github.io/vault-kubernetes-kms/metrics/#prometheus-metrics)
 
 ## Without a KMS Provider
 ```bash
