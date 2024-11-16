@@ -1,4 +1,7 @@
 # vault-kms-plugin
+> [!IMPORTANT]  
+> as of [`v1.0.0`](https://github.com/FalcoSuessgott/vault-kubernetes-kms/releases/tag/v1.0.0) `vault-kubernetes-kms` is considered stable and production-grade
+
 A Kubernetes KMS Plugin that uses [HashiCorp Vaults](https://developer.hashicorp.com/vault) [Transit Engine](https://developer.hashicorp.com/vault/docs/secrets/transit) for securely encrypting Secrets, Config Maps and other Kubernetes Objects in etcd at Rest (on disk).
 
 [![E2E](https://github.com/FalcoSuessgott/vault-kubernetes-kms/actions/workflows/e2e.yml/badge.svg)](https://github.com/FalcoSuessgott/vault-kubernetes-kms/actions/workflows/e2e.yml)
@@ -23,6 +26,8 @@ To do so, you will have to enable Data at Rest encryption, by configuring the `k
 
 :warning: As a result of that, **the `kube-apiserver` requires the `vault-kubernetes-kms` plugin to be up & running before the `kube-apiserver` starts**. To ensure this, setting a priority class in the plugins manifest (`"priorityClassName: system-node-critical"`) is recommended. :warning:
 
+Following the scenario that `vault-kubernetes-kms` is deployed as a static pod, then your Vault server has to reside **outside** of your Kubernetes cluster, as it is [recommended](https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-security-concerns). If you decide to deploy the plugin not as a static pod, then theoretically the Vault server can be deployed on the same cluster, you then would have to patch the `kube-apiserver` after startup to find its `EncryptionProviderConfig`.
+
 **[Check out the official documentation](https://falcosuessgott.github.io/vault-kubernetes-kms/)**
 
 ## Features
@@ -36,7 +41,7 @@ To do so, you will have to enable Data at Rest encryption, by configuring the `k
 # create any secret
 $> kubectl create secret generic secret-unencrypted -n default --from-literal=key=value
 
-# proof that k8s secrets are stored unencrypted on disk and in etctd
+# proof that k8s secrets are stored unencrypted on disk in etctd
 $> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl \
     --endpoints=https://127.0.0.1:2379 \
     --cert /var/lib/minikube/certs/etcd/server.crt \
@@ -69,7 +74,7 @@ $> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl \
 # create any k8s secret
 $> kubectl create secret generic secret-encrypted -n default --from-literal=key=value
 
-# proof that now secrets are stored encrypted on disk and in etctd
+# proof that now secrets are stored encrypted on disk in etctd
 $> kubectl -n kube-system exec etcd-minikube -- sh -c "ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
     --cert /var/lib/minikube/certs/etcd/server.crt \
     --key /var/lib/minikube/certs/etcd/server.key \
