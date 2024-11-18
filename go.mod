@@ -4,7 +4,7 @@ go 1.22.6
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/hashicorp/vault/api v1.14.0
+	github.com/hashicorp/vault/api v1.15.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.34.0
@@ -22,8 +22,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitfield/gotestdox v0.2.2 // indirect
-	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
-	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
+	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/platforms v0.2.1 // indirect
