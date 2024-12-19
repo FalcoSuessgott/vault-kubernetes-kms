@@ -12,7 +12,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.34.0
 	github.com/testcontainers/testcontainers-go/modules/vault v0.34.0
 	go.uber.org/zap v1.27.0
-	google.golang.org/grpc v1.69.0
+	google.golang.org/grpc v1.69.2
 	gotest.tools/gotestsum v1.12.0
 	k8s.io/kms v0.31.4
 )
