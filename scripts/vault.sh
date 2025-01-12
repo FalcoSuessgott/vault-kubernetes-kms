@@ -7,11 +7,16 @@ command -v vault >/dev/null 2>&1 || { echo "vault is not installed.  Aborting." 
 kill $(pgrep -x vault) || true
 
 # start developemnt vault
-nohup vault server -dev -dev-listen-address=0.0.0.0:8200 -dev-root-token-id=root 2> /dev/null &
+nohup vault server -dev \
+   -dev-listen-address=0.0.0.0:8200 \
+   -dev-root-token-id=root \
+   -dev-tls \
+   -dev-tls-cert-dir certs/ 2> /dev/null &
+
 sleep 3
 
 # auth to vault
-export VAULT_ADDR="http://127.0.0.1:8200"
+export VAULT_ADDR="https://127.0.0.1:8200"
 export VAULT_SKIP_VERIFY="true"
 export VAULT_TOKEN="root"
 

@@ -67,3 +67,32 @@ setup-local: setup-vault setup-registry setup-kind ## complete local setup
 .PHONY: destroy
 destroy: ## destroy kind cluster
 	kind delete cluster --name=kms
+
+.PHONY: tls
+tls: setup-vault
+	# create cert for the plugin
+	openssl req -new -newkey rsa:2048 \
+		-nodes -keyout newcert.key \
+		-out newcert.csr
+
+	openssl x509 -req -in newcert.csr \
+		-CA certs/vault-cert.pem \
+		-CAkey certs/vault-key.pem \
+		-CAcreateserial \
+		-out newcert.crt -days 365 -sha256
+
+	# configure vault cert auth
+	vault auth enable cert
+	vault write auth/cert/certs/kms \
+		display_name="KMS" \
+		allowed_common_names="vault-kubernetes-kms" \
+		certificate=@certs/vault-ca.pem \
+		policies="kms"
+
+	# login using vault
+	vault login \
+		-method=cert \
+		-ca-cert=certs/vault-ca.pem \
+		-client-cert=newcert.crt \
+		-client-key=newcert.key \
+		name=kms
