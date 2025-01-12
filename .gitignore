@@ -6,3 +6,8 @@ coverage.out
 manpages/
 dist/
 nohup.out
+scripts/output
+**/.terraform
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup

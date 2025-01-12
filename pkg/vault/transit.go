@@ -10,7 +10,7 @@ import (
 
 // Encrypt takes any data and encrypts it using the specified vaults transit engine.
 func (c *Client) Encrypt(ctx context.Context, data []byte) ([]byte, string, error) {
-	p := fmt.Sprintf(encryptDataPath, c.TransitEngine, c.TransitKey)
+	p := fmt.Sprintf(encryptDataPath, c.transitEngine, c.transitKey)
 
 	opts := map[string]interface{}{
 		"plaintext": base64.StdEncoding.EncodeToString(data),
@@ -36,7 +36,7 @@ func (c *Client) Encrypt(ctx context.Context, data []byte) ([]byte, string, erro
 
 // Decrypt takes any encrypted data and decrypts it using the specified vaults transit engine.
 func (c *Client) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
-	p := fmt.Sprintf(decryptDataPath, c.TransitEngine, c.TransitKey)
+	p := fmt.Sprintf(decryptDataPath, c.transitEngine, c.transitKey)
 
 	opts := map[string]interface{}{
 		"ciphertext": string(data),
@@ -63,7 +63,7 @@ func (c *Client) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
 // GetKeyVersions returns the latest_version aka the timestamp the key version was created.
 // https://developer.hashicorp.com/vault/api-docs/secret/transit#read-key
 func (c *Client) GetKeyVersion(ctx context.Context) (string, error) {
-	p := fmt.Sprintf(transitKeyPath, c.TransitEngine, c.TransitKey)
+	p := fmt.Sprintf(transitKeyPath, c.transitEngine, c.transitKey)
 
 	resp, err := c.Logical().ReadWithContext(ctx, p)
 	if err != nil {
@@ -71,12 +71,12 @@ func (c *Client) GetKeyVersion(ctx context.Context) (string, error) {
 	}
 
 	if resp == nil {
-		return "", fmt.Errorf("could not read transit key: %s/%s. Check transit engine and key and permissions", c.TransitEngine, c.TransitKey)
+		return "", fmt.Errorf("could not read transit key: %s/%s. Check transit engine and key and permissions", c.transitEngine, c.transitKey)
 	}
 
 	kv, ok := resp.Data["latest_version"].(json.Number)
 	if !ok {
-		return "", fmt.Errorf("could not get latest_version of transit key: %s/%s", c.TransitEngine, c.TransitKey)
+		return "", fmt.Errorf("could not get latest_version of transit key: %s/%s", c.transitEngine, c.transitKey)
 	}
 
 	return kv.String(), nil

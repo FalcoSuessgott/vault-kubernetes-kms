@@ -44,7 +44,7 @@ gen-secrets: ## generate secrets on KMS plugin
 	done;
 
 .PHONY: setup-kind
-setup-kind: ## setup kind cluster with encrpytion provider configured
+setup-kind: ## setup kind cluster with encryption provider configured
 	kind delete cluster --name=kms || true
 	kind create cluster --name=kms --config scripts/kind-config_v2.yaml
 
@@ -67,3 +67,33 @@ setup-local: setup-vault setup-registry setup-kind ## complete local setup
 .PHONY: destroy
 destroy: ## destroy kind cluster
 	kind delete cluster --name=kms
+
+.PHONY: setup-tls
+setup-tls: ## setup tls auth
+	# gen tls certs
+	terraform -chdir=./scripts/setup-tls-auth init
+	terraform -chdir=./scripts/setup-tls-auth apply -auto-approve
+
+	# start vault
+	$(MAKE) setup-vault
+
+	# configure vault cert auth
+	vault auth enable cert
+	vault write auth/cert/certs/kms \
+		certificate=@scripts/output/tls-ca.crt \
+		policies="kms"
+
+	# verify login using vault
+	vault login \
+		-method=cert \
+		-client-cert=./scripts/output/tls-client-ca.crt \
+		-client-key=./scripts/output/tls-client-ca.key \
+		name=kms
+
+	go run main.go \
+		-vault-address=https://127.0.0.1:8400 \
+		-auth-method=tls \
+		-tls-role=kms \
+		-tls-cert=./scripts/output/tls-client-ca.crt \
+		-tls-key=./scripts/output/tls-client-ca.key \
+		-socket=unix:///tmp/vaultkms.socket

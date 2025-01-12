@@ -1,5 +1,5 @@
 # vault-kms-plugin
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > as of [`v1.0.0`](https://github.com/FalcoSuessgott/vault-kubernetes-kms/releases/tag/v1.0.0) `vault-kubernetes-kms` is considered stable and production-grade
 
 A Kubernetes KMS Plugin that uses [HashiCorp Vaults](https://developer.hashicorp.com/vault) [Transit Engine](https://developer.hashicorp.com/vault/docs/secrets/transit) for securely encrypting Secrets, Config Maps and other Kubernetes Objects in etcd at Rest (on disk).

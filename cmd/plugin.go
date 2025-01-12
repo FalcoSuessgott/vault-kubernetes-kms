@@ -32,30 +32,37 @@ type Options struct {
 
 	Debug bool `env:"DEBUG"`
 
-	// vault server
+	// Vault Server
 	VaultAddress   string `env:"VAULT_ADDR"`
 	VaultNamespace string `env:"VAULT_NAMESPACE"`
+	VaultCACert    string `env:"VAULT_CACERT"`
 
-	// auth
+	// Auth method
 	AuthMethod string `env:"AUTH_METHOD"`
 
-	// token auth
+	// Token auth
 	Token string `env:"TOKEN"`
 
-	// approle auth
+	// Approle auth
 	AppRoleRoleID       string `env:"APPROLE_ROLE_ID"`
 	AppRoleRoleSecretID string `env:"APPROLE_SECRET_ID"`
 	AppRoleMount        string `env:"APPROLE_MOUNT"     envDefault:"approle"`
 
-	// token refresh
+	// TLS Auth
+	TLSAuthMount  string `env:"TLS_AUTH_ROLE" envDefault:"cert"`
+	TLSAuthRole   string `env:"TLS_AUTH_ROLE"`
+	TLSClientCert string `env:"TLS_CLIENT_CERT"`
+	TLSClientKey  string `env:"TLS_CLIENT_KEY"`
+
+	// Token Refresh
 	TokenRefreshInterval string `env:"TOKEN_REFRESH_INTERVAL" envDefault:"60s"`
 	TokenRenewalSeconds  int    `env:"TOKEN_RENEWAL_SECONDS"  envDefault:"3600"`
 
-	// transit
+	// Transit
 	TransitKey   string `env:"TRANSIT_KEY"   envDefault:"kms"`
 	TransitMount string `env:"TRANSIT_MOUNT" envDefault:"transit"`
 
-	// healthz check
+	// Health Check
 	HealthPort string `env:"HEALTH_PORT" envDefault:"8080"`
 
 	// Disable KMSv1 Plugin
@@ -76,33 +83,46 @@ func NewPlugin(version string) error {
 
 	flag := flag.FlagSet{}
 	// then flags, since they have precedence over env vars
+
+	// Socket
 	flag.StringVar(&opts.Socket, "socket", opts.Socket, "Destination path of the socket (required)")
 	flag.BoolVar(&opts.ForceSocketOverwrite, "force-socket-overwrite", opts.ForceSocketOverwrite, "Force creation of the socket file."+
 		"Use with caution deletes whatever exists at -socket!")
 
-	flag.BoolVar(&opts.Debug, "debug", opts.Debug, "Enable debug logs")
-
+	// Vault Server
 	flag.StringVar(&opts.VaultAddress, "vault-address", opts.VaultAddress, "Vault API address (required)")
 	flag.StringVar(&opts.VaultNamespace, "vault-namespace", opts.VaultNamespace, "Vault Namespace (only when Vault Enterprise)")
+	flag.StringVar(&opts.VaultCACert, "vault-ca-cert", opts.VaultCACert, "Vault CA cert")
 
+	// Auth Method
 	flag.StringVar(&opts.AuthMethod, "auth-method", opts.AuthMethod, "Auth Method. Supported: token, approle, k8s")
 
+	// Token
 	flag.StringVar(&opts.Token, "token", opts.Token, "Vault Token (when Token auth)")
 
+	// Approle
 	flag.StringVar(&opts.AppRoleMount, "approle-mount", opts.AppRoleMount, "Vault Approle mount name (when approle auth)")
 	flag.StringVar(&opts.AppRoleRoleID, "approle-role-id", opts.AppRoleRoleID, "Vault Approle role ID (when approle auth)")
 	flag.StringVar(&opts.AppRoleRoleSecretID, "approle-secret-id", opts.AppRoleRoleSecretID, "Vault Approle Secret ID (when approle auth)")
 
+	// TLS
+	flag.StringVar(&opts.TLSAuthMount, "tls-mount", opts.TLSAuthMount, "Vault TLS auth mount name (when tls auth)")
+	flag.StringVar(&opts.TLSAuthRole, "tls-role", opts.TLSAuthRole, "Vault TLS auth role (when tls auth)")
+	flag.StringVar(&opts.TLSClientCert, "tls-cert", opts.TLSClientCert, "Vault TLS auth client cert (when tls auth)")
+	flag.StringVar(&opts.TLSClientKey, "tls-key", opts.TLSClientKey, "Vault TLS auth client key (when tls auth)")
+
+	// TokenRefresh
 	flag.StringVar(&opts.TokenRefreshInterval, "token-refresh-interval", opts.TokenRefreshInterval, "Interval to check for a token renewal")
 	flag.IntVar(&opts.TokenRenewalSeconds, "token-renewal", opts.TokenRenewalSeconds, "The number of seconds to renew the token")
 
+	// Transit
 	flag.StringVar(&opts.TransitMount, "transit-mount", opts.TransitMount, "Vault Transit mount name")
 	flag.StringVar(&opts.TransitKey, "transit-key", opts.TransitKey, "Vault Transit key name")
 
+	// Misc
+	flag.BoolVar(&opts.Debug, "debug", opts.Debug, "Enable debug logs")
 	flag.StringVar(&opts.HealthPort, "health-port", opts.HealthPort, "Health Check Port")
-
 	flag.BoolVar(&opts.DisableV1, "disable-v1", opts.DisableV1, "disable the v1 kms plugin")
-
 	flag.BoolVar(&opts.Version, "version", opts.Version, "prints out the plugins version")
 
 	if err := flag.Parse(os.Args[1:]); err != nil {
@@ -145,6 +165,7 @@ func NewPlugin(version string) error {
 		zap.Bool("debug", opts.Debug),
 		zap.String("vault-address", opts.VaultAddress),
 		zap.String("vault-namespace", opts.VaultNamespace),
+		zap.String("vault-ca-cert", opts.VaultCACert),
 		zap.String("transit-engine", opts.TransitMount),
 		zap.String("transit-key", opts.TransitKey),
 		zap.String("health-port", opts.HealthPort),
@@ -161,6 +182,13 @@ func NewPlugin(version string) error {
 		logFields = append(logFields,
 			zap.String("approle-mount", opts.AppRoleMount),
 			zap.String("approle-role-id", opts.AppRoleRoleID))
+	case "tls":
+		authMethod = vault.WithTLSAuth(opts.TLSAuthMount, opts.TLSAuthRole, opts.TLSClientKey, opts.TLSClientCert, opts.VaultCACert)
+		logFields = append(logFields,
+			zap.String("tls-auth-mount", opts.TLSAuthMount),
+			zap.String("tls-auth-role", opts.TLSAuthRole),
+			zap.String("tls-auth-client-key", opts.TLSClientKey),
+			zap.String("tls-auth-client-cert", opts.TLSClientCert))
 	default:
 		return fmt.Errorf("invalid auth method: %s", opts.AuthMethod)
 	}
@@ -168,6 +196,7 @@ func NewPlugin(version string) error {
 	zap.L().Info("starting kms plugin", logFields...)
 
 	vc, err := vault.NewClient(
+		ctx,
 		vault.WithVaultAddress(opts.VaultAddress),
 		vault.WithVaultNamespace(opts.VaultNamespace),
 		vault.WithTransit(opts.TransitMount, opts.TransitKey),
@@ -268,8 +297,8 @@ func (o *Options) validateFlags() error {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
 	// check auth method
-	case !slices.Contains([]string{"token", "approle"}, o.AuthMethod):
-		return errors.New("invalid auth method. Supported: token, approle")
+	case !slices.Contains([]string{"token", "approle", "tls"}, o.AuthMethod):
+		return errors.New("invalid auth method. Supported: token, approle, tls")
 
 	// validate token auth
 	case o.AuthMethod == "token" && o.Token == "":
@@ -278,6 +307,10 @@ func (o *Options) validateFlags() error {
 	// validate approle auth
 	case o.AuthMethod == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
 		return errors.New("approle role id and secret id required when using approle auth")
+
+	// validate tls auth
+	case o.AuthMethod == "tls" && (o.TLSClientCert == "" || o.TLSClientKey == ""):
+		return errors.New("tls client key and client cert required when using tls auth")
 	}
 
 	if _, err := time.ParseDuration(o.TokenRefreshInterval); err != nil {
