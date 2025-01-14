@@ -36,6 +36,7 @@ func (s *VaultSuite) SetupSubTest() {
 	s.tc = tc
 
 	vault, err := NewClient(
+		context.Background(),
 		WithVaultAddress(tc.URI),
 		WithTokenAuth(tc.Token),
 		WithTransit("transit", "kms"),
@@ -89,6 +90,17 @@ func (s *VaultSuite) TestAuthMethods() {
 			},
 		},
 		{
+			name: "tls auth",
+			auth: func() (Option, error) {
+				token, err := s.tc.GetToken("default", "1h")
+				if err != nil {
+					return nil, err
+				}
+
+				return WithTokenAuth(token), nil
+			},
+		},
+		{
 			name: "invalid token auth",
 			auth: func() (Option, error) {
 				return WithTokenAuth("invalidtoken"), nil
@@ -110,6 +122,7 @@ func (s *VaultSuite) TestAuthMethods() {
 			s.Require().NoError(err, "auth "+tc.name)
 
 			_, err = NewClient(
+				context.Background(),
 				WithVaultAddress(s.tc.URI),
 				WithTokenAuth(s.tc.Token),
 				auth,

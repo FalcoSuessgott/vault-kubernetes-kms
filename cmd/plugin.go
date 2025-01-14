@@ -32,30 +32,37 @@ type Options struct {
 
 	Debug bool `env:"DEBUG"`
 
-	// vault server
+	// Vault Server
 	VaultAddress   string `env:"VAULT_ADDR"`
 	VaultNamespace string `env:"VAULT_NAMESPACE"`
 
-	// auth
+	// Auth method
 	AuthMethod string `env:"AUTH_METHOD"`
 
-	// token auth
+	// Token auth
 	Token string `env:"TOKEN"`
 
-	// approle auth
+	// Approle auth
 	AppRoleRoleID       string `env:"APPROLE_ROLE_ID"`
 	AppRoleRoleSecretID string `env:"APPROLE_SECRET_ID"`
 	AppRoleMount        string `env:"APPROLE_MOUNT"     envDefault:"approle"`
 
-	// token refresh
+	// TLS Auth
+	TLSAuthMount    string `env:"TLS_AUTH_ROLE" envDefault:"cert"`
+	TLSAuthRole     string `env:"TLS_AUTH_ROLE"`
+	TLSClientCACert string `env:"TLS_CLIENT_CA_CERT"`
+	TLSClientCert   string `env:"TLS_CLIENT_CERT"`
+	TLSClientKey    string `env:"TLS_CLIENT_KEY"`
+
+	// Token Refresh
 	TokenRefreshInterval string `env:"TOKEN_REFRESH_INTERVAL" envDefault:"60s"`
 	TokenRenewalSeconds  int    `env:"TOKEN_RENEWAL_SECONDS"  envDefault:"3600"`
 
-	// transit
+	// Transit
 	TransitKey   string `env:"TRANSIT_KEY"   envDefault:"kms"`
 	TransitMount string `env:"TRANSIT_MOUNT" envDefault:"transit"`
 
-	// healthz check
+	// Health Check
 	HealthPort string `env:"HEALTH_PORT" envDefault:"8080"`
 
 	// Disable KMSv1 Plugin
@@ -161,6 +168,14 @@ func NewPlugin(version string) error {
 		logFields = append(logFields,
 			zap.String("approle-mount", opts.AppRoleMount),
 			zap.String("approle-role-id", opts.AppRoleRoleID))
+	case "tls":
+		authMethod = vault.WithTLSAuth(opts.TLSAuthMount, opts.TLSAuthRole, opts.TLSClientKey, opts.TLSClientCert, opts.TLSClientCACert)
+		logFields = append(logFields,
+			zap.String("tls-auth-mount", opts.TLSAuthMount),
+			zap.String("tls-auth-role", opts.TLSAuthRole),
+			zap.String("tls-auth-client-key", opts.TLSClientKey),
+			zap.String("tls-auth-client-cert", opts.TLSClientCert),
+			zap.String("tls-auth-client-ca-cert", opts.TLSClientCACert))
 	default:
 		return fmt.Errorf("invalid auth method: %s", opts.AuthMethod)
 	}
@@ -168,6 +183,7 @@ func NewPlugin(version string) error {
 	zap.L().Info("starting kms plugin", logFields...)
 
 	vc, err := vault.NewClient(
+		ctx,
 		vault.WithVaultAddress(opts.VaultAddress),
 		vault.WithVaultNamespace(opts.VaultNamespace),
 		vault.WithTransit(opts.TransitMount, opts.TransitKey),
@@ -268,8 +284,8 @@ func (o *Options) validateFlags() error {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
 	// check auth method
-	case !slices.Contains([]string{"token", "approle"}, o.AuthMethod):
-		return errors.New("invalid auth method. Supported: token, approle")
+	case !slices.Contains([]string{"token", "approle", "tls"}, o.AuthMethod):
+		return errors.New("invalid auth method. Supported: token, approle, tls")
 
 	// validate token auth
 	case o.AuthMethod == "token" && o.Token == "":
@@ -278,6 +294,10 @@ func (o *Options) validateFlags() error {
 	// validate approle auth
 	case o.AuthMethod == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
 		return errors.New("approle role id and secret id required when using approle auth")
+
+	// validate tls auth
+	case o.AuthMethod == "tls" && (o.TLSClientCert == "" || o.TLSClientKey == ""):
+		return errors.New("tls client key and client cert required when using tls auth")
 	}
 
 	if _, err := time.ParseDuration(o.TokenRefreshInterval); err != nil {

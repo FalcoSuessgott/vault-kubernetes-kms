@@ -16,6 +16,7 @@ func (s *VaultSuite) TestTokenRefresher() {
 		s.Require().NoError(err, "token creation failed")
 
 		vc, err := NewClient(
+			context.Background(),
 			WithVaultAddress(s.tc.URI),
 			WithTokenAuth(token),
 		)

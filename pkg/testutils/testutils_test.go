@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"context"
 	"testing"
 
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/vault"
@@ -21,6 +22,7 @@ func TestVaultConnection(t *testing.T) {
 	require.NoError(t, err, "token creation")
 
 	tokenVault, err := vault.NewClient(
+		context.Background(),
 		vault.WithVaultAddress(tc.URI),
 		vault.WithTokenAuth(token),
 		vault.WithTransit("transit", "kms"),
@@ -38,6 +40,7 @@ func TestVaultConnection(t *testing.T) {
 	require.NoError(t, err, "approle creation")
 
 	_, err = vault.NewClient(
+		context.Background(),
 		vault.WithVaultAddress(tc.URI),
 		vault.WithTokenAuth(tc.Token),
 		vault.WithAppRoleAuth("approle", roleID, secretID),

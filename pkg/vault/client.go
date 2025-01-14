@@ -1,34 +1,45 @@
 package vault
 
 import (
+	"bytes"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
 
 	"github.com/hashicorp/vault/api"
+	"golang.org/x/net/context"
 )
 
 // Client Vault API wrapper.
 type Client struct {
 	*api.Client
 
-	Token string
+	// move out of struct ...
+	ctx context.Context
 
-	AppRoleMount    string
-	AppRoleID       string
-	AppRoleSecretID string
+	token string
 
-	AuthMethodFunc Option
+	appRoleMount    string
+	appRoleID       string
+	appRoleSecretID string
 
-	TokenRenewalSeconds int
+	authMethodFunc Option
 
-	TransitEngine string
-	TransitKey    string
+	tokenRenewalSeconds int
+
+	transitEngine string
+	transitKey    string
 }
 
 // Option vault client connection option.
-type Option func(*Client) error
+type Option func(client *Client) error
 
 // NewClient returns a new vault client wrapper.
-func NewClient(opts ...Option) (*Client, error) {
+func NewClient(ctx context.Context, opts ...Option) (*Client, error) {
 	cfg := api.DefaultConfig()
 
 	// read all vault env vars
@@ -37,7 +48,10 @@ func NewClient(opts ...Option) (*Client, error) {
 		return nil, err
 	}
 
-	client := &Client{Client: c}
+	client := &Client{
+		ctx:    ctx,
+		Client: c,
+	}
 
 	for _, opt := range opts {
 		if err := opt(client); err != nil {
@@ -75,8 +89,8 @@ func WithVaultNamespace(namespace string) Option {
 // WithTransit sets transit parameters.
 func WithTransit(mount, key string) Option {
 	return func(c *Client) error {
-		c.TransitEngine = mount
-		c.TransitKey = key
+		c.transitEngine = mount
+		c.transitKey = key
 
 		return nil
 	}
@@ -85,14 +99,14 @@ func WithTransit(mount, key string) Option {
 // WithTokenAuth sets the specified token.
 func WithTokenAuth(token string) Option {
 	return func(c *Client) error {
-		c.Token = token
+		c.token = token
 
 		if token != "" {
 			c.SetToken(token)
 		}
 
-		if c.AuthMethodFunc == nil {
-			c.AuthMethodFunc = WithTokenAuth(token)
+		if c.authMethodFunc == nil {
+			c.authMethodFunc = WithTokenAuth(token)
 		}
 
 		return nil
@@ -102,7 +116,7 @@ func WithTokenAuth(token string) Option {
 // WithTokenAuth sets the specified token.
 func WithTokenRenewalSeconds(seconds int) Option {
 	return func(c *Client) error {
-		c.TokenRenewalSeconds = seconds
+		c.tokenRenewalSeconds = seconds
 
 		return nil
 	}
@@ -111,24 +125,86 @@ func WithTokenRenewalSeconds(seconds int) Option {
 // WitAppRoleAuth performs a approle auth login.
 func WithAppRoleAuth(mount, roleID, secretID string) Option {
 	return func(c *Client) error {
-		c.AppRoleID = roleID
-		c.AppRoleMount = mount
-		c.AppRoleSecretID = secretID
+		c.appRoleID = roleID
+		c.appRoleMount = mount
+		c.appRoleSecretID = secretID
 
 		opts := map[string]interface{}{
 			"role_id":   roleID,
 			"secret_id": secretID,
 		}
 
-		s, err := c.Logical().Write(fmt.Sprintf(authLoginPath, mount), opts)
+		s, err := c.Logical().WriteWithContext(c.ctx, fmt.Sprintf(authLoginPath, mount), opts)
 		if err != nil {
 			return fmt.Errorf("error performing approle auth: %w", err)
 		}
 
 		c.SetToken(s.Auth.ClientToken)
 
-		if c.AuthMethodFunc == nil {
-			c.AuthMethodFunc = WithAppRoleAuth(mount, roleID, secretID)
+		if c.authMethodFunc == nil {
+			c.authMethodFunc = WithAppRoleAuth(mount, roleID, secretID)
+		}
+
+		return nil
+	}
+}
+
+func WithTLSAuth(mount, role, key, cert, ca string) Option {
+	// https://sirsean.medium.com/mutually-authenticated-tls-from-a-go-client-92a117e605a1
+	return func(c *Client) error {
+		caCert, err := os.ReadFile(ca)
+		if err != nil {
+			return fmt.Errorf("cannot read CA file %s: %w", ca, err)
+		}
+
+		pool := x509.NewCertPool()
+		pool.AppendCertsFromPEM(caCert)
+
+		clientCert, err := tls.LoadX509KeyPair(cert, key)
+		if err != nil {
+			return fmt.Errorf("cannot load key pair (key: %s, cert: %s): %w", key, cert, err)
+		}
+
+		tlsConfig := tls.Config{
+			RootCAs:      pool,
+			Certificates: []tls.Certificate{clientCert},
+		}
+
+		transport := http.Transport{
+			TLSClientConfig: &tlsConfig,
+		}
+
+		httpClient := http.Client{
+			Transport: &transport,
+		}
+
+		opts := map[string]interface{}{
+			"name": role,
+		}
+
+		payload, err := json.Marshal(opts)
+		if err != nil {
+			return fmt.Errorf("error marshalling payload: %w", err)
+		}
+
+		resp, err := httpClient.Post(fmt.Sprintf("%s/" + authLoginPath, c.Address(), mount), "application/json", bytes.NewBuffer(payload))
+		if err != nil {
+			return fmt.Errorf("error performing tls auth: %w", err)
+		}
+
+		defer resp.Body.Close()
+
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("error reading response body: %w", err)
+		}
+
+		fmt.Println(string(data))
+
+	//	c.SetToken(s.Auth.ClientToken)
+
+		if c.authMethodFunc == nil {
+			c.authMethodFunc = WithTLSAuth(mount, role, key, cert, ca)
 		}
 
 		return nil
