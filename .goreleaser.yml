@@ -5,10 +5,19 @@ builds:
     env:
       - CGO_ENABLED=0
     binary: vault-kubernetes-kms
+    flags:
+      - -trimpath
     goos:
       - linux
+      - darwin
     goarch:
       - amd64
+      - arm64
+    goarm:
+      - "7"
+    ignore:
+      - goos: windows
+        goarch: arm
 
 archives:
   -
@@ -26,40 +35,65 @@ archives:
       {{- if .Arm }}v{{ .Arm }}{{ end -}}
 
 dockers:
-- image_templates:
-  - 'ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
-  - 'falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
-  dockerfile: Dockerfile.goreleaser
-  use: buildx
-  build_flag_templates:
-  - "--pull"
-  - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/FalcoSuessgott/vault-kubernetes-kms/main/README.md"
-  - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Tom Morelly\",\"email\":\"tommorelly@gmail.com\"}]"
-  - "--label=io.artifacthub.package.license=MIT"
-  - "--label=org.opencontainers.image.description=Encrypt Kubernetes Secrets using Hashicorp Vault as the KMS Provider"
-  - "--label=org.opencontainers.image.created={{.Date}}"
-  - "--label=org.opencontainers.image.name={{.ProjectName}}"
-  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-  - "--label=org.opencontainers.image.version={{.Version}}"
-  - "--label=org.opencontainers.image.source={{.GitURL}}"
-  - "--platform=linux/amd64"
-  extra_files:
+  - image_templates:
+      - "ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64"
+      - "falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/FalcoSuessgott/vault-kubernetes-kms/main/README.md"
+      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Tom Morelly\",\"email\":\"tommorelly@gmail.com\"}]"
+      - "--label=io.artifacthub.package.license=MIT"
+      - "--label=org.opencontainers.image.description=Encrypt Kubernetes Secrets using Hashicorp Vault as the KMS Provider"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/amd64"
+    extra_files:
       - go.mod
       - go.sum
+  - image_templates:
+      - "ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-arm64"
+      - "falcosuessgott/{{.ProjectName}}:{{ .Tag }}-arm64"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/FalcoSuessgott/vault-kubernetes-kms/main/README.md"
+      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Tom Morelly\",\"email\":\"tommorelly@gmail.com\"}]"
+      - "--label=io.artifacthub.package.license=MIT"
+      - "--label=org.opencontainers.image.description=Encrypt Kubernetes Secrets using Hashicorp Vault as the KMS Provider"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/arm64"
+    extra_files:
+      - go.mod
+      - go.sum
+    goarch: arm64
 
 docker_manifests:
-- name_template: 'ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}'
+- name_template: "ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}"
   image_templates:
-  - 'ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
-- name_template: 'ghcr.io/falcosuessgott/{{.ProjectName}}:latest'
+    - "ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64"
+    - "ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-arm64"
+- name_template: "ghcr.io/falcosuessgott/{{.ProjectName}}:latest"
   image_templates:
-  - 'ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
-- name_template: 'falcosuessgott/{{.ProjectName}}:{{ .Tag }}'
+    - "ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64"
+    - "ghcr.io/falcosuessgott/{{.ProjectName}}:{{ .Tag }}-arm64"
+- name_template: "falcosuessgott/{{.ProjectName}}:{{ .Tag }}"
   image_templates:
-  - 'falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
-- name_template: 'falcosuessgott/{{.ProjectName}}:latest'
+    - "falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64"
+    - "falcosuessgott/{{.ProjectName}}:{{ .Tag }}-arm64"
+- name_template: "falcosuessgott/{{.ProjectName}}:latest"
   image_templates:
-  - 'falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64'
+    - "falcosuessgott/{{.ProjectName}}:{{ .Tag }}-amd64"
+    - "falcosuessgott/{{.ProjectName}}:{{ .Tag }}-arm64"
 
 gomod:
   proxy: true
@@ -101,9 +135,9 @@ changelog:
   use: github
   filters:
     exclude:
-    - '^test:'
-    - '^chore'
-    - 'merge conflict'
+    - "^test:"
+    - "^chore"
+    - "merge conflict"
     - Merge pull request
     - Merge remote-tracking branch
     - Merge branch
