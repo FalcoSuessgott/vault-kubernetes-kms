@@ -7,37 +7,41 @@ import (
 	"time"
 
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/metrics"
-	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/vault"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	pb "k8s.io/kms/apis/v2"
 )
 
-// PluginV2 a kms plugin wrapper.
-type PluginV2 struct {
-	*vault.Client
+type Plugin interface {
+	Encrypt(ctx context.Context, data []byte) ([]byte, string, error)
+	Decrypt(ctx context.Context, data []byte) ([]byte, error)
+	GetKeyVersion(ctx context.Context) (string, error)
+}
+
+// KMSv2 is a KMS v2 wrapper.
+type KMSv2 struct {
+	plugin Plugin
 	pb.UnimplementedKeyManagementServiceServer
 }
 
 // NewPluginV2 returns a KMS v2 wrapper.
-func NewPluginV2(vc *vault.Client) *PluginV2 {
-	return &PluginV2{Client: vc}
+func NewPluginV2(p Plugin) *KMSv2 {
+	return &KMSv2{plugin: p}
 }
 
 // Status performs a simple health check and returns ok if encryption / decryption was successful
 // https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#developing-a-kms-plugin-gRPC-server-notes-kms-v2
-func (p *PluginV2) Status(ctx context.Context, _ *pb.StatusRequest) (*pb.StatusResponse, error) {
+func (v2 *KMSv2) Status(ctx context.Context, _ *pb.StatusRequest) (*pb.StatusResponse, error) {
 	health := "ok"
 
-	kv, err := p.GetKeyVersion(ctx)
+	kv, err := v2.plugin.GetKeyVersion(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	//nolint: contextcheck
-	err = p.Health()
-	if err != nil {
+	if err := v2.Health(); err != nil {
 		health = "err"
 
 		zap.L().Info(err.Error())
@@ -51,18 +55,19 @@ func (p *PluginV2) Status(ctx context.Context, _ *pb.StatusRequest) (*pb.StatusR
 
 	return &pb.StatusResponse{
 		Version: "v2",
-		Healthz: "ok",
+		Healthz: health,
 		KeyId:   kv,
 	}, nil
 }
 
 // Health sends a simple plaintext for encryption and then compares the decrypted value.
-func (p *PluginV2) Health() error {
+func (v2 *KMSv2) Health() error {
 	health := "health"
+	ctx := context.Background()
 
 	start := time.Now().Unix()
 
-	enc, err := p.Encrypt(context.Background(), &pb.EncryptRequest{
+	enc, err := v2.Encrypt(ctx, &pb.EncryptRequest{
 		Plaintext: []byte(health),
 		Uid:       strconv.FormatInt(start, 10),
 	})
@@ -70,7 +75,7 @@ func (p *PluginV2) Health() error {
 		return err
 	}
 
-	dec, err := p.Decrypt(context.Background(), &pb.DecryptRequest{
+	dec, err := v2.Decrypt(ctx, &pb.DecryptRequest{
 		Ciphertext: enc.GetCiphertext(),
 		Uid:        strconv.FormatInt(start, 10),
 	})
@@ -87,10 +92,10 @@ func (p *PluginV2) Health() error {
 	return nil
 }
 
-func (p *PluginV2) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.EncryptResponse, error) {
+func (v2 *KMSv2) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.EncryptResponse, error) {
 	timer := prometheus.NewTimer(metrics.EncryptionOperationDurationSeconds)
 
-	resp, id, err := p.Client.Encrypt(ctx, request.GetPlaintext())
+	resp, id, err := v2.plugin.Encrypt(ctx, request.GetPlaintext())
 	if err != nil {
 		metrics.EncryptionErrorsTotal.Inc()
 
@@ -107,10 +112,10 @@ func (p *PluginV2) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb
 	}, nil
 }
 
-func (p *PluginV2) Decrypt(ctx context.Context, request *pb.DecryptRequest) (*pb.DecryptResponse, error) {
+func (v2 *KMSv2) Decrypt(ctx context.Context, request *pb.DecryptRequest) (*pb.DecryptResponse, error) {
 	timer := prometheus.NewTimer(metrics.DecryptionOperationDurationSeconds)
 
-	resp, err := p.Client.Decrypt(ctx, request.GetCiphertext())
+	resp, err := v2.plugin.Decrypt(ctx, request.GetCiphertext())
 	if err != nil {
 		metrics.DecryptionErrorsTotal.Inc()
 
@@ -126,6 +131,6 @@ func (p *PluginV2) Decrypt(ctx context.Context, request *pb.DecryptRequest) (*pb
 	}, nil
 }
 
-func (p *PluginV2) Register(s *grpc.Server) {
-	pb.RegisterKeyManagementServiceServer(s, p)
+func (v2 *KMSv2) Register(s *grpc.Server) {
+	pb.RegisterKeyManagementServiceServer(s, v2)
 }
