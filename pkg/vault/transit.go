@@ -9,7 +9,7 @@ import (
 )
 
 // Encrypt takes any data and encrypts it using the specified vaults transit engine.
-func (c *Client) Encrypt(ctx context.Context, data []byte) ([]byte, string, error) {
+func (c *Client) TransitEncrypt(ctx context.Context, data []byte) ([]byte, string, error) {
 	p := fmt.Sprintf(encryptDataPath, c.TransitEngine, c.TransitKey)
 
 	opts := map[string]interface{}{
@@ -26,7 +26,7 @@ func (c *Client) Encrypt(ctx context.Context, data []byte) ([]byte, string, erro
 		return nil, "", errors.New("invalid response")
 	}
 
-	kv, err := c.GetKeyVersion(ctx)
+	kv, err := c.TransitKeyVersion(ctx)
 	if err != nil {
 		return nil, "", err
 	}
@@ -35,7 +35,7 @@ func (c *Client) Encrypt(ctx context.Context, data []byte) ([]byte, string, erro
 }
 
 // Decrypt takes any encrypted data and decrypts it using the specified vaults transit engine.
-func (c *Client) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
+func (c *Client) TransitDecrypt(ctx context.Context, data []byte) ([]byte, error) {
 	p := fmt.Sprintf(decryptDataPath, c.TransitEngine, c.TransitKey)
 
 	opts := map[string]interface{}{
@@ -62,7 +62,7 @@ func (c *Client) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
 
 // GetKeyVersions returns the latest_version aka the timestamp the key version was created.
 // https://developer.hashicorp.com/vault/api-docs/secret/transit#read-key
-func (c *Client) GetKeyVersion(ctx context.Context) (string, error) {
+func (c *Client) TransitKeyVersion(ctx context.Context) (string, error) {
 	p := fmt.Sprintf(transitKeyPath, c.TransitEngine, c.TransitKey)
 
 	resp, err := c.Logical().ReadWithContext(ctx, p)
