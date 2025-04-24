@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22.6'
+          go-version-file: go.mod
           cache: false
 
       - uses: hadolint/hadolint-action@v3.1.0

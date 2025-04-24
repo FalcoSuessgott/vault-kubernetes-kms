@@ -1,8 +1,6 @@
 module github.com/FalcoSuessgott/vault-kubernetes-kms
 
-go 1.22.7
-
-toolchain go1.22.9
+go 1.23.3
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
