@@ -10,7 +10,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.37.0
 	github.com/testcontainers/testcontainers-go/modules/vault v0.37.0
 	go.uber.org/zap v1.27.0
-	google.golang.org/grpc v1.72.2
+	google.golang.org/grpc v1.73.0
 	gotest.tools/gotestsum v1.12.2
 	k8s.io/kms v0.31.4
 )
@@ -98,7 +98,7 @@ require (
 	golang.org/x/text v0.24.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
-	google.golang.org/protobuf v1.36.5 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
