@@ -22,11 +22,11 @@ func (s *VaultSuite) TestTransitEncryptDecrypt() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			// encrypt data
-			enc, _, err := s.vault.Encrypt(context.Background(), tc.data)
+			enc, _, err := s.vault.TransitEncrypt(context.Background(), tc.data)
 			require.NoError(s.Suite.T(), err, tc.name)
 
 			// decrypt data
-			dec, err := s.vault.Decrypt(context.Background(), enc)
+			dec, err := s.vault.TransitDecrypt(context.Background(), enc)
 			require.NoError(s.Suite.T(), err, tc.name)
 
 			// data should match decrypted text
@@ -64,7 +64,7 @@ func (s *VaultSuite) TestTransitKeyVersion() {
 
 			s.Suite.Require().NoError(err)
 
-			v, err := vault.GetKeyVersion(context.Background())
+			v, err := vault.TransitKeyVersion(context.Background())
 
 			if tc.err {
 				s.Suite.Require().Error(err, tc.name)
