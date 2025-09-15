@@ -28,7 +28,7 @@ jobs:
           go-version-file: go.mod
           cache: false
 
-      - uses: sigstore/cosign-installer@v3.9.2
+      - uses: sigstore/cosign-installer@v3.10.0
       - uses: anchore/sbom-action/download-syft@v0.20.5
       -
         name: Set up QEMU
