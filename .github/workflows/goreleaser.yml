@@ -65,7 +65,7 @@ jobs:
 
       -
         name: Docker Hub Description
-        uses: peter-evans/dockerhub-description@v4
+        uses: peter-evans/dockerhub-description@v5
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
