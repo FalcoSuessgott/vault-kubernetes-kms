@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/hashicorp/vault/api v1.21.0
+	github.com/hashicorp/vault/api v1.22.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.38.0
