@@ -3,6 +3,7 @@ package vault
 import (
 	"fmt"
 
+	customHTTP "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/http"
 	"github.com/hashicorp/vault/api"
 )
 
@@ -30,8 +31,8 @@ type Option func(*Client) error
 // NewClient returns a new vault client wrapper.
 func NewClient(opts ...Option) (*Client, error) {
 	cfg := api.DefaultConfig()
+	cfg.HttpClient = customHTTP.New()
 
-	// read all vault env vars
 	c, err := api.NewClient(cfg)
 	if err != nil {
 		return nil, err

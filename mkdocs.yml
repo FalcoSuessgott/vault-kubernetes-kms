@@ -15,32 +15,13 @@ plugins:
       enable_creation_date: false
 
 markdown_extensions:
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-  - pymdownx.tabbed:
-      alternate_style: true
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
-  - pymdownx.snippets
-  - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
-  - pymdownx.inlinehilite
   - admonition
   - def_list
   - footnotes
   - attr_list
   - md_in_html
   - tables
-  - pymdownx.tasklist:
-      custom_checkbox: true
   - footnotes
-  - pymdownx.tabbed:
-      alternate_style: true
   - toc:
       permalink: true
   - markdown_include.include:

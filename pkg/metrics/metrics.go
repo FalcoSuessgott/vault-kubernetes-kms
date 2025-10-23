@@ -7,9 +7,6 @@ import (
 
 const MetricsPrefix = "vault_kubernetes_kms"
 
-// nolint: mnd
-var defaultBuckets = prometheus.ExponentialBuckets(0.001, 2, 11)
-
 var metricsPrefix = func(s string) string {
 	return MetricsPrefix + "_" + s
 }
@@ -28,25 +25,32 @@ func RegisterPrometheusMetrics() *prometheus.Registry {
 		DecryptionOperationDurationSeconds,
 		VaultTokenRenewalTotal,
 		VaultTokenExpirySeconds,
+		VaultRequestsDurationSeconds,
 	)
 
 	return promReg
 }
 
 var (
+	VaultRequestsDurationSeconds = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: metricsPrefix("vault_requests_duration_seconds"),
+			Help: "duration of vault requests in seconds",
+		},
+		[]string{"method", "path", "status"},
+	)
+
 	EncryptionOperationDurationSeconds = prometheus.NewHistogram(
 		prometheus.HistogramOpts{
-			Name:    metricsPrefix("encryption_operation_duration_seconds"),
-			Help:    "duration of encryption operations",
-			Buckets: defaultBuckets,
+			Name: metricsPrefix("encryption_operation_duration_seconds"),
+			Help: "duration of encryption operations",
 		},
 	)
 
 	DecryptionOperationDurationSeconds = prometheus.NewHistogram(
 		prometheus.HistogramOpts{
-			Name:    metricsPrefix("decryption_operation_duration_seconds"),
-			Help:    "duration of decryption operations",
-			Buckets: defaultBuckets,
+			Name: metricsPrefix("decryption_operation_duration_seconds"),
+			Help: "duration of decryption operations",
 		},
 	)
 

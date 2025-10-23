@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	customHTTP "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/http"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/logging"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/metrics"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/plugin"
@@ -58,8 +59,8 @@ type Options struct {
 	// healthz check
 	HealthPort string `env:"HEALTH_PORT" envDefault:"8080"`
 
-	// Disable KMSv1 Plugin
 	DisableV1 bool `env:"DISABLE_V1" envDefault:"false"`
+	DisableV2 bool `env:"DISABLE_V2" envDefault:"false"`
 
 	Version bool
 }
@@ -102,6 +103,7 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.HealthPort, "health-port", opts.HealthPort, "Health Check Port")
 
 	flag.BoolVar(&opts.DisableV1, "disable-v1", opts.DisableV1, "disable the v1 kms plugin")
+	flag.BoolVar(&opts.DisableV2, "disable-v12", opts.DisableV1, "disable the v2 kms plugin")
 
 	flag.BoolVar(&opts.Version, "version", opts.Version, "prints out the plugins version")
 
@@ -151,6 +153,7 @@ func NewPlugin(version string) error {
 		zap.String("token-refresh-interval", opts.TokenRefreshInterval),
 		zap.Int("token-renewal-seconds", opts.TokenRenewalSeconds),
 		zap.Bool("disable-v1", opts.DisableV1),
+		zap.Bool("disable-v2", opts.DisableV2),
 	)
 
 	switch strings.ToLower(opts.AuthMethod) {
@@ -205,6 +208,9 @@ func NewPlugin(version string) error {
 			zap.Any("error", err))
 	}
 
+	// clean up socket
+	defer listener.Close()
+
 	zap.L().Info("Listening for connection")
 
 	grpc := grpc.NewServer()
@@ -218,11 +224,13 @@ func NewPlugin(version string) error {
 		zap.L().Info("Successfully registered kms plugin v1")
 	}
 
-	pluginV2 := plugin.NewPluginV2(vc)
-	pluginV2.Register(grpc)
-	healthChecks = append(healthChecks, pluginV2)
+	if !opts.DisableV2 {
+		pluginV2 := plugin.NewPluginV2(vc)
+		pluginV2.Register(grpc)
+		healthChecks = append(healthChecks, pluginV2)
 
-	zap.L().Info("Successfully registered kms plugin v2")
+		zap.L().Info("Successfully registered kms plugin v2")
+	}
 
 	go func() {
 		if err := grpc.Serve(listener); err != nil {
@@ -230,20 +238,19 @@ func NewPlugin(version string) error {
 		}
 	}()
 
+	mux := &http.ServeMux{}
+	mux.HandleFunc("/metrics", customHTTP.LoggingMiddleware(promhttp.HandlerFor(metrics.RegisterPrometheusMetrics(), promhttp.HandlerOpts{}).ServeHTTP))
+	mux.HandleFunc("/health", customHTTP.LoggingMiddleware(probes.HealthZ(healthChecks)))
+	mux.HandleFunc("/live", customHTTP.LoggingMiddleware(probes.HealthZ(healthChecks)))
+
+	//nolint: mnd
+	server := &http.Server{
+		Addr:              ":" + opts.HealthPort,
+		Handler:           mux,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+
 	go func() {
-		mux := &http.ServeMux{}
-
-		mux.HandleFunc("/metrics", promhttp.HandlerFor(metrics.RegisterPrometheusMetrics(), promhttp.HandlerOpts{}).ServeHTTP)
-		mux.HandleFunc("/health", probes.HealthZ(healthChecks))
-		mux.HandleFunc("/live", probes.HealthZ(healthChecks))
-
-		//nolint: mnd
-		server := &http.Server{
-			Addr:              ":" + opts.HealthPort,
-			Handler:           mux,
-			ReadHeaderTimeout: 3 * time.Second,
-		}
-
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			zap.L().Fatal("Failed to start health check handlers", zap.Error(err))
 		}
@@ -254,6 +261,13 @@ func NewPlugin(version string) error {
 	}()
 
 	<-ctx.Done()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		return fmt.Errorf("error while shutting down server: %w", err)
+	}
 
 	grpc.GracefulStop()
 
