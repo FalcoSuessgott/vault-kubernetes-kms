@@ -116,7 +116,7 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 **If Vault Token Auth**:
 
 * **(Required)**: `-auth-method="token"` (`VAULT_KMS_AUTH_METHOD`)
-* **(Required)**: `-token` (`VAULT_KMS_VAULT_TOKEN`)
+* **(Required)**: `-token` (`VAULT_KMS_TOKEN`)
 
 **If Vault Approle Auth**:
 
