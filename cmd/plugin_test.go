@@ -186,6 +186,17 @@ func TestValidateFlags(t *testing.T) {
 				AuthMethod:   "approle",
 			},
 		},
+		{
+			name: "all plugin versions disabled",
+			err:  true,
+			opts: &Options{
+				VaultAddress: "e2e",
+				AuthMethod:   "token",
+				Token:        "token",
+				DisableV1:    true,
+				DisableV2:    true,
+			},
+		},
 	}
 
 	for _, tc := range testCases {

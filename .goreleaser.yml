@@ -108,11 +108,12 @@ sboms:
 
 signs:
   - cmd: cosign
+    signature: "${artifact}.sigstore.json"
     artifacts: checksum
     output: true
     args:
       - sign-blob
-      - "--bundle=${artifact}.bundle"
+      - "--bundle=${signature}"
       - "${artifact}"
       - "--yes"
 

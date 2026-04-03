@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	customHTTP "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/http"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/logging"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/metrics"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/plugin"
@@ -25,6 +27,8 @@ import (
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 )
+
+const shutdownTimeout = 3 * time.Second
 
 type Options struct {
 	Socket               string `env:"SOCKET"                 envDefault:"unix:///opt/kms/vaultkms.socket"`
@@ -58,14 +62,14 @@ type Options struct {
 	// healthz check
 	HealthPort string `env:"HEALTH_PORT" envDefault:"8080"`
 
-	// Disable KMSv1 Plugin
 	DisableV1 bool `env:"DISABLE_V1" envDefault:"false"`
+	DisableV2 bool `env:"DISABLE_V2" envDefault:"false"`
 
 	Version bool
 }
 
 // NewPlugin instantiates the plugin.
-// nolint: funlen, cyclop
+// nolint: funlen, cyclop, maintidx
 func NewPlugin(version string) error {
 	opts := &Options{}
 
@@ -103,6 +107,7 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.HealthPort, "health-port", opts.HealthPort, "Health Check Port")
 
 	flag.BoolVar(&opts.DisableV1, "disable-v1", opts.DisableV1, "disable the v1 kms plugin")
+	flag.BoolVar(&opts.DisableV2, "disable-v2", opts.DisableV2, "disable the v2 kms plugin")
 
 	flag.BoolVar(&opts.Version, "version", opts.Version, "prints out the plugins version")
 
@@ -154,6 +159,7 @@ func NewPlugin(version string) error {
 		zap.String("token-refresh-interval", opts.TokenRefreshInterval),
 		zap.Int("token-renewal-seconds", opts.TokenRenewalSeconds),
 		zap.Bool("disable-v1", opts.DisableV1),
+		zap.Bool("disable-v2", opts.DisableV2),
 	)
 
 	switch strings.ToLower(opts.AuthMethod) {
@@ -208,59 +214,71 @@ func NewPlugin(version string) error {
 			zap.Any("error", err))
 	}
 
+	// clean up socket
+	defer listener.Close()
+
 	zap.L().Info("Listening for connection")
 
-	grpc := grpc.NewServer()
+	grpcServer := grpc.NewServer()
 
 	if !opts.DisableV1 {
 		pluginV1 := plugin.NewPluginV1(vc)
-		pluginV1.Register(grpc)
+		pluginV1.Register(grpcServer)
 
 		healthChecks = append(healthChecks, pluginV1)
 
 		zap.L().Info("Successfully registered kms plugin v1")
 	}
 
-	pluginV2 := plugin.NewPluginV2(vc)
-	pluginV2.Register(grpc)
-	healthChecks = append(healthChecks, pluginV2)
+	if !opts.DisableV2 {
+		pluginV2 := plugin.NewPluginV2(vc)
+		pluginV2.Register(grpcServer)
+		healthChecks = append(healthChecks, pluginV2)
 
-	zap.L().Info("Successfully registered kms plugin v2")
+		zap.L().Info("Successfully registered kms plugin v2")
+	}
 
 	go func() {
-		err = grpc.Serve(listener)
-		if err != nil {
-			zap.L().Fatal("Failed to start kms plugin", zap.Error(err))
+		serveErr := grpcServer.Serve(listener)
+		if serveErr != nil && !errors.Is(serveErr, grpc.ErrServerStopped) && !errors.Is(serveErr, net.ErrClosed) {
+			zap.L().Fatal("Failed to start kms plugin", zap.Error(serveErr))
 		}
 	}()
 
+	mux := &http.ServeMux{}
+	mux.HandleFunc("/metrics", customHTTP.LoggingMiddleware(promhttp.HandlerFor(metrics.RegisterPrometheusMetrics(), promhttp.HandlerOpts{}).ServeHTTP))
+	mux.HandleFunc("/health", customHTTP.LoggingMiddleware(probes.HealthZ(healthChecks)))
+	mux.HandleFunc("/live", customHTTP.LoggingMiddleware(probes.HealthZ(healthChecks)))
+
+	//nolint: mnd
+	server := &http.Server{
+		Addr:              ":" + opts.HealthPort,
+		Handler:           mux,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+
+	zap.L().Info("Exposing metrics under /metrics", zap.String("port", opts.HealthPort))
+	zap.L().Info("Exposing health check under /health", zap.String("port", opts.HealthPort))
+	zap.L().Info("Exposing live check under /live", zap.String("port", opts.HealthPort))
+
 	go func() {
-		mux := &http.ServeMux{}
-
-		mux.HandleFunc("/metrics", promhttp.HandlerFor(metrics.RegisterPrometheusMetrics(), promhttp.HandlerOpts{}).ServeHTTP)
-		mux.HandleFunc("/health", probes.HealthZ(healthChecks))
-		mux.HandleFunc("/live", probes.HealthZ(healthChecks))
-
-		//nolint: mnd
-		server := &http.Server{
-			Addr:              ":" + opts.HealthPort,
-			Handler:           mux,
-			ReadHeaderTimeout: 3 * time.Second,
+		serverErr := server.ListenAndServe()
+		if serverErr != nil && !errors.Is(serverErr, http.ErrServerClosed) {
+			zap.L().Fatal("Failed to start health check handlers", zap.Error(serverErr))
 		}
-
-		err = server.ListenAndServe()
-		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			zap.L().Fatal("Failed to start health check handlers", zap.Error(err))
-		}
-
-		zap.L().Info("Exposing metrics under /metrics", zap.String("port", opts.HealthPort))
-		zap.L().Info("Exposing health check under /health", zap.String("port", opts.HealthPort))
-		zap.L().Info("Exposing live check under /live", zap.String("port", opts.HealthPort))
 	}()
 
 	<-ctx.Done()
 
-	grpc.GracefulStop()
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	err = server.Shutdown(ctx)
+	if err != nil {
+		return fmt.Errorf("error while shutting down server: %w", err)
+	}
+
+	grpcServer.GracefulStop()
 
 	zap.L().Info("Exiting...")
 
@@ -283,6 +301,8 @@ func (o *Options) validateFlags() error {
 	// validate approle auth
 	case o.AuthMethod == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
 		return errors.New("approle role id and secret id required when using approle auth")
+	case o.DisableV1 && o.DisableV2:
+		return errors.New("at least one kms plugin version must be enabled")
 	}
 
 	_, err := time.ParseDuration(o.TokenRefreshInterval)

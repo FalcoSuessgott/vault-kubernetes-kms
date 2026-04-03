@@ -1,6 +1,7 @@
 package probes
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -9,7 +10,7 @@ import (
 
 // Prober interface.
 type Prober interface {
-	Health() error
+	Health(ctx context.Context) error
 }
 
 // HealthZ performs a health check for each prober and returns OK if all checks were successful.
@@ -20,7 +21,7 @@ func HealthZ(prober []Prober) http.HandlerFunc {
 				return
 			}
 
-			err := p.Health()
+			err := p.Health(r.Context())
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprint(w, err)
