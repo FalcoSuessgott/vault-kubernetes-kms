@@ -78,7 +78,7 @@ jobs:
           cache: false
 
       - name: setup qemu
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: setup docker build
         uses: docker/setup-buildx-action@v3
