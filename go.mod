@@ -12,7 +12,7 @@ require (
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.80.0
 	gotest.tools/gotestsum v1.13.0
-	k8s.io/kms v0.31.4
+	k8s.io/kms v0.35.3
 )
 
 require (
@@ -42,7 +42,6 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 // indirect
