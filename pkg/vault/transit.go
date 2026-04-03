@@ -12,7 +12,7 @@ import (
 func (c *Client) Encrypt(ctx context.Context, data []byte) ([]byte, string, error) {
 	p := fmt.Sprintf(encryptDataPath, c.TransitEngine, c.TransitKey)
 
-	opts := map[string]interface{}{
+	opts := map[string]any{
 		"plaintext": base64.StdEncoding.EncodeToString(data),
 	}
 
@@ -38,7 +38,7 @@ func (c *Client) Encrypt(ctx context.Context, data []byte) ([]byte, string, erro
 func (c *Client) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
 	p := fmt.Sprintf(decryptDataPath, c.TransitEngine, c.TransitKey)
 
-	opts := map[string]interface{}{
+	opts := map[string]any{
 		"ciphertext": string(data),
 	}
 
@@ -60,7 +60,7 @@ func (c *Client) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
 	return decoded, nil
 }
 
-// GetKeyVersions returns the latest_version aka the timestamp the key version was created.
+// GetKeyVersion returns the latest key version for the configured transit key.
 // https://developer.hashicorp.com/vault/api-docs/secret/transit#read-key
 func (c *Client) GetKeyVersion(ctx context.Context) (string, error) {
 	p := fmt.Sprintf(transitKeyPath, c.TransitEngine, c.TransitKey)

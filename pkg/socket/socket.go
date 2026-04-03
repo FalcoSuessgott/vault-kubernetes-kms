@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -38,11 +39,13 @@ func NewSocket(str string) (*Socket, error) {
 // Listen listens on the current socket for connections.
 func (s *Socket) Listen(force bool) (net.Listener, error) {
 	// Remove the socket file if it already exists.
-	if _, err := os.Stat(s.Path); err == nil {
+	_, err := os.Stat(s.Path)
+	if err == nil {
 		zap.L().Info("Socket already exists", zap.String("path", s.Path))
 
 		if force {
-			if err := os.Remove(s.Path); err != nil {
+			err = os.Remove(s.Path)
+			if err != nil {
 				return nil, fmt.Errorf("failed to remove unix socket: %w", err)
 			}
 
@@ -50,5 +53,7 @@ func (s *Socket) Listen(force bool) (net.Listener, error) {
 		}
 	}
 
-	return net.Listen(s.Network, s.Path)
+	listenConfig := net.ListenConfig{}
+
+	return listenConfig.Listen(context.Background(), s.Network, s.Path)
 }

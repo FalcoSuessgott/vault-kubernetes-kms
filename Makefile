@@ -20,7 +20,7 @@ test: ## test
 
 PHONY: lint
 lint: ## lint go files
-	golangci-lint run -c .golang-ci.yml
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.3 run -c .golang-ci.yml
 
 ..PHONY: setup-vault
 setup-vault: ## setup a local vault dev server with transit engine + key

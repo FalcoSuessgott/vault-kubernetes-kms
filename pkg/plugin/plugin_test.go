@@ -64,7 +64,8 @@ func (p *PluginSuite) SetupSubTest() {
 }
 
 func (p *PluginSuite) TearDownSubTest() {
-	if err := p.tc.Terminate(); err != nil {
+	err := p.tc.Terminate()
+	if err != nil {
 		log.Fatal(err)
 	}
 }
@@ -132,6 +133,7 @@ func (p *PluginSuite) TestPluginEncryptDecrypt() {
 				p.Require().NoError(err, tc.name)
 
 				// compare result
+				//nolint: staticcheck
 				p.Require().Equal(tc.data, res.GetPlain(), tc.name)
 			} else {
 				pluginV2 := NewPluginV2(p.vault)

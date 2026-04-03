@@ -10,7 +10,8 @@ import (
 var version = "0.0.1-dev"
 
 func main() {
-	if err := cmd.NewPlugin(version); err != nil {
+	err := cmd.NewPlugin(version)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 
 		os.Exit(1)

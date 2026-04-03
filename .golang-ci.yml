@@ -1,23 +1,53 @@
-linters-settings:
-  lll:
-    line-length: 180
+version: "2"
 linters:
-  enable-all: true
+  default: all
+  enable:
+    - wsl_v5
   disable:
-    - testpackage
-    - forbidigo
-    - paralleltest
-    - varnamelen
-    - rowserrcheck
-    - sqlclosecheck
-    - wastedassign
-    - exhaustruct
-    - nolintlint
-    - wrapcheck
+    - copyloopvar
     - depguard
     - err113
-    - intrange
-    - copyloopvar
+    - exhaustruct
+    - forbidigo
     - gochecknoglobals
+    - intrange
+    - nolintlint
+    - paralleltest
     - revive
-    - exportloopref
+    - rowserrcheck
+    - sqlclosecheck
+    - testpackage
+    - varnamelen
+    - wastedassign
+    - wsl
+    - wrapcheck
+  settings:
+    lll:
+      line-length: 180
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

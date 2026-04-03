@@ -70,7 +70,8 @@ func NewPlugin(version string) error {
 	opts := &Options{}
 
 	// first parse any env vars
-	if err := utils.ParseEnvs("VAULT_KMS_", opts); err != nil {
+	err := utils.ParseEnvs("VAULT_KMS_", opts)
+	if err != nil {
 		return fmt.Errorf("error parsing env vars: %w", err)
 	}
 
@@ -105,7 +106,8 @@ func NewPlugin(version string) error {
 
 	flag.BoolVar(&opts.Version, "version", opts.Version, "prints out the plugins version")
 
-	if err := flag.Parse(os.Args[1:]); err != nil {
+	err = flag.Parse(os.Args[1:])
+	if err != nil {
 		return fmt.Errorf("error parsing flags: %w", err)
 	}
 
@@ -115,7 +117,8 @@ func NewPlugin(version string) error {
 		return nil
 	}
 
-	if err := opts.validateFlags(); err != nil {
+	err = opts.validateFlags()
+	if err != nil {
 		return fmt.Errorf("error validating args: %w", err)
 	}
 
@@ -225,7 +228,8 @@ func NewPlugin(version string) error {
 	zap.L().Info("Successfully registered kms plugin v2")
 
 	go func() {
-		if err := grpc.Serve(listener); err != nil {
+		err = grpc.Serve(listener)
+		if err != nil {
 			zap.L().Fatal("Failed to start kms plugin", zap.Error(err))
 		}
 	}()
@@ -244,7 +248,8 @@ func NewPlugin(version string) error {
 			ReadHeaderTimeout: 3 * time.Second,
 		}
 
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		err = server.ListenAndServe()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			zap.L().Fatal("Failed to start health check handlers", zap.Error(err))
 		}
 
@@ -280,7 +285,8 @@ func (o *Options) validateFlags() error {
 		return errors.New("approle role id and secret id required when using approle auth")
 	}
 
-	if _, err := time.ParseDuration(o.TokenRefreshInterval); err != nil {
+	_, err := time.ParseDuration(o.TokenRefreshInterval)
+	if err != nil {
 		return fmt.Errorf("invalid token refresh interval: %w", err)
 	}
 

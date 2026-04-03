@@ -130,7 +130,8 @@ func TestNewPlugin(t *testing.T) {
 			go func() {
 				defer wg.Done()
 
-				if err := NewPlugin(""); err != nil {
+				err := NewPlugin("")
+				if err != nil {
 					log.Fatal(err)
 				}
 			}()
