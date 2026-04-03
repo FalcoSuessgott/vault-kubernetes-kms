@@ -12,6 +12,7 @@ The following metrics are available:
 | `vault_kubernetes_kms_encryption_operation_errors_total`            | Counter   | total number of errors during encryption operations |
 | `vault_kubernetes_kms_token_expiry_seconds`                         | Gauge     | time remaining until the current token expires      |
 | `vault_kubernetes_kms_token_renewals_total`                         | Counter   | total number of token renewals                      |
+| `vault_kubernetes_kms_vault_requests_duration_seconds_bucket`       | Histogram | duration of outgoing Vault HTTP requests in seconds |
 
 Including the metrics defined in the [Prometheus Process Collector](https://github.com/prometheus/client_golang/blob/main/prometheus/process_collector.go#L38) (when running on `Linux`).
 

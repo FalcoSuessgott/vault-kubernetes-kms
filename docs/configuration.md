@@ -150,8 +150,12 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
       When `vault-kubernetes-kms` crashes, it is not guaranteed that the socket-file will always be removed. For those scenarios `-force-socket-overwrite` was introduced to allow a smooth re-deployment of the plugin and not having to manually delete the stale socket file on the control plane node.
 
 * **(Optional)**: `-debug` (`VAULT_KMS_DEBUG`)
-* **(Optional)**: `-health-port` (`VAULT_KMS_HEALTH_PORT`); default: `":8080"`
-* **(Optional)**: `-disable-v1` (`VAULT_KMS_DISABLE_V1`); default: `"true"`
+* **(Optional)**: `-health-port` (`VAULT_KMS_HEALTH_PORT`); default: `"8080"`
+* **(Optional)**: `-disable-v1` (`VAULT_KMS_DISABLE_V1`); default: `"false"`
+* **(Optional)**: `-disable-v2` (`VAULT_KMS_DISABLE_V2`); default: `"false"`
+
+!!! note
+      At least one KMS API version must remain enabled. Setting both `-disable-v1=true` and `-disable-v2=true` is invalid.
 
 
 ### Example Vault Token Auth

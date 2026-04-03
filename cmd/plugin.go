@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -26,6 +27,8 @@ import (
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 )
+
+const shutdownTimeout = 3 * time.Second
 
 type Options struct {
 	Socket               string `env:"SOCKET"                 envDefault:"unix:///opt/kms/vaultkms.socket"`
@@ -66,7 +69,7 @@ type Options struct {
 }
 
 // NewPlugin instantiates the plugin.
-// nolint: funlen, cyclop
+// nolint: funlen, cyclop, maintidx
 func NewPlugin(version string) error {
 	opts := &Options{}
 
@@ -216,11 +219,11 @@ func NewPlugin(version string) error {
 
 	zap.L().Info("Listening for connection")
 
-	grpc := grpc.NewServer()
+	grpcServer := grpc.NewServer()
 
 	if !opts.DisableV1 {
 		pluginV1 := plugin.NewPluginV1(vc)
-		pluginV1.Register(grpc)
+		pluginV1.Register(grpcServer)
 
 		healthChecks = append(healthChecks, pluginV1)
 
@@ -229,16 +232,16 @@ func NewPlugin(version string) error {
 
 	if !opts.DisableV2 {
 		pluginV2 := plugin.NewPluginV2(vc)
-		pluginV2.Register(grpc)
+		pluginV2.Register(grpcServer)
 		healthChecks = append(healthChecks, pluginV2)
 
 		zap.L().Info("Successfully registered kms plugin v2")
 	}
 
 	go func() {
-		err = grpc.Serve(listener)
-		if err != nil {
-			zap.L().Fatal("Failed to start kms plugin", zap.Error(err))
+		serveErr := grpcServer.Serve(listener)
+		if serveErr != nil && !errors.Is(serveErr, grpc.ErrServerStopped) && !errors.Is(serveErr, net.ErrClosed) {
+			zap.L().Fatal("Failed to start kms plugin", zap.Error(serveErr))
 		}
 	}()
 
@@ -254,26 +257,28 @@ func NewPlugin(version string) error {
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
-	go func() {
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			zap.L().Fatal("Failed to start health check handlers", zap.Error(err))
-		}
+	zap.L().Info("Exposing metrics under /metrics", zap.String("port", opts.HealthPort))
+	zap.L().Info("Exposing health check under /health", zap.String("port", opts.HealthPort))
+	zap.L().Info("Exposing live check under /live", zap.String("port", opts.HealthPort))
 
-		zap.L().Info("Exposing metrics under /metrics", zap.String("port", opts.HealthPort))
-		zap.L().Info("Exposing health check under /health", zap.String("port", opts.HealthPort))
-		zap.L().Info("Exposing live check under /live", zap.String("port", opts.HealthPort))
+	go func() {
+		serverErr := server.ListenAndServe()
+		if serverErr != nil && !errors.Is(serverErr, http.ErrServerClosed) {
+			zap.L().Fatal("Failed to start health check handlers", zap.Error(serverErr))
+		}
 	}()
 
 	<-ctx.Done()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
-	if err := server.Shutdown(ctx); err != nil {
+	err = server.Shutdown(ctx)
+	if err != nil {
 		return fmt.Errorf("error while shutting down server: %w", err)
 	}
 
-	grpc.GracefulStop()
+	grpcServer.GracefulStop()
 
 	zap.L().Info("Exiting...")
 

@@ -1,14 +1,16 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/metrics"
 )
 
-// RoundTripper is a custom http rountripper.
+const requestTimeout = 10 * time.Second
+
+// RoundTripper is a custom HTTP RoundTripper.
 type RoundTripper struct {
 	Transport http.RoundTripper
 }
@@ -20,10 +22,9 @@ func (rd *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	status := "error"
 	if resp != nil {
-		status = fmt.Sprint(resp.StatusCode)
+		status = strconv.Itoa(resp.StatusCode)
 	}
 
-	// nolnt: perfsprint
 	metrics.VaultRequestsDurationSeconds.WithLabelValues(req.Method, req.URL.Path, status).Observe(time.Since(startTime).Seconds())
 
 	return resp, err
@@ -31,10 +32,17 @@ func (rd *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 // New returns a custom http client.
 func New() *http.Client {
+	transport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		transport = &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		}
+	}
+
 	return &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: requestTimeout,
 		Transport: &RoundTripper{
-			Transport: &http.Transport{},
+			Transport: transport.Clone(),
 		},
 	}
 }

@@ -7,11 +7,14 @@ You don't have to deploy the plugin in a Kubernetes Cluster, you can just execut
 ```bash
 $> make setup-vault
 $> go run main.go -vault-address=http://127.0.0.1:8200 -auth-method=token -token=root -socket=unix:///tmp/kms.socket
-{"level":"info","timestamp":"2024-08-25T15:36:19.233+1000","caller":"cmd/plugin.go:154","message":"starting kms plugin","auth-method":"token","socket":"unix:///tmp/kms.socket","debug":false,"vault-address":"http://127.0.0.1:8200","vault-namespace":"","transit-engine":"transit","transit-key":"kms","health-port":":8080","disable-v1":false}
-{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:167","message":"Successfully authenticated to vault"}
-{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:174","message":"Successfully dialed to unix domain socket","socket":"unix:///tmp/kms.socket"}
-{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:184","message":"Successfully registered kms plugin v1"}
-{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:191","message":"Successfully registered kms plugin v2"}
+{"level":"info","timestamp":"2024-08-25T15:36:19.233+1000","caller":"cmd/plugin.go:174","message":"starting kms plugin","auth-method":"token","socket":"unix:///tmp/kms.socket","debug":false,"vault-address":"http://127.0.0.1:8200","vault-namespace":"","transit-engine":"transit","transit-key":"kms","health-port":"8080","token-refresh-interval":"60s","token-renewal-seconds":3600,"disable-v1":false,"disable-v2":false}
+{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:187","message":"Successfully authenticated to vault"}
+{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:205","message":"Successfully created unix socket","socket":"/tmp/kms.socket"}
+{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:230","message":"Successfully registered kms plugin v1"}
+{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:238","message":"Successfully registered kms plugin v2"}
+{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:260","message":"Exposing metrics under /metrics","port":"8080"}
+{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:261","message":"Exposing health check under /health","port":"8080"}
+{"level":"info","timestamp":"2024-08-25T15:36:19.235+1000","caller":"cmd/plugin.go:262","message":"Exposing live check under /live","port":"8080"}
 ```
 
 In order to send encryption and decryption requests you can use the client CLI tool in `cmd/v2_Client/main.go`. This tool simply connects to the plugin and encrypts a given string and decrypts it back to its plaintext version:

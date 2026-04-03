@@ -13,8 +13,9 @@ import (
 
 // KMSv1 is a KMS v1 wrapper.
 type KMSv1 struct {
-	plugin Plugin
 	pb.UnimplementedKeyManagementServiceServer
+
+	plugin Plugin
 }
 
 // NewPluginV1 returns a kms wrapper.
@@ -34,19 +35,15 @@ func (v1 *KMSv1) Version(ctx context.Context, request *pb.VersionRequest) (*pb.V
 
 // Health sends a simple plaintext for encryption and then compares the decrypted value.
 // nolint: staticcheck
-func (v1 *KMSv1) Health() error {
+func (v1 *KMSv1) Health(ctx context.Context) error {
 	health := "health"
 
-	enc, err := v1.Encrypt(context.Background(), &pb.EncryptRequest{
-		Plain: []byte(health),
-	})
+	enc, err := v1.encrypt(ctx, []byte(health), false)
 	if err != nil {
 		return err
 	}
 
-	dec, err := v1.Decrypt(context.Background(), &pb.DecryptRequest{
-		Cipher: enc.GetCipher(),
-	})
+	dec, err := v1.decrypt(ctx, enc.GetCipher(), false)
 	if err != nil {
 		return err
 	}
@@ -63,47 +60,69 @@ func (v1 *KMSv1) Health() error {
 // Encrypt encrypts plaintext using Vault transit for the KMS v1 API.
 // nolint: staticcheck
 func (v1 *KMSv1) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.EncryptResponse, error) {
-	timer := prometheus.NewTimer(metrics.EncryptionOperationDurationSeconds)
-
-	resp, _, err := v1.plugin.Encrypt(ctx, request.GetPlain())
-	if err != nil {
-		metrics.EncryptionErrorsTotal.Inc()
-
-		return nil, err
-	}
-
-	zap.L().Info("v1 encryption request")
-
-	timer.ObserveDuration()
-
-	return &pb.EncryptResponse{
-		Cipher: resp,
-	}, nil
+	return v1.encrypt(ctx, request.GetPlain(), true)
 }
 
 // Decrypt decrypts ciphertext using Vault transit for the KMS v1 API.
 // nolint: staticcheck
 func (v1 *KMSv1) Decrypt(ctx context.Context, request *pb.DecryptRequest) (*pb.DecryptResponse, error) {
-	timer := prometheus.NewTimer(metrics.DecryptionOperationDurationSeconds)
-
-	resp, err := v1.plugin.Decrypt(ctx, request.GetCipher())
-	if err != nil {
-		metrics.DecryptionErrorsTotal.Inc()
-
-		return nil, err
-	}
-
-	zap.L().Info("v1 decryption request")
-
-	timer.ObserveDuration()
-
-	return &pb.DecryptResponse{
-		Plain: resp,
-	}, nil
+	return v1.decrypt(ctx, request.GetCipher(), true)
 }
 
 // Register registers the KMS v1 gRPC service with the server.
 // nolint: staticcheck
 func (v1 *KMSv1) Register(s *grpc.Server) {
 	pb.RegisterKeyManagementServiceServer(s, v1)
+}
+
+// nolint: staticcheck
+func (v1 *KMSv1) encrypt(ctx context.Context, plain []byte, recordMetrics bool) (*pb.EncryptResponse, error) {
+	var timer *prometheus.Timer
+	if recordMetrics {
+		timer = prometheus.NewTimer(metrics.EncryptionOperationDurationSeconds)
+		defer timer.ObserveDuration()
+	}
+
+	resp, _, err := v1.plugin.Encrypt(ctx, plain)
+	if err != nil {
+		if recordMetrics {
+			metrics.EncryptionErrorsTotal.Inc()
+		}
+
+		return nil, err
+	}
+
+	if recordMetrics {
+		zap.L().Info("v1 encryption request")
+	}
+
+	return &pb.EncryptResponse{
+		Cipher: resp,
+	}, nil
+}
+
+// nolint: staticcheck
+func (v1 *KMSv1) decrypt(ctx context.Context, cipher []byte, recordMetrics bool) (*pb.DecryptResponse, error) {
+	var timer *prometheus.Timer
+	if recordMetrics {
+		timer = prometheus.NewTimer(metrics.DecryptionOperationDurationSeconds)
+		defer timer.ObserveDuration()
+	}
+
+	resp, err := v1.plugin.Decrypt(ctx, cipher)
+	if err != nil {
+		if recordMetrics {
+			metrics.DecryptionErrorsTotal.Inc()
+		}
+
+		return nil, err
+	}
+
+	if recordMetrics {
+		zap.L().Info("v1 decryption request")
+	}
+
+	return &pb.DecryptResponse{
+		Plain: resp,
+	}, nil
 }

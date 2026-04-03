@@ -21,8 +21,9 @@ type Plugin interface {
 
 // KMSv2 is a KMS v2 wrapper.
 type KMSv2 struct {
-	plugin Plugin
 	pb.UnimplementedKeyManagementServiceServer
+
+	plugin Plugin
 }
 
 // NewPluginV2 returns a KMS v2 wrapper.
@@ -41,10 +42,11 @@ func (v2 *KMSv2) Status(ctx context.Context, _ *pb.StatusRequest) (*pb.StatusRes
 	}
 
 	//nolint: contextcheck
-	if err := v2.Health(); err != nil {
+	err = v2.Health(ctx)
+	if err != nil {
 		health = "err"
 
-		zap.L().Info(err.Error())
+		zap.L().Info("v2 health check failed", zap.Error(err))
 	}
 
 	zap.L().Info("health status",
@@ -61,24 +63,17 @@ func (v2 *KMSv2) Status(ctx context.Context, _ *pb.StatusRequest) (*pb.StatusRes
 }
 
 // Health sends a simple plaintext for encryption and then compares the decrypted value.
-func (v2 *KMSv2) Health() error {
+func (v2 *KMSv2) Health(ctx context.Context) error {
 	health := "health"
-	ctx := context.Background()
 
 	start := time.Now().Unix()
 
-	enc, err := v2.Encrypt(ctx, &pb.EncryptRequest{
-		Plaintext: []byte(health),
-		Uid:       strconv.FormatInt(start, 10),
-	})
+	enc, err := v2.encrypt(ctx, []byte(health), strconv.FormatInt(start, 10), false)
 	if err != nil {
 		return err
 	}
 
-	dec, err := v2.Decrypt(ctx, &pb.DecryptRequest{
-		Ciphertext: enc.GetCiphertext(),
-		Uid:        strconv.FormatInt(start, 10),
-	})
+	dec, err := v2.decrypt(ctx, enc.GetCiphertext(), strconv.FormatInt(start, 10), false)
 	if err != nil {
 		return err
 	}
@@ -93,18 +88,36 @@ func (v2 *KMSv2) Health() error {
 }
 
 func (v2 *KMSv2) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.EncryptResponse, error) {
-	timer := prometheus.NewTimer(metrics.EncryptionOperationDurationSeconds)
+	return v2.encrypt(ctx, request.GetPlaintext(), request.GetUid(), true)
+}
 
-	resp, id, err := v2.plugin.Encrypt(ctx, request.GetPlaintext())
+func (v2 *KMSv2) Decrypt(ctx context.Context, request *pb.DecryptRequest) (*pb.DecryptResponse, error) {
+	return v2.decrypt(ctx, request.GetCiphertext(), request.GetUid(), true)
+}
+
+func (v2 *KMSv2) Register(s *grpc.Server) {
+	pb.RegisterKeyManagementServiceServer(s, v2)
+}
+
+func (v2 *KMSv2) encrypt(ctx context.Context, plain []byte, requestID string, recordMetrics bool) (*pb.EncryptResponse, error) {
+	var timer *prometheus.Timer
+	if recordMetrics {
+		timer = prometheus.NewTimer(metrics.EncryptionOperationDurationSeconds)
+		defer timer.ObserveDuration()
+	}
+
+	resp, id, err := v2.plugin.Encrypt(ctx, plain)
 	if err != nil {
-		metrics.EncryptionErrorsTotal.Inc()
+		if recordMetrics {
+			metrics.EncryptionErrorsTotal.Inc()
+		}
 
 		return nil, err
 	}
 
-	zap.L().Info("v2 encryption request", zap.String("request_id", request.GetUid()))
-
-	timer.ObserveDuration()
+	if recordMetrics {
+		zap.L().Info("v2 encryption request", zap.String("request_id", requestID))
+	}
 
 	return &pb.EncryptResponse{
 		Ciphertext: resp,
@@ -112,25 +125,27 @@ func (v2 *KMSv2) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.E
 	}, nil
 }
 
-func (v2 *KMSv2) Decrypt(ctx context.Context, request *pb.DecryptRequest) (*pb.DecryptResponse, error) {
-	timer := prometheus.NewTimer(metrics.DecryptionOperationDurationSeconds)
+func (v2 *KMSv2) decrypt(ctx context.Context, cipher []byte, requestID string, recordMetrics bool) (*pb.DecryptResponse, error) {
+	var timer *prometheus.Timer
+	if recordMetrics {
+		timer = prometheus.NewTimer(metrics.DecryptionOperationDurationSeconds)
+		defer timer.ObserveDuration()
+	}
 
-	resp, err := v2.plugin.Decrypt(ctx, request.GetCiphertext())
+	resp, err := v2.plugin.Decrypt(ctx, cipher)
 	if err != nil {
-		metrics.DecryptionErrorsTotal.Inc()
+		if recordMetrics {
+			metrics.DecryptionErrorsTotal.Inc()
+		}
 
 		return nil, err
 	}
 
-	zap.L().Info("v2 decryption request", zap.String("request_id", request.GetUid()))
-
-	timer.ObserveDuration()
+	if recordMetrics {
+		zap.L().Info("v2 decryption request", zap.String("request_id", requestID))
+	}
 
 	return &pb.DecryptResponse{
 		Plaintext: resp,
 	}, nil
-}
-
-func (v2 *KMSv2) Register(s *grpc.Server) {
-	pb.RegisterKeyManagementServiceServer(s, v2)
 }
