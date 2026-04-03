@@ -15,13 +15,15 @@ import (
 // PluginV1 a kms plugin wrapper.
 type PluginV1 struct {
 	*vault.Client
+	pb.UnimplementedKeyManagementServiceServer
 }
 
 // NewPluginV1 returns a kms wrapper.
 func NewPluginV1(vc *vault.Client) *PluginV1 {
-	return &PluginV1{vc}
+	return &PluginV1{Client: vc}
 }
 
+// Version returns static plugin version metadata for the KMS v1 API.
 // nolint: staticcheck
 func (p *PluginV1) Version(ctx context.Context, request *pb.VersionRequest) (*pb.VersionResponse, error) {
 	return &pb.VersionResponse{
@@ -59,6 +61,7 @@ func (p *PluginV1) Health() error {
 	return nil
 }
 
+// Encrypt encrypts plaintext using Vault transit for the KMS v1 API.
 // nolint: staticcheck
 func (p *PluginV1) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb.EncryptResponse, error) {
 	timer := prometheus.NewTimer(metrics.EncryptionOperationDurationSeconds)
@@ -79,6 +82,7 @@ func (p *PluginV1) Encrypt(ctx context.Context, request *pb.EncryptRequest) (*pb
 	}, nil
 }
 
+// Decrypt decrypts ciphertext using Vault transit for the KMS v1 API.
 // nolint: staticcheck
 func (p *PluginV1) Decrypt(ctx context.Context, request *pb.DecryptRequest) (*pb.DecryptResponse, error) {
 	timer := prometheus.NewTimer(metrics.DecryptionOperationDurationSeconds)
@@ -99,6 +103,7 @@ func (p *PluginV1) Decrypt(ctx context.Context, request *pb.DecryptRequest) (*pb
 	}, nil
 }
 
+// Register registers the KMS v1 gRPC service with the server.
 // nolint: staticcheck
 func (p *PluginV1) Register(s *grpc.Server) {
 	pb.RegisterKeyManagementServiceServer(s, p)

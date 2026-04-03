@@ -20,7 +20,8 @@ func HealthZ(prober []Prober) http.HandlerFunc {
 				return
 			}
 
-			if err := p.Health(); err != nil {
+			err := p.Health()
+			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprint(w, err)
 

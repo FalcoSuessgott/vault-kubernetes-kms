@@ -63,10 +63,12 @@ func (c *Client) LeaseRefresher(ctx context.Context, interval time.Duration) {
 			if ttlFloat < creationTTLFloat/2 {
 				zap.L().Info("attempting token renewal", zap.Int("renewal_seconds", c.TokenRenewalSeconds))
 
-				if _, err := c.Auth().Token().RenewSelf(c.TokenRenewalSeconds); err != nil {
+				_, err = c.Auth().Token().RenewSelf(c.TokenRenewalSeconds)
+				if err != nil {
 					zap.L().Error("failed to renew token, performing new authentication", zap.Error(err))
 
-					if err := c.AuthMethodFunc(c); err != nil {
+					err = c.AuthMethodFunc(c)
+					if err != nil {
 						zap.L().Error("failed to authenticate", zap.Error(err))
 					} else {
 						zap.L().Info("successfully re-authenticated")

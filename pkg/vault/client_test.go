@@ -19,7 +19,8 @@ type VaultSuite struct {
 }
 
 func (s *VaultSuite) TearDownSubTest() {
-	if err := s.tc.Terminate(); err != nil {
+	err := s.tc.Terminate()
+	if err != nil {
 		log.Fatal(err)
 	}
 }

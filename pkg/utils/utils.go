@@ -5,12 +5,13 @@ import (
 )
 
 // ParseEnvs parses the environment variables and sets the options.
-func ParseEnvs(prefix string, i interface{}) error {
+func ParseEnvs(prefix string, i any) error {
 	opts := env.Options{
 		Prefix: prefix,
 	}
 
-	if err := env.Parse(i, opts); err != nil {
+	err := env.Parse(i, opts)
+	if err != nil {
 		return err
 	}
 

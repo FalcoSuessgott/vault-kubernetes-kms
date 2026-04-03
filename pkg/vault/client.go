@@ -40,7 +40,8 @@ func NewClient(opts ...Option) (*Client, error) {
 	client := &Client{Client: c}
 
 	for _, opt := range opts {
-		if err := opt(client); err != nil {
+		err = opt(client)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -99,7 +100,7 @@ func WithTokenAuth(token string) Option {
 	}
 }
 
-// WithTokenAuth sets the specified token.
+// WithTokenRenewalSeconds sets the number of seconds used for token renewal.
 func WithTokenRenewalSeconds(seconds int) Option {
 	return func(c *Client) error {
 		c.TokenRenewalSeconds = seconds
@@ -108,14 +109,14 @@ func WithTokenRenewalSeconds(seconds int) Option {
 	}
 }
 
-// WitAppRoleAuth performs a approle auth login.
+// WithAppRoleAuth performs an AppRole auth login.
 func WithAppRoleAuth(mount, roleID, secretID string) Option {
 	return func(c *Client) error {
 		c.AppRoleID = roleID
 		c.AppRoleMount = mount
 		c.AppRoleSecretID = secretID
 
-		opts := map[string]interface{}{
+		opts := map[string]any{
 			"role_id":   roleID,
 			"secret_id": secretID,
 		}

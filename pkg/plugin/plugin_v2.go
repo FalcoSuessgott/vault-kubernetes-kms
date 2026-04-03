@@ -17,11 +17,12 @@ import (
 // PluginV2 a kms plugin wrapper.
 type PluginV2 struct {
 	*vault.Client
+	pb.UnimplementedKeyManagementServiceServer
 }
 
-// PluginV2 returns a kms wrapper.
+// NewPluginV2 returns a KMS v2 wrapper.
 func NewPluginV2(vc *vault.Client) *PluginV2 {
-	return &PluginV2{vc}
+	return &PluginV2{Client: vc}
 }
 
 // Status performs a simple health check and returns ok if encryption / decryption was successful
@@ -29,13 +30,14 @@ func NewPluginV2(vc *vault.Client) *PluginV2 {
 func (p *PluginV2) Status(ctx context.Context, _ *pb.StatusRequest) (*pb.StatusResponse, error) {
 	health := "ok"
 
-	kv, err := p.Client.GetKeyVersion(ctx)
+	kv, err := p.GetKeyVersion(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	//nolint: contextcheck
-	if err := p.Health(); err != nil {
+	err = p.Health()
+	if err != nil {
 		health = "err"
 
 		zap.L().Info(err.Error())

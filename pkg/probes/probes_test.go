@@ -1,6 +1,7 @@
 package probes
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -23,7 +24,7 @@ func TestHealthZ(t *testing.T) {
 
 		hf := HealthZ(prober)
 
-		req := httptest.NewRequest(http.MethodGet, "https://google.de", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "https://google.de", nil)
 		w := httptest.NewRecorder()
 		hf(w, req)
 
@@ -36,7 +37,7 @@ func TestHealthZ(t *testing.T) {
 
 		hf := HealthZ(prober)
 
-		req := httptest.NewRequest(http.MethodGet, "https://google.de", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "https://google.de", nil)
 		w := httptest.NewRecorder()
 		hf(w, req)
 

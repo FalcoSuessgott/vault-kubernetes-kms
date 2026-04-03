@@ -73,6 +73,7 @@ func (v *TestContainer) GetApproleCreds(mount, role string) (string, string, err
 	return string(roleID[8:]), string(secretID[8:]), nil
 }
 
+// GetToken creates a token with the supplied policy and TTL.
 // nolint: perfsprint
 func (v *TestContainer) GetToken(policy string, ttl string) (string, error) {
 	return v.RunCommand("vault token create -field=token -policy=" + policy + " -ttl=" + ttl)
