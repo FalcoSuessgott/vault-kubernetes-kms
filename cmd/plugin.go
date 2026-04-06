@@ -178,8 +178,8 @@ func NewPlugin(version string) error {
 	case "userpass":
 		authMethod = vault.WithUserPassAuth(opts.UserPassMount, opts.UserPassUsername, opts.UserPassPassword)
 		logFields = append(logFields,
-			zap.String("approle-mount", opts.AppRoleMount),
-			zap.String("approle-role-id", opts.AppRoleRoleID))
+			zap.String("userpass-mount", opts.UserPassMount),
+			zap.String("userpass-username", opts.UserPassUsername))
 	default:
 		return fmt.Errorf("invalid auth method: %s", opts.AuthMethod)
 	}
