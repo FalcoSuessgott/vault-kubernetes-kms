@@ -79,6 +79,23 @@ func (s *VaultSuite) TestAuthMethods() {
 			},
 		},
 		{
+			name: "userpass auth",
+			prepCmd: []string{
+				"vault auth enable userpass",
+				"vault write auth/userpass/users/kms-user password=kms-password",
+			},
+			auth: func() (Option, error) {
+				return WithAppRoleAuth("userpass", "kms-user", "kms-password"), nil
+			},
+		},
+		{
+			name: "invalid userpass auth",
+			err:  true,
+			auth: func() (Option, error) {
+				return WithAppRoleAuth("userpass", "invalid", "invalid"), nil
+			},
+		},
+		{
 			name: "token auth",
 			auth: func() (Option, error) {
 				token, err := s.tc.GetToken("default", "1h")
