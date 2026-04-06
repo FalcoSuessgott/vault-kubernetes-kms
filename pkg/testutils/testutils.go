@@ -73,6 +73,22 @@ func (v *TestContainer) GetApproleCreds(mount, role string) (string, string, err
 	return string(roleID[8:]), string(secretID[8:]), nil
 }
 
+func (v *TestContainer) GetUserPassCreds(mount string, username string, password string) (string, string, error) {
+	_, _, err := v.Container.Exec(
+		context.Background(),
+		[]string{
+			"vault", "login", "-method=userpass",
+			fmt.Sprintf("auth/%s/users/mitchellh", mount, username),
+			fmt.Sprintf("password=%s", password),
+		},
+	)
+	if err != nil {
+		return "", "", fmt.Errorf("error creating userpass: %w", err)
+	}
+
+	return username, password, nil
+}
+
 // GetToken creates a token with the supplied policy and TTL.
 // nolint: perfsprint
 func (v *TestContainer) GetToken(policy string, ttl string) (string, error) {

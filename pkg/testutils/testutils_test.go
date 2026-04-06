@@ -37,10 +37,15 @@ func TestVaultConnection(t *testing.T) {
 	roleID, secretID, err := tc.GetApproleCreds("approle", "kms")
 	require.NoError(t, err, "approle creation")
 
+	// test userpass
+	username, password, err := tc.GetUserPassCreds("userpass", "kms-user", "kms-pass")
+	require.NoError(t, err, "approle creation")
+
 	_, err = vault.NewClient(
 		vault.WithVaultAddress(tc.URI),
 		vault.WithTokenAuth(tc.Token),
 		vault.WithAppRoleAuth("approle", roleID, secretID),
+		vault.WithUserPassAuth("userpass", username, password),
 		vault.WithTransit("transit", "kms"),
 	)
 

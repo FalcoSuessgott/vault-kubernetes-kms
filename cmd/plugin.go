@@ -51,6 +51,11 @@ type Options struct {
 	AppRoleRoleSecretID string `env:"APPROLE_SECRET_ID"`
 	AppRoleMount        string `env:"APPROLE_MOUNT"     envDefault:"approle"`
 
+	// userpass auth
+	UserPassUsername string `env:"USERPASS_USERNAME"`
+	UserPassPassword string `env:"USERPASS_PASSWORD"`
+	UserPassMount    string `env:"USERPASS_MOUNT" envDefault:"userpass"`
+
 	// token refresh
 	TokenRefreshInterval string `env:"TOKEN_REFRESH_INTERVAL" envDefault:"60s"`
 	TokenRenewalSeconds  int    `env:"TOKEN_RENEWAL_SECONDS"  envDefault:"3600"`
@@ -167,6 +172,11 @@ func NewPlugin(version string) error {
 		authMethod = vault.WithTokenAuth(opts.Token)
 	case "approle":
 		authMethod = vault.WithAppRoleAuth(opts.AppRoleMount, opts.AppRoleRoleID, opts.AppRoleRoleSecretID)
+		logFields = append(logFields,
+			zap.String("approle-mount", opts.AppRoleMount),
+			zap.String("approle-role-id", opts.AppRoleRoleID))
+	case "userpass":
+		authMethod = vault.WithUserPassAuth(opts.UserPassMount, opts.UserPassUsername, opts.UserPassPassword)
 		logFields = append(logFields,
 			zap.String("approle-mount", opts.AppRoleMount),
 			zap.String("approle-role-id", opts.AppRoleRoleID))

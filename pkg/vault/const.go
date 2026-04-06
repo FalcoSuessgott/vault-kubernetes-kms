@@ -1,7 +1,9 @@
 package vault
 
 const (
-	authLoginPath = "auth/%s/login"
+	appRoleAuthLoginPath = "auth/%s/login"
+
+	userPassAuthLoginPath = "auth/%s/login/%s"
 
 	encryptDataPath = "%s/encrypt/%s"
 	decryptDataPath = "%s/decrypt/%s"
