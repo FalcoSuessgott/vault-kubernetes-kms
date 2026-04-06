@@ -82,17 +82,17 @@ func (s *VaultSuite) TestAuthMethods() {
 			name: "userpass auth",
 			prepCmd: []string{
 				"vault auth enable userpass",
-				"vault write auth/userpass/users/kms-user password=kms-password",
+				"vault write auth/userpass/users/kms-user password=kms-pass",
 			},
 			auth: func() (Option, error) {
-				return WithAppRoleAuth("userpass", "kms-user", "kms-password"), nil
+				return WithUserPassAuth("userpass", "kms-user", "kms-pass"), nil
 			},
 		},
 		{
 			name: "invalid userpass auth",
 			err:  true,
 			auth: func() (Option, error) {
-				return WithAppRoleAuth("userpass", "invalid", "invalid"), nil
+				return WithUserPassAuth("userpass", "invalid", "invalid"), nil
 			},
 		},
 		{

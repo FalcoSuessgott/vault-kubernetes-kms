@@ -13,6 +13,8 @@ func TestVaultConnection(t *testing.T) {
 		"write -f transit/keys/kms",
 		"auth enable approle",
 		"write auth/approle/role/kms token_ttl=1h",
+		"auth enable userpass",
+		"write auth/userpass/users/kms-user password=kms-pass",
 	)
 	require.NoError(t, err, "start")
 
@@ -37,15 +39,11 @@ func TestVaultConnection(t *testing.T) {
 	roleID, secretID, err := tc.GetApproleCreds("approle", "kms")
 	require.NoError(t, err, "approle creation")
 
-	// test userpass
-	username, password, err := tc.GetUserPassCreds("userpass", "kms-user", "kms-pass")
-	require.NoError(t, err, "approle creation")
-
 	_, err = vault.NewClient(
 		vault.WithVaultAddress(tc.URI),
 		vault.WithTokenAuth(tc.Token),
 		vault.WithAppRoleAuth("approle", roleID, secretID),
-		vault.WithUserPassAuth("userpass", username, password),
+		vault.WithUserPassAuth("userpass", "kms-user", "kms-pass"),
 		vault.WithTransit("transit", "kms"),
 	)
 
