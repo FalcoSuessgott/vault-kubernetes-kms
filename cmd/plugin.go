@@ -314,7 +314,7 @@ func (o *Options) validateFlags() error {
 
 	// validate userpass auth
 	case o.AuthMethod == "userpass" && (o.UserPassUsername == "" || o.UserPassPassword == ""):
-		return errors.New("approle role id and secret id required when using approle auth")
+		return errors.New("userpass username and password required when using userpass auth")
 
 	case o.DisableV1 && o.DisableV2:
 		return errors.New("at least one kms plugin version must be enabled")
