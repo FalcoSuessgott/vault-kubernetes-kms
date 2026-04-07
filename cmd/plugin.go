@@ -51,6 +51,11 @@ type Options struct {
 	AppRoleRoleSecretID string `env:"APPROLE_SECRET_ID"`
 	AppRoleMount        string `env:"APPROLE_MOUNT"     envDefault:"approle"`
 
+	// userpass auth
+	UserPassUsername string `env:"USERPASS_USERNAME"`
+	UserPassPassword string `env:"USERPASS_PASSWORD"`
+	UserPassMount    string `env:"USERPASS_MOUNT"    envDefault:"userpass"`
+
 	// token refresh
 	TokenRefreshInterval string `env:"TOKEN_REFRESH_INTERVAL" envDefault:"60s"`
 	TokenRenewalSeconds  int    `env:"TOKEN_RENEWAL_SECONDS"  envDefault:"3600"`
@@ -170,6 +175,11 @@ func NewPlugin(version string) error {
 		logFields = append(logFields,
 			zap.String("approle-mount", opts.AppRoleMount),
 			zap.String("approle-role-id", opts.AppRoleRoleID))
+	case "userpass":
+		authMethod = vault.WithUserPassAuth(opts.UserPassMount, opts.UserPassUsername, opts.UserPassPassword)
+		logFields = append(logFields,
+			zap.String("userpass-mount", opts.UserPassMount),
+			zap.String("userpass-username", opts.UserPassUsername))
 	default:
 		return fmt.Errorf("invalid auth method: %s", opts.AuthMethod)
 	}
@@ -291,7 +301,7 @@ func (o *Options) validateFlags() error {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
 	// check auth method
-	case !slices.Contains([]string{"token", "approle"}, o.AuthMethod):
+	case !slices.Contains([]string{"token", "approle", "userpass"}, o.AuthMethod):
 		return errors.New("invalid auth method. Supported: token, approle")
 
 	// validate token auth
@@ -301,6 +311,11 @@ func (o *Options) validateFlags() error {
 	// validate approle auth
 	case o.AuthMethod == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
 		return errors.New("approle role id and secret id required when using approle auth")
+
+	// validate userpass auth
+	case o.AuthMethod == "userpass" && (o.UserPassUsername == "" || o.UserPassPassword == ""):
+		return errors.New("userpass username and password required when using userpass auth")
+
 	case o.DisableV1 && o.DisableV2:
 		return errors.New("at least one kms plugin version must be enabled")
 	}
