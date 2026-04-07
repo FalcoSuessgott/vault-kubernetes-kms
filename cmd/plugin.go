@@ -301,7 +301,7 @@ func (o *Options) validateFlags() error {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
 	// check auth method
-	case !slices.Contains([]string{"token", "approle"}, o.AuthMethod):
+	case !slices.Contains([]string{"token", "approle", "userpass"}, o.AuthMethod):
 		return errors.New("invalid auth method. Supported: token, approle")
 
 	// validate token auth
@@ -311,6 +311,11 @@ func (o *Options) validateFlags() error {
 	// validate approle auth
 	case o.AuthMethod == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
 		return errors.New("approle role id and secret id required when using approle auth")
+
+	// validate userpass auth
+	case o.AuthMethod == "userpass" && (o.UserPassUsername == "" || o.UserPassPassword == ""):
+		return errors.New("approle role id and secret id required when using approle auth")
+
 	case o.DisableV1 && o.DisableV2:
 		return errors.New("at least one kms plugin version must be enabled")
 	}
