@@ -54,7 +54,7 @@ type Options struct {
 	// userpass auth
 	UserPassUsername string `env:"USERPASS_USERNAME"`
 	UserPassPassword string `env:"USERPASS_PASSWORD"`
-	UserPassMount    string `env:"USERPASS_MOUNT" envDefault:"userpass"`
+	UserPassMount    string `env:"USERPASS_MOUNT"    envDefault:"userpass"`
 
 	// token refresh
 	TokenRefreshInterval string `env:"TOKEN_REFRESH_INTERVAL" envDefault:"60s"`
