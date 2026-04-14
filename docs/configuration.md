@@ -80,10 +80,8 @@ $> vault write -f auth/approle/role/kms/secret-id
 
 ```bash
 # Follow https://developer.hashicorp.com/vault/docs/auth/userpass
-# enable approle and create a role
+# enable userpass and create a user
 $> vault auth enable userpass
-
-# Create a user
 $> vault write auth/userpass/users/kms-user password=kms-password policies=kms
 ```
 
