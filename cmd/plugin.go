@@ -95,7 +95,7 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.VaultAddress, "vault-address", opts.VaultAddress, "Vault API address (required)")
 	flag.StringVar(&opts.VaultNamespace, "vault-namespace", opts.VaultNamespace, "Vault Namespace (only when Vault Enterprise)")
 
-	flag.StringVar(&opts.AuthMethod, "auth-method", opts.AuthMethod, "Auth Method. Supported: token, approle, k8s")
+	flag.StringVar(&opts.AuthMethod, "auth-method", opts.AuthMethod, "Auth Method. Supported: token, approle, userpass")
 
 	flag.StringVar(&opts.Token, "token", opts.Token, "Vault Token (when Token auth)")
 
@@ -305,19 +305,19 @@ func (o *Options) validateFlags() error {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
 	// check auth method
-	case !slices.Contains([]string{"token", "approle", "userpass"}, o.AuthMethod):
-		return errors.New("invalid auth method. Supported: token, approle")
+	case !slices.Contains([]string{"token", "approle", "userpass"}, strings.ToLower(o.AuthMethod)):
+		return errors.New("invalid auth method. Supported: token, approle, userpass")
 
 	// validate token auth
-	case o.AuthMethod == "token" && o.Token == "":
+	case strings.ToLower(o.AuthMethod) == "token" && o.Token == "":
 		return errors.New("token required when using token auth")
 
 	// validate approle auth
-	case o.AuthMethod == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
+	case strings.ToLower(o.AuthMethod) == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
 		return errors.New("approle role id and secret id required when using approle auth")
 
 	// validate userpass auth
-	case o.AuthMethod == "userpass" && (o.UserPassUsername == "" || o.UserPassPassword == ""):
+	case strings.ToLower(o.AuthMethod) == "userpass" && (o.UserPassUsername == "" || o.UserPassPassword == ""):
 		return errors.New("userpass username and password required when using userpass auth")
 
 	case o.DisableV1 && o.DisableV2:

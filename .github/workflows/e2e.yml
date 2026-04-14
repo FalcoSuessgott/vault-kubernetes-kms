@@ -18,12 +18,12 @@ jobs:
         run: |
           echo "versions=$(curl -s "https://api.github.com/repos/hashicorp/vault/tags?per_page=100" \
           | jq -r '.[].name' \
-          | grep -E '^v?[0-9]+\.[0-9]+\.0$' \
+          | grep -E '^v?1\.[0-9]+\.0$' \
           | sed 's/^v//' \
           | head -n 3 \
           | jq -cRn '[inputs]')" >> "$GITHUB_OUTPUT"
 
-      - name: Last 3 Vault major versions
+      - name: Last 3 Vault 1.x versions
         run: echo "${{ steps.vault-versions.outputs.versions }}"
 
   E2E:
@@ -34,9 +34,9 @@ jobs:
         versions:
           - k8s_version: v1.28.0
             kind_cfg: kind-config_v1.yaml
-          - k8s_version: v1.29.0
+          - k8s_version: v1.33.0
             kind_cfg: kind-config_v2.yaml
-          - k8s_version: v1.30.0
+          - k8s_version: v1.35.0
             kind_cfg: kind-config_v2.yaml
     runs-on: ubuntu-latest
 

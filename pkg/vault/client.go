@@ -2,6 +2,7 @@ package vault
 
 import (
 	"fmt"
+	"net/url"
 
 	customHTTP "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/http"
 	"github.com/hashicorp/vault/api"
@@ -153,7 +154,7 @@ func WithUserPassAuth(mount string, username string, password string) Option {
 		}
 
 		s, err := c.Logical().Write(
-			fmt.Sprintf(userPassAuthLoginPath, mount, username),
+			fmt.Sprintf(userPassAuthLoginPath, mount, url.PathEscape(username)),
 			opts,
 		)
 		if err != nil {
