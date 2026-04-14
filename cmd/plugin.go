@@ -103,6 +103,10 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.AppRoleRoleID, "approle-role-id", opts.AppRoleRoleID, "Vault Approle role ID (when approle auth)")
 	flag.StringVar(&opts.AppRoleRoleSecretID, "approle-secret-id", opts.AppRoleRoleSecretID, "Vault Approle Secret ID (when approle auth)")
 
+	flag.StringVar(&opts.UserPassMount, "userpass-mount", opts.UserPassMount, "Vault UserPass mount name (when userpass auth)")
+	flag.StringVar(&opts.UserPassUsername, "userpass-username", opts.UserPassUsername, "Vault UserPass username (when userpass auth)")
+	flag.StringVar(&opts.UserPassPassword, "userpass-password", opts.UserPassPassword, "Vault UserPass password (when userpass auth)")
+
 	flag.StringVar(&opts.TokenRefreshInterval, "token-refresh-interval", opts.TokenRefreshInterval, "Interval to check for a token renewal")
 	flag.IntVar(&opts.TokenRenewalSeconds, "token-renewal", opts.TokenRenewalSeconds, "The number of seconds to renew the token")
 

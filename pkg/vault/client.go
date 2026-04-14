@@ -141,6 +141,7 @@ func WithAppRoleAuth(mount, roleID, secretID string) Option {
 	}
 }
 
+// WithUserPassAuth performs UserPass auth login.
 func WithUserPassAuth(mount string, username string, password string) Option {
 	return func(c *Client) error {
 		c.UserPassMount = mount
