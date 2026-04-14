@@ -36,7 +36,7 @@ jobs:
             kind_cfg: kind-config_v1.yaml
           - k8s_version: v1.33.0
             kind_cfg: kind-config_v2.yaml
-          - k8s_version: v1.35.0
+          - k8s_version: v1.34.0
             kind_cfg: kind-config_v2.yaml
     runs-on: ubuntu-latest
 
