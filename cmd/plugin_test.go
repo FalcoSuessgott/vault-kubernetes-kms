@@ -172,6 +172,7 @@ func TestNewPlugin(t *testing.T) {
 	}
 }
 
+//nolint:funlen
 func TestValidateFlags(t *testing.T) {
 	testCases := []struct {
 		name string
