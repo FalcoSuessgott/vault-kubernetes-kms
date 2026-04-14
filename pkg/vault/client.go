@@ -2,6 +2,7 @@ package vault
 
 import (
 	"fmt"
+	"net/url"
 
 	customHTTP "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/http"
 	"github.com/hashicorp/vault/api"
@@ -16,6 +17,10 @@ type Client struct {
 	AppRoleMount    string
 	AppRoleID       string
 	AppRoleSecretID string
+
+	UserPassMount string
+	Username      string
+	Password      string
 
 	AuthMethodFunc Option
 
@@ -122,7 +127,7 @@ func WithAppRoleAuth(mount, roleID, secretID string) Option {
 			"secret_id": secretID,
 		}
 
-		s, err := c.Logical().Write(fmt.Sprintf(authLoginPath, mount), opts)
+		s, err := c.Logical().Write(fmt.Sprintf(appRoleAuthLoginPath, mount), opts)
 		if err != nil {
 			return fmt.Errorf("error performing approle auth: %w", err)
 		}
@@ -131,6 +136,35 @@ func WithAppRoleAuth(mount, roleID, secretID string) Option {
 
 		if c.AuthMethodFunc == nil {
 			c.AuthMethodFunc = WithAppRoleAuth(mount, roleID, secretID)
+		}
+
+		return nil
+	}
+}
+
+// WithUserPassAuth performs UserPass auth login.
+func WithUserPassAuth(mount string, username string, password string) Option {
+	return func(c *Client) error {
+		c.UserPassMount = mount
+		c.Username = username
+		c.Password = password
+
+		opts := map[string]any{
+			"password": password,
+		}
+
+		s, err := c.Logical().Write(
+			fmt.Sprintf(userPassAuthLoginPath, mount, url.PathEscape(username)),
+			opts,
+		)
+		if err != nil {
+			return fmt.Errorf("error performing userpass auth: %w", err)
+		}
+
+		c.SetToken(s.Auth.ClientToken)
+
+		if c.AuthMethodFunc == nil {
+			c.AuthMethodFunc = WithUserPassAuth(mount, username, password)
 		}
 
 		return nil

@@ -1,7 +1,9 @@
 package vault
 
 const (
-	authLoginPath = "auth/%s/login"
+	appRoleAuthLoginPath = "auth/%s/login"
+
+	userPassAuthLoginPath = "auth/%s/login/%s" //nolint:gosec
 
 	encryptDataPath = "%s/encrypt/%s"
 	decryptDataPath = "%s/decrypt/%s"

@@ -51,6 +51,11 @@ type Options struct {
 	AppRoleRoleSecretID string `env:"APPROLE_SECRET_ID"`
 	AppRoleMount        string `env:"APPROLE_MOUNT"     envDefault:"approle"`
 
+	// userpass auth
+	UserPassUsername string `env:"USERPASS_USERNAME"`
+	UserPassPassword string `env:"USERPASS_PASSWORD"`
+	UserPassMount    string `env:"USERPASS_MOUNT"    envDefault:"userpass"`
+
 	// token refresh
 	TokenRefreshInterval string `env:"TOKEN_REFRESH_INTERVAL" envDefault:"60s"`
 	TokenRenewalSeconds  int    `env:"TOKEN_RENEWAL_SECONDS"  envDefault:"3600"`
@@ -90,13 +95,17 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.VaultAddress, "vault-address", opts.VaultAddress, "Vault API address (required)")
 	flag.StringVar(&opts.VaultNamespace, "vault-namespace", opts.VaultNamespace, "Vault Namespace (only when Vault Enterprise)")
 
-	flag.StringVar(&opts.AuthMethod, "auth-method", opts.AuthMethod, "Auth Method. Supported: token, approle, k8s")
+	flag.StringVar(&opts.AuthMethod, "auth-method", opts.AuthMethod, "Auth Method. Supported: token, approle, userpass")
 
 	flag.StringVar(&opts.Token, "token", opts.Token, "Vault Token (when Token auth)")
 
 	flag.StringVar(&opts.AppRoleMount, "approle-mount", opts.AppRoleMount, "Vault Approle mount name (when approle auth)")
 	flag.StringVar(&opts.AppRoleRoleID, "approle-role-id", opts.AppRoleRoleID, "Vault Approle role ID (when approle auth)")
 	flag.StringVar(&opts.AppRoleRoleSecretID, "approle-secret-id", opts.AppRoleRoleSecretID, "Vault Approle Secret ID (when approle auth)")
+
+	flag.StringVar(&opts.UserPassMount, "userpass-mount", opts.UserPassMount, "Vault UserPass mount name (when userpass auth)")
+	flag.StringVar(&opts.UserPassUsername, "userpass-username", opts.UserPassUsername, "Vault UserPass username (when userpass auth)")
+	flag.StringVar(&opts.UserPassPassword, "userpass-password", opts.UserPassPassword, "Vault UserPass password (when userpass auth)")
 
 	flag.StringVar(&opts.TokenRefreshInterval, "token-refresh-interval", opts.TokenRefreshInterval, "Interval to check for a token renewal")
 	flag.IntVar(&opts.TokenRenewalSeconds, "token-renewal", opts.TokenRenewalSeconds, "The number of seconds to renew the token")
@@ -170,6 +179,11 @@ func NewPlugin(version string) error {
 		logFields = append(logFields,
 			zap.String("approle-mount", opts.AppRoleMount),
 			zap.String("approle-role-id", opts.AppRoleRoleID))
+	case "userpass":
+		authMethod = vault.WithUserPassAuth(opts.UserPassMount, opts.UserPassUsername, opts.UserPassPassword)
+		logFields = append(logFields,
+			zap.String("userpass-mount", opts.UserPassMount),
+			zap.String("userpass-username", opts.UserPassUsername))
 	default:
 		return fmt.Errorf("invalid auth method: %s", opts.AuthMethod)
 	}
@@ -291,16 +305,21 @@ func (o *Options) validateFlags() error {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
 	// check auth method
-	case !slices.Contains([]string{"token", "approle"}, o.AuthMethod):
-		return errors.New("invalid auth method. Supported: token, approle")
+	case !slices.Contains([]string{"token", "approle", "userpass"}, strings.ToLower(o.AuthMethod)):
+		return errors.New("invalid auth method. Supported: token, approle, userpass")
 
 	// validate token auth
-	case o.AuthMethod == "token" && o.Token == "":
+	case strings.ToLower(o.AuthMethod) == "token" && o.Token == "":
 		return errors.New("token required when using token auth")
 
 	// validate approle auth
-	case o.AuthMethod == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
+	case strings.ToLower(o.AuthMethod) == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
 		return errors.New("approle role id and secret id required when using approle auth")
+
+	// validate userpass auth
+	case strings.ToLower(o.AuthMethod) == "userpass" && (o.UserPassUsername == "" || o.UserPassPassword == ""):
+		return errors.New("userpass username and password required when using userpass auth")
+
 	case o.DisableV1 && o.DisableV2:
 		return errors.New("at least one kms plugin version must be enabled")
 	}

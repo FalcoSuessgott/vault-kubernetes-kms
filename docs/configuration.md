@@ -76,6 +76,15 @@ $> vault read auth/approle/role/kms/role-id
 $> vault write -f auth/approle/role/kms/secret-id
 ```
 
+### UserPass auth
+
+```bash
+# Follow https://developer.hashicorp.com/vault/docs/auth/userpass
+# enable userpass and create a user
+$> vault auth enable userpass
+$> vault write auth/userpass/users/kms-user password=kms-password policies=kms
+```
+
 ### Token Auth
 It is recommended, that the Vault token used for authentication is **an orphaned and periodic token**. Periodic tokens can be renewed within the period. An orphan token does not have a parent token and will not be revoked when the token that created it expires.
 
@@ -124,6 +133,13 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 * **(Required)**: `-approle-role-id` (`VAULT_KMS_APPROLE_ROLE_ID`)
 * **(Required)**: `-approle-secret-id` (`VAULT_KMS_APPROLE_SECRET_ID`)
 * **(Optional)**: `-approle-mount` (`VAULT_KMS_APPROLE_MOUNT`); default: `"approle"`
+
+**If Vault UserPass Auth**:
+
+* **(Required)**: `-auth-method="userpass"` (`VAULT_KMS_AUTH_METHOD`)
+* **(Required)**: `-userpass-username` (`VAULT_KMS_USERPASS_USERNAME`)
+* **(Required)**: `-userpass-password` (`VAULT_KMS_USERPASS_PASSWORD`)
+* **(Optional)**: `-userpass-mount` (`VAULT_KMS_USERPASS_MOUNT`); default: `"userpass"`
 
 **Lease Refreshing Settings**:
 

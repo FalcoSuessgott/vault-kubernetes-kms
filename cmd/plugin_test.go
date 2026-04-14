@@ -99,6 +99,28 @@ func TestNewPlugin(t *testing.T) {
 				}, nil
 			},
 		},
+		{
+			name: "userpass auth",
+			vaultCmd: []string{
+				"secrets enable transit",
+				"write -f transit/keys/kms",
+				"auth enable userpass",
+				"write auth/userpass/users/kms-user password=kms-pass",
+			},
+			args: []string{
+				"vault-kubernetes-kms",
+				"-auth-method=userpass",
+				"-health-port=8084",
+				"-userpass-username=kms-user",
+				"-userpass-password=kms-pass",
+				fmt.Sprintf("-socket=unix:///%s/vaultkms.socket", t.TempDir()),
+			},
+			extraArgs: func(c *testutils.TestContainer) ([]string, error) {
+				return []string{
+					fmt.Sprintf("-vault-address=%s", c.URI),
+				}, nil
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -150,6 +172,7 @@ func TestNewPlugin(t *testing.T) {
 	}
 }
 
+//nolint:funlen
 func TestValidateFlags(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -184,6 +207,14 @@ func TestValidateFlags(t *testing.T) {
 			opts: &Options{
 				VaultAddress: "e2e",
 				AuthMethod:   "approle",
+			},
+		},
+		{
+			name: "userpass auth, but no userpass creds",
+			err:  true,
+			opts: &Options{
+				VaultAddress: "e2e",
+				AuthMethod:   "userpass",
 			},
 		},
 		{
