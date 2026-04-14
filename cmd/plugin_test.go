@@ -104,8 +104,8 @@ func TestNewPlugin(t *testing.T) {
 			vaultCmd: []string{
 				"secrets enable transit",
 				"write -f transit/keys/kms",
-				"vault auth enable userpass",
-				"vault write auth/userpass/users/kms-user password=kms-pass",
+				"auth enable userpass",
+				"write auth/userpass/users/kms-user password=kms-pass",
 			},
 			args: []string{
 				"vault-kubernetes-kms",
