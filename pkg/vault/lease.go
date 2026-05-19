@@ -22,7 +22,13 @@ func (c *Client) LeaseRefresher(ctx context.Context, interval time.Duration) {
 		case <-ticker.C:
 			token, err := c.Auth().Token().LookupSelf()
 			if err != nil {
-				zap.L().Error("failed to lookup token", zap.Error(err))
+				zap.L().Error("failed to lookup token, performing new authentication", zap.Error(err))
+
+				if authErr := c.AuthMethodFunc(c); authErr != nil {
+					zap.L().Error("failed to authenticate", zap.Error(authErr))
+				} else {
+					zap.L().Info("successfully re-authenticated")
+				}
 
 				continue
 			}
