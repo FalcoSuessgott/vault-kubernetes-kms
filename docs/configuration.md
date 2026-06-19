@@ -59,7 +59,7 @@ path "transit/keys/kms" {
 You can create the policy using `vault policy write kms ./kms-policy.hcl`.
 
 ### Vault Auth
-`vault-kubernetes-kms` supports Token, Approle, UserPass, and TLS Certificate (`cert`) auth. Kubernetes Auth was removed (see [falcosuessgott/vault-kubernetes-kms#81](https://github.com/FalcoSuessgott/vault-kubernetes-kms/issues/81)), since a static pod cannot reference any other API objects, such as Service Account, which are required for Kubernetes Auth.
+`vault-kubernetes-kms` supports Token, AppRole, TLS Certificate (`cert`) & JWT Auth. Since a static pod cannot reference any other Kubernetes API-Objects, JWT authentication is only possible in scenarios, where the plugin does not run as a static pod (see [Issue #312](https://github.com/FalcoSuessgott/vault-kubernetes-kms/issues/312)).
 
 ### Cert (TLS Certificate) Auth
 
@@ -130,6 +130,22 @@ It is recommended, that the Vault token used for authentication is **an orphaned
 $> vault token create -orphan -policy="kms" -period=24h
 ```
 
+### JWT Auth
+This authentication method is specifically for deployment models, where the plugin **does not** run in a static pod and has access to a Kubernetes Service Account token. With the usual deployment in a static pod, this authentication method does not work.
+
+```bash
+# Follow https://developer.hashicorp.com/vault/docs/auth/jwt
+# enable jwt
+$> vault auth enable jwt
+
+# configure jwt auth, either with an OIDC Discovery URL or public keys
+$> vault write auth/jwt/config oidc_discovery_url="[OIDC Discovery URL]" oidc_discovery_ca_pem="[OIDC Discovery Certificate]"
+$> vault write auth/jwt/config jwt_validation_pubkeys="-----BEGIN PUBLIC KEY-----..."
+
+# create a role
+$> vault write auth/jwt/role/kms role_type="jwt" bound_audiences="vault-kms" user_claim="sub" bound_subject="system:serviceaccount:[NAMESPACE]:[SERVICE_ACCOUNT_NAME]" token_policies="kms" token_period="3600"
+```
+
 ## Deploying `vault-kubernetes-kms`
 #### Container Images
 `vault-kubernetes-kms` is published on:
@@ -186,6 +202,13 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 * **(Required, option B)**: `-cert-pem` (`VAULT_KMS_CERT_PEM`) — combined cert+key PEM file (e.g. `/var/lib/kubelet/pki/kubelet-client-current.pem`)
 * **(Optional)**: `-cert-mount` (`VAULT_KMS_CERT_MOUNT`); default: `"cert"`
 * **(Required)**: `-vault-ca-cert` (`VAULT_KMS_VAULT_CACERT`) — path to CA cert for verifying Vault's TLS certificate (cert auth requires HTTPS)
+
+**If Vault JWT Auth**:
+
+* **(Required)**: `-auth-method="jwt"` (`VAULT_KMS_AUTH_METHOD`)
+* **(Required)**: `-jwt-role` (`VAULT_KMS_JWT_ROLE`)
+* **(Optional)**: `-jwt-token-path` (`VAULT_KMS_JWT_TOKEN_PATH`); default: `"/var/run/secrets/kubernetes.io/serviceaccount/token"`
+* **(Optional)**: `-jwt-mount` (`VAULT_KMS_JWT_MOUNT`); default: `"jwt"`
 
 **Lease Refreshing Settings**:
 

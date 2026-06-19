@@ -1,8 +1,11 @@
 package vault
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
+	"os"
+	"strings"
 
 	customHTTP "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/http"
 	"github.com/hashicorp/vault/api"
@@ -26,6 +29,9 @@ type Client struct {
 	CertRole      string
 	CertFile      string
 	CertKey       string
+
+	JWTMount string
+	JWTRole  string
 
 	AuthMethodFunc Option
 
@@ -180,7 +186,6 @@ func WithUserPassAuth(mount string, username string, password string) Option {
 }
 
 // WithCertAuth performs Vault TLS Certificate auth login.
-// The client certificate is presented during the TLS handshake; caFile should be the CA that
 // signed the Vault server's TLS certificate (for the HTTPS connection). Vault verifies the
 // client cert against cert roles configured with vault write auth/{mount}/certs/{name}.
 func WithCertAuth(mount, role, certFile, keyFile, caFile string) Option {
@@ -216,11 +221,45 @@ func WithCertAuth(mount, role, certFile, keyFile, caFile string) Option {
 		if err != nil {
 			return fmt.Errorf("error performing cert auth: %w", err)
 		}
-
 		c.SetToken(s.Auth.ClientToken)
 
 		if c.AuthMethodFunc == nil {
 			c.AuthMethodFunc = WithCertAuth(mount, role, certFile, keyFile, caFile)
+		}
+
+		return nil
+	}
+}
+
+// WithJWTAuth performs a jwt auth login.
+func WithJWTAuth(mount, role, tokenPath string) Option {
+	return func(c *Client) error {
+		if role == "" {
+			return errors.New("role is required")
+		}
+
+		c.JWTMount = mount
+		c.JWTRole = role
+
+		jwtBytes, err := os.ReadFile(tokenPath)
+		if err != nil {
+			return fmt.Errorf("error reading jwt token file %q: %w", tokenPath, err)
+		}
+
+		opts := map[string]any{
+			"role": role,
+			"jwt":  strings.TrimSpace(string(jwtBytes)),
+		}
+
+		s, err := c.Logical().Write(fmt.Sprintf(jwtAuthLoginPath, mount), opts)
+		if err != nil {
+			return fmt.Errorf("error performing jwt auth: %w", err)
+		}
+
+		c.SetToken(s.Auth.ClientToken)
+
+		if c.AuthMethodFunc == nil {
+			c.AuthMethodFunc = WithJWTAuth(mount, role, tokenPath)
 		}
 
 		return nil

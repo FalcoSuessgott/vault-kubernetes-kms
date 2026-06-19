@@ -18,7 +18,7 @@ Since the key used for encrypting secrets is not stored in Kubernetes, an attack
 ## How does it work?
 ![img](docs/arch.svg)
 
-`vault-kubernetes-kms` is supposed to run as a static pod on every control plane node or on  that node where the `kube-apiserver` will run.
+In the default deployment model, `vault-kubernetes-kms` is supposed to run as a static pod on every control plane node or on  that node where the `kube-apiserver` will run.
 
 `vault-kubernetes-kms` will start a UNIX domain socket and listens for encryption requests from the `kube-apiserver`. The plugin will then use the specified Vault transit encryption key to encrypt the data and send it back to the `kube-apiserver`, who will then store the encrypted response in `etcd`.
 
@@ -31,7 +31,7 @@ Following the scenario that `vault-kubernetes-kms` is deployed as a static pod, 
 **[Check out the official documentation](https://falcosuessgott.github.io/vault-kubernetes-kms/)**
 
 ## Features
-* support [Vault Token](https://developer.hashicorp.com/vault/docs/auth/token), [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle) authentication (Since a static pod cannot reference any other Kubernetes API-Objects, Vaults Kubernetes Authentication is not possible.)
+* support [Vault Token](https://developer.hashicorp.com/vault/docs/auth/token), [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle), [JWT](https://developer.hashicorp.com/vault/docs/auth/jwt) authentication (Since a static pod cannot reference any other Kubernetes API-Objects, JWT authentication is only possible in scenarios, where the plugin does not run as a static pod.)
 * support Kubernetes [KMS Plugin v1 (deprecated since `v1.28.0`) & v2 (stable in `v1.29.0`)](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#before-you-begin)
 * [automatic Token Renewal for avoiding Token expiry](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/#cli-args-environment-variables)
 * [Exposes useful Prometheus Metrics](https://falcosuessgott.github.io/vault-kubernetes-kms/metrics/#prometheus-metrics)

@@ -15,7 +15,7 @@ Since the key used for encrypting secrets is not stored in Kubernetes, an attack
 ![img](arch.svg)
 
 
-`vault-kubernetes-kms` is supposed to run as a static pod on every control plane node or on  that node where the `kube-apiserver` will run.
+In the default deployment model, `vault-kubernetes-kms` is supposed to run as a static pod on every control plane node or on  that node where the `kube-apiserver` will run.
 
 The plugin creates a Unix-Socket and receive encryption requests through that socket from the `kube-apiserver`. The plugin will then use the specified Vault transit encryption key to encrypt the data and send it back to the `kube-apiserver`, who will then store the encrypted response in `etcd`.
 
@@ -26,7 +26,7 @@ To do so, you will have to enable Data at Rest encryption, by configuring the `k
 :warning: **`vault-kubernetes-kms` is in early stage! Running it in Production is not yet recommended. Im looking for early adopters in order to  gather important feedback.** :warning:
 
 ## Features
-* support [Vault Token Auth](https://developer.hashicorp.com/vault/docs/auth/token) (not recommended for production), [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle) and [Vault Kubernetes Auth](https://developer.hashicorp.com/vault/docs/auth/kubernetes) using the Plugins Service Account
+* support [Vault Token](https://developer.hashicorp.com/vault/docs/auth/token), [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle), [JWT](https://developer.hashicorp.com/vault/docs/auth/jwt) authentication (Since a static pod cannot reference any other Kubernetes API-Objects, JWT authentication is only possible in scenarios, where the plugin does not run as a static pod.)
 * support Kubernetes [KMS Plugin v1 (deprecated since `v1.28.0`) & v2 (stable in `v1.29.0`)](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#before-you-begin)
 * [automatic Token Renewal for avoiding Token expiry](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/#cli-args-environment-variables)
 * [Exposes useful Prometheus Metrics](https://falcosuessgott.github.io/vault-kubernetes-kms/metrics/#prometheus-metrics)

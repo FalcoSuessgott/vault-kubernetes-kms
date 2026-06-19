@@ -218,6 +218,15 @@ func TestValidateFlags(t *testing.T) {
 			},
 		},
 		{
+			name: "jwt auth, but no jwt role",
+			err:  true,
+			opts: &Options{
+				VaultAddress: "e2e",
+				AuthMethod:   "jwt",
+			},
+		},
+
+		{
 			name: "all plugin versions disabled",
 			err:  true,
 			opts: &Options{
