@@ -2,12 +2,29 @@ package vault
 
 import (
 	"context"
+	"errors"
 	"encoding/json"
 	"time"
 
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/metrics"
+	"github.com/hashicorp/vault/api"
 	"go.uber.org/zap"
 )
+
+func isAuthError(err error) bool {
+	var respErr *api.ResponseError
+	return errors.As(err, &respErr) &&
+		(respErr.StatusCode == 401 || respErr.StatusCode == 403)
+}
+
+func authenticateAndVerify(c *Client) error {
+	if err := c.AuthMethodFunc(c); err != nil {
+		return err
+	}
+
+	_, err := c.Auth().Token().LookupSelf()
+	return err
+}
 
 // LeaseRefresher periodically checks the ttl of the current lease and attempts to renew it if the ttl is less than half of the creation ttl.
 // if the token renewal fails, a new login with the configured auth method is performed
@@ -22,8 +39,19 @@ func (c *Client) LeaseRefresher(ctx context.Context, interval time.Duration) {
 		case <-ticker.C:
 			token, err := c.Auth().Token().LookupSelf()
 			if err != nil {
-				zap.L().Error("failed to lookup token", zap.Error(err))
+				if isAuthError(err) {
+					zap.L().Error("failed to lookup token, performing new authentication", zap.Error(err))
 
+					if authErr := authenticateAndVerify(c); authErr != nil {
+						zap.L().Error("failed to authenticate or verify token", zap.Error(authErr))
+					} else {
+						zap.L().Info("successfully re-authenticated")
+					}
+
+					continue
+				}
+
+				zap.L().Error("failed to lookup token", zap.Error(err))
 				continue
 			}
 
