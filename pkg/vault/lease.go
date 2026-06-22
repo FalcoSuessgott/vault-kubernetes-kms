@@ -15,15 +15,17 @@ import (
 func isAuthError(err error) bool {
 	var respErr *api.ResponseError
 	return errors.As(err, &respErr) &&
-		(respErr.StatusCode == http.StatusUnauthorized || respErr.StatusCode == 403)
+		(respErr.StatusCode == http.StatusUnauthorized || respErr.StatusCode == http.StatusForbidden)
 }
 
 func authenticateAndVerify(c *Client) error {
-	if err := c.AuthMethodFunc(c); err != nil {
+	err := c.AuthMethodFunc(c)
+	if err != nil {
 		return err
 	}
 
-	_, err := c.Auth().Token().LookupSelf()
+	_, err = c.Auth().Token().LookupSelf()
+
 	return err
 }
 
@@ -43,7 +45,8 @@ func (c *Client) LeaseRefresher(ctx context.Context, interval time.Duration) {
 				if isAuthError(err) {
 					zap.L().Error("failed to lookup token, performing new authentication", zap.Error(err))
 
-					if authErr := authenticateAndVerify(c); authErr != nil {
+					authErr := authenticateAndVerify(c)
+					if authErr != nil {
 						zap.L().Error("failed to authenticate or verify token", zap.Error(authErr))
 					} else {
 						zap.L().Info("successfully re-authenticated")

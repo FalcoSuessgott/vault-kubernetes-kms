@@ -40,6 +40,7 @@ func TestParseCombinedPEM(t *testing.T) {
 	t.Run("combined cert+key PEM", func(t *testing.T) {
 		f, err := os.CreateTemp(t.TempDir(), "combined-*.pem")
 		require.NoError(t, err)
+
 		defer os.Remove(f.Name())
 
 		// Write cert first, then key — matches kubelet-client-current.pem layout.
@@ -58,6 +59,7 @@ func TestParseCombinedPEM(t *testing.T) {
 	t.Run("key before cert is also accepted", func(t *testing.T) {
 		f, err := os.CreateTemp(t.TempDir(), "reversed-*.pem")
 		require.NoError(t, err)
+
 		defer os.Remove(f.Name())
 
 		_, err = f.Write(keyBlock)
@@ -75,6 +77,7 @@ func TestParseCombinedPEM(t *testing.T) {
 	t.Run("missing key returns error", func(t *testing.T) {
 		f, err := os.CreateTemp(t.TempDir(), "cert-only-*.pem")
 		require.NoError(t, err)
+
 		defer os.Remove(f.Name())
 
 		_, err = f.Write(certBlock)

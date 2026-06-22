@@ -256,6 +256,7 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 	if err != nil {
 		container.Terminate(ctx) //nolint:errcheck
 		cleanupFiles()
+
 		return nil, fmt.Errorf("vault init: %w", err)
 	}
 
@@ -263,6 +264,7 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 	if err != nil {
 		container.Terminate(ctx) //nolint:errcheck
 		cleanupFiles()
+
 		return nil, fmt.Errorf("parse vault init output: %w (raw: %q)", err, initOutput)
 	}
 
@@ -270,6 +272,7 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 	if err != nil {
 		container.Terminate(ctx) //nolint:errcheck
 		cleanupFiles()
+
 		return nil, fmt.Errorf("vault unseal: %w", err)
 	}
 

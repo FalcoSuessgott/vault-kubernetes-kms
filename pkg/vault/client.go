@@ -195,11 +195,12 @@ func WithCertAuth(mount, role, certFile, keyFile, caFile string) Option {
 		tmpCfg := api.DefaultConfig()
 		tmpCfg.Address = c.Address()
 
-		if err := tmpCfg.ConfigureTLS(&api.TLSConfig{
+		err := tmpCfg.ConfigureTLS(&api.TLSConfig{
 			ClientCert: certFile,
 			ClientKey:  keyFile,
 			CACert:     caFile,
-		}); err != nil {
+		})
+		if err != nil {
 			return fmt.Errorf("error configuring TLS for cert auth: %w", err)
 		}
 
