@@ -22,6 +22,11 @@ type Client struct {
 	Username      string
 	Password      string
 
+	CertAuthMount string
+	CertRole      string
+	CertFile      string
+	CertKey       string
+
 	AuthMethodFunc Option
 
 	TokenRenewalSeconds int
@@ -36,7 +41,10 @@ type Option func(*Client) error
 // NewClient returns a new vault client wrapper.
 func NewClient(opts ...Option) (*Client, error) {
 	cfg := api.DefaultConfig()
-	cfg.HttpClient = customHTTP.New()
+
+	// Wrap the existing transport (which carries any TLS config set by VAULT_CACERT env var
+	// via api.DefaultConfig's ReadEnvironment) instead of replacing it wholesale.
+	cfg.HttpClient = customHTTP.NewWithTransport(cfg.HttpClient.Transport)
 
 	c, err := api.NewClient(cfg)
 	if err != nil {
@@ -165,6 +173,54 @@ func WithUserPassAuth(mount string, username string, password string) Option {
 
 		if c.AuthMethodFunc == nil {
 			c.AuthMethodFunc = WithUserPassAuth(mount, username, password)
+		}
+
+		return nil
+	}
+}
+
+// WithCertAuth performs Vault TLS Certificate auth login.
+// The client certificate is presented during the TLS handshake; caFile should be the CA that
+// signed the Vault server's TLS certificate (for the HTTPS connection). Vault verifies the
+// client cert against cert roles configured with vault write auth/{mount}/certs/{name}.
+func WithCertAuth(mount, role, certFile, keyFile, caFile string) Option {
+	return func(c *Client) error {
+		c.CertAuthMount = mount
+		c.CertRole = role
+		c.CertFile = certFile
+		c.CertKey = keyFile
+
+		// Build a temporary Vault SDK client configured with the client TLS certificate.
+		// The client cert is presented during the TLS handshake, so it must be on the transport.
+		tmpCfg := api.DefaultConfig()
+		tmpCfg.Address = c.Address()
+
+		err := tmpCfg.ConfigureTLS(&api.TLSConfig{
+			ClientCert: certFile,
+			ClientKey:  keyFile,
+			CACert:     caFile,
+		})
+		if err != nil {
+			return fmt.Errorf("error configuring TLS for cert auth: %w", err)
+		}
+
+		tmpClient, err := api.NewClient(tmpCfg)
+		if err != nil {
+			return fmt.Errorf("error creating cert auth client: %w", err)
+		}
+
+		s, err := tmpClient.Logical().Write(
+			fmt.Sprintf(certAuthLoginPath, mount),
+			map[string]any{"name": role},
+		)
+		if err != nil {
+			return fmt.Errorf("error performing cert auth: %w", err)
+		}
+
+		c.SetToken(s.Auth.ClientToken)
+
+		if c.AuthMethodFunc == nil {
+			c.AuthMethodFunc = WithCertAuth(mount, role, certFile, keyFile, caFile)
 		}
 
 		return nil

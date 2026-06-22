@@ -30,7 +30,7 @@ func (rd *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return resp, err
 }
 
-// New returns a custom http client.
+// New returns a custom http client backed by a clone of the default transport.
 func New() *http.Client {
 	transport, ok := http.DefaultTransport.(*http.Transport)
 	if !ok {
@@ -44,5 +44,14 @@ func New() *http.Client {
 		Transport: &RoundTripper{
 			Transport: transport.Clone(),
 		},
+	}
+}
+
+// NewWithTransport wraps an existing transport with the metrics round tripper,
+// preserving any TLS configuration already present on the transport.
+func NewWithTransport(transport http.RoundTripper) *http.Client {
+	return &http.Client{
+		Timeout:   requestTimeout,
+		Transport: &RoundTripper{Transport: transport},
 	}
 }

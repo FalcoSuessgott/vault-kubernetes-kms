@@ -228,6 +228,56 @@ func TestValidateFlags(t *testing.T) {
 				DisableV2:    true,
 			},
 		},
+		{
+			name: "cert auth missing role",
+			err:  true,
+			opts: &Options{
+				VaultAddress: "e2e",
+				AuthMethod:   "cert",
+				CertFile:     "/tmp/cert.pem",
+				CertKey:      "/tmp/key.pem",
+			},
+		},
+		{
+			name: "cert auth missing cert files",
+			err:  true,
+			opts: &Options{
+				VaultAddress: "e2e",
+				AuthMethod:   "cert",
+				CertAuthRole: "kms",
+			},
+		},
+		{
+			name: "cert auth with cert-pem is valid",
+			err:  false,
+			opts: &Options{
+				VaultAddress:         "e2e",
+				AuthMethod:           "cert",
+				CertAuthMount:        "cert",
+				CertAuthRole:         "kms",
+				CertPEM:              "/tmp/combined.pem",
+				TransitKey:           "kms",
+				TransitMount:         "transit",
+				HealthPort:           "8080",
+				TokenRefreshInterval: "60s",
+			},
+		},
+		{
+			name: "cert auth with separate cert+key is valid",
+			err:  false,
+			opts: &Options{
+				VaultAddress:         "e2e",
+				AuthMethod:           "cert",
+				CertAuthMount:        "cert",
+				CertAuthRole:         "kms",
+				CertFile:             "/tmp/cert.pem",
+				CertKey:              "/tmp/key.pem",
+				TransitKey:           "kms",
+				TransitMount:         "transit",
+				HealthPort:           "8080",
+				TokenRefreshInterval: "60s",
+			},
+		},
 	}
 
 	for _, tc := range testCases {

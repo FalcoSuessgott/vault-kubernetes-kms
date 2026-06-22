@@ -77,6 +77,7 @@ func (s *VaultSuite) TestTokenRefresherReauthenticatesOnLookupFailure() {
 
 		s.Eventually(func() bool {
 			_, err := vc.Auth().Token().LookupSelf()
+
 			return err == nil && vc.Client.Token() != oldToken
 		}, 8*time.Second, 250*time.Millisecond)
 	})
