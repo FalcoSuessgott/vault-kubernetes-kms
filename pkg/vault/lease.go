@@ -14,6 +14,7 @@ import (
 
 func isAuthError(err error) bool {
 	var respErr *api.ResponseError
+
 	return errors.As(err, &respErr) &&
 		(respErr.StatusCode == http.StatusUnauthorized || respErr.StatusCode == http.StatusForbidden)
 }

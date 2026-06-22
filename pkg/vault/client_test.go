@@ -1,7 +1,6 @@
 package vault
 
 import (
-	"context"
 	"log"
 	"runtime"
 	"strings"
@@ -124,7 +123,7 @@ func (s *VaultSuite) TestAuthMethods() {
 		s.Run(tc.name, func() {
 			// prep vault
 			for _, cmd := range tc.prepCmd {
-				_, _, err := s.tc.Container.Exec(context.Background(), strings.Split(cmd, " "))
+				_, _, err := s.tc.Container.Exec(s.T().Context(), strings.Split(cmd, " "))
 				s.Require().NoError(err, tc.name)
 			}
 
@@ -164,7 +163,7 @@ func TestCertAuth(t *testing.T) {
 	require.NoError(t, err, "generate test certs")
 
 	// 2. Start TLS-enabled non-dev Vault container.
-	tc, err := testutils.StartTLSTestContainer(certs)
+	tc, err := testutils.StartTLSTestContainer(t, certs)
 	require.NoError(t, err, "start TLS vault container")
 
 	defer func() { _ = tc.Terminate() }()
@@ -188,7 +187,7 @@ func TestCertAuth(t *testing.T) {
 
 	// Copy the CA cert into the container and write a cert role that trusts it.
 	err = tc.Container.CopyFileToContainer(
-		context.Background(),
+		t.Context(),
 		tc.CACertFile,
 		"/tmp/vault-ca.crt",
 		0o444,
@@ -214,10 +213,10 @@ func TestCertAuth(t *testing.T) {
 
 	plaintext := []byte("hello-cert-auth")
 
-	ciphertext, _, err := vc.Encrypt(context.Background(), plaintext)
+	ciphertext, _, err := vc.Encrypt(t.Context(), plaintext)
 	require.NoError(t, err, "encrypt")
 
-	decrypted, err := vc.Decrypt(context.Background(), ciphertext)
+	decrypted, err := vc.Decrypt(t.Context(), ciphertext)
 	require.NoError(t, err, "decrypt")
 
 	require.Equal(t, plaintext, decrypted, "decrypted plaintext must match original")
