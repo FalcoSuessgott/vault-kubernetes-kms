@@ -28,7 +28,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-const shutdownTimeout = 3 * time.Second
+const (
+	shutdownTimeout = 3 * time.Second
+	certAuthMethod  = "cert"
+)
 
 type Options struct {
 	Socket               string `env:"SOCKET"                 envDefault:"unix:///opt/kms/vaultkms.socket"`
@@ -209,7 +212,7 @@ func NewPlugin(version string) error {
 		logFields = append(logFields,
 			zap.String("userpass-mount", opts.UserPassMount),
 			zap.String("userpass-username", opts.UserPassUsername))
-	case "cert":
+	case certAuthMethod:
 		certFile, certKey := opts.CertFile, opts.CertKey
 
 		if opts.CertPEM != "" {
@@ -348,7 +351,7 @@ func (o *Options) validateFlags() error {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
 	// check auth method
-	case !slices.Contains([]string{"token", "approle", "userpass", "cert"}, strings.ToLower(o.AuthMethod)):
+	case !slices.Contains([]string{"token", "approle", "userpass", certAuthMethod}, strings.ToLower(o.AuthMethod)):
 		return errors.New("invalid auth method. Supported: token, approle, userpass, cert")
 
 	// validate token auth
@@ -364,10 +367,10 @@ func (o *Options) validateFlags() error {
 		return errors.New("userpass username and password required when using userpass auth")
 
 	// validate cert auth — need either separate cert+key files or a combined PEM
-	case strings.ToLower(o.AuthMethod) == "cert" && o.CertAuthRole == "":
+	case strings.ToLower(o.AuthMethod) == certAuthMethod && o.CertAuthRole == "":
 		return errors.New("cert-role required when using cert auth")
 
-	case strings.ToLower(o.AuthMethod) == "cert" && o.CertPEM == "" && (o.CertFile == "" || o.CertKey == ""):
+	case strings.ToLower(o.AuthMethod) == certAuthMethod && o.CertPEM == "" && (o.CertFile == "" || o.CertKey == ""):
 		return errors.New("cert auth requires either --cert-pem or both --cert-file and --cert-key")
 
 	case o.DisableV1 && o.DisableV2:

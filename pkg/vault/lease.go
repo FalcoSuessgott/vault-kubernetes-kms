@@ -2,8 +2,8 @@ package vault
 
 import (
 	"context"
-	"errors"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/metrics"

@@ -75,7 +75,7 @@ func (v *TLSTestContainer) ExecWithToken(cmd string) (string, error) {
 // GenerateTestCerts creates an ephemeral CA, server cert (for Vault HTTPS), and client cert
 // (for Vault cert auth). All three are signed by the same CA.
 //
-//nolint:funlen
+//nolint:funlen,mnd
 func GenerateTestCerts() (*TLSCerts, error) {
 	caKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -171,7 +171,7 @@ func GenerateTestCerts() (*TLSCerts, error) {
 // Vault is initialized (1-of-1 unseal) and unsealed automatically. The root token
 // is stored in TestContainer.Token. Use ExecWithToken for further vault CLI setup.
 //
-//nolint:cyclop
+//nolint:cyclop,funlen,mnd
 func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 	// Host-side temp files are only needed for the SDK client (CA cert, client cert/key).
 	// Server cert and config are passed in-memory via ContainerRequest.Files.
@@ -296,42 +296,66 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 }
 
 // parseVaultInitOutput extracts root_token and first unseal key from vault operator init JSON.
+// It uses simple string scanning rather than encoding/json to avoid import complexity and
+// handles both compact (`"key":"value"`) and spaced (`"key": "value"`) JSON formatting.
 func parseVaultInitOutput(raw string) (rootToken, unsealKey string, err error) {
 	raw = strings.TrimSpace(raw)
 
-	const rtKey = `"root_token":"`
-
-	rtIdx := strings.Index(raw, rtKey)
-	if rtIdx < 0 {
-		return "", "", fmt.Errorf("root_token not found")
+	rootToken, err = extractJSONString(raw, `"root_token"`)
+	if err != nil {
+		return "", "", fmt.Errorf("root_token: %w", err)
 	}
 
-	rest := raw[rtIdx+len(rtKey):]
-
-	endIdx := strings.Index(rest, `"`)
-	if endIdx < 0 {
-		return "", "", fmt.Errorf("malformed root_token value")
-	}
-
-	rootToken = rest[:endIdx]
-
-	const ukKey = `"unseal_keys_b64":["` //nolint:gosec
+	// unseal_keys_b64 is an array; find the bracket, then the first quoted value.
+	const ukKey = `"unseal_keys_b64"` //nolint:gosec
 
 	ukIdx := strings.Index(raw, ukKey)
 	if ukIdx < 0 {
 		return "", "", fmt.Errorf("unseal_keys_b64 not found")
 	}
 
-	rest = raw[ukIdx+len(ukKey):]
+	rest := raw[ukIdx+len(ukKey):]
 
-	endIdx = strings.Index(rest, `"`)
-	if endIdx < 0 {
-		return "", "", fmt.Errorf("malformed unseal_keys_b64 value")
+	bracketIdx := strings.Index(rest, "[")
+	if bracketIdx < 0 {
+		return "", "", fmt.Errorf("malformed unseal_keys_b64: missing array bracket")
 	}
 
-	unsealKey = rest[:endIdx]
+	rest = rest[bracketIdx:]
+
+	unsealKey, err = extractJSONString(rest, "")
+	if err != nil {
+		return "", "", fmt.Errorf("unseal_keys_b64 value: %w", err)
+	}
 
 	return rootToken, unsealKey, nil
+}
+
+// extractJSONString finds the first quoted string value after key in s.
+// If key is empty, it finds the first quoted value in s directly.
+func extractJSONString(s, key string) (string, error) {
+	if key != "" {
+		idx := strings.Index(s, key)
+		if idx < 0 {
+			return "", fmt.Errorf("%s not found", key)
+		}
+
+		s = s[idx+len(key):]
+	}
+
+	openIdx := strings.Index(s, `"`)
+	if openIdx < 0 {
+		return "", fmt.Errorf("no opening quote found")
+	}
+
+	s = s[openIdx+1:]
+
+	closeIdx := strings.Index(s, `"`)
+	if closeIdx < 0 {
+		return "", fmt.Errorf("no closing quote found")
+	}
+
+	return s[:closeIdx], nil
 }
 
 func tlsExecAndRead(ctx context.Context, c testcontainers.Container, args ...string) (string, error) {

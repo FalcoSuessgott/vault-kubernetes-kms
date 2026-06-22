@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//nolint:funlen
 func TestParseCombinedPEM(t *testing.T) {
 	// Generate a real cert+key pair.
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
