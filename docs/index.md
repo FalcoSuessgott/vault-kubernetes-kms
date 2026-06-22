@@ -15,7 +15,7 @@ Since the key used for encrypting secrets is not stored in Kubernetes, an attack
 ![img](arch.svg)
 
 
-In the default deployment model, `vault-kubernetes-kms` is supposed to run as a static pod on every control plane node or on  that node where the `kube-apiserver` will run.
+In the default deployment model, `vault-kubernetes-kms` is supposed to run as a static pod on every control plane node or on that node where the `kube-apiserver` will run.
 
 The plugin creates a Unix-Socket and receive encryption requests through that socket from the `kube-apiserver`. The plugin will then use the specified Vault transit encryption key to encrypt the data and send it back to the `kube-apiserver`, who will then store the encrypted response in `etcd`.
 
