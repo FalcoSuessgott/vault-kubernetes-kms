@@ -91,6 +91,7 @@ func TestParseCombinedPEM(t *testing.T) {
 	t.Run("missing cert returns error", func(t *testing.T) {
 		f, err := os.CreateTemp(t.TempDir(), "key-only-*.pem")
 		require.NoError(t, err)
+
 		defer os.Remove(f.Name())
 
 		_, err = f.Write(keyBlock)
@@ -109,6 +110,7 @@ func TestParseCombinedPEM(t *testing.T) {
 	t.Run("ParseCombinedPEMFile writes host temp files and returns cleanup", func(t *testing.T) {
 		f, err := os.CreateTemp(t.TempDir(), "combined-*.pem")
 		require.NoError(t, err)
+
 		defer os.Remove(f.Name())
 
 		_, err = f.Write(certBlock)

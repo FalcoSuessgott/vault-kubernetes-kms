@@ -280,6 +280,7 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 	if err != nil {
 		container.Terminate(ctx) //nolint:errcheck
 		cleanupFiles()
+
 		return nil, fmt.Errorf("get container host: %w", err)
 	}
 
@@ -287,6 +288,7 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 	if err != nil {
 		container.Terminate(ctx) //nolint:errcheck
 		cleanupFiles()
+
 		return nil, fmt.Errorf("get container port: %w", err)
 	}
 
@@ -394,6 +396,7 @@ func writeTLSTempFile(pattern string, data []byte) (string, error) {
 	_, err = f.Write(data)
 	if err != nil {
 		os.Remove(f.Name())
+
 		return "", fmt.Errorf("write temp file %s: %w", pattern, err)
 	}
 

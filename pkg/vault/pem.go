@@ -20,7 +20,8 @@ func ParseCombinedPEMFile(path string) (string, string, func(), error) {
 		return "", "", func() {}, fmt.Errorf("error creating temp cert file: %w", err)
 	}
 
-	if _, err = certF.Write(certPEM); err != nil {
+	_, err = certF.Write(certPEM)
+	if err != nil {
 		certF.Close()
 		os.Remove(certF.Name())
 
@@ -36,7 +37,8 @@ func ParseCombinedPEMFile(path string) (string, string, func(), error) {
 		return "", "", func() {}, fmt.Errorf("error creating temp key file: %w", err)
 	}
 
-	if _, err = keyF.Write(keyPEM); err != nil {
+	_, err = keyF.Write(keyPEM)
+	if err != nil {
 		keyF.Close()
 		os.Remove(certF.Name())
 		os.Remove(keyF.Name())
