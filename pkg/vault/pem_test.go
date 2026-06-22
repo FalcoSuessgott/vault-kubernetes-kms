@@ -38,7 +38,7 @@ func TestParseCombinedPEM(t *testing.T) {
 	keyBlock := pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: keyDER})
 
 	t.Run("combined cert+key PEM", func(t *testing.T) {
-		f, err := os.CreateTemp("", "combined-*.pem")
+		f, err := os.CreateTemp(t.TempDir(), "combined-*.pem")
 		require.NoError(t, err)
 		defer os.Remove(f.Name())
 
@@ -56,7 +56,7 @@ func TestParseCombinedPEM(t *testing.T) {
 	})
 
 	t.Run("key before cert is also accepted", func(t *testing.T) {
-		f, err := os.CreateTemp("", "reversed-*.pem")
+		f, err := os.CreateTemp(t.TempDir(), "reversed-*.pem")
 		require.NoError(t, err)
 		defer os.Remove(f.Name())
 
@@ -73,7 +73,7 @@ func TestParseCombinedPEM(t *testing.T) {
 	})
 
 	t.Run("missing key returns error", func(t *testing.T) {
-		f, err := os.CreateTemp("", "cert-only-*.pem")
+		f, err := os.CreateTemp(t.TempDir(), "cert-only-*.pem")
 		require.NoError(t, err)
 		defer os.Remove(f.Name())
 
@@ -86,7 +86,7 @@ func TestParseCombinedPEM(t *testing.T) {
 	})
 
 	t.Run("missing cert returns error", func(t *testing.T) {
-		f, err := os.CreateTemp("", "key-only-*.pem")
+		f, err := os.CreateTemp(t.TempDir(), "key-only-*.pem")
 		require.NoError(t, err)
 		defer os.Remove(f.Name())
 
@@ -104,7 +104,7 @@ func TestParseCombinedPEM(t *testing.T) {
 	})
 
 	t.Run("ParseCombinedPEMFile writes host temp files and returns cleanup", func(t *testing.T) {
-		f, err := os.CreateTemp("", "combined-*.pem")
+		f, err := os.CreateTemp(t.TempDir(), "combined-*.pem")
 		require.NoError(t, err)
 		defer os.Remove(f.Name())
 

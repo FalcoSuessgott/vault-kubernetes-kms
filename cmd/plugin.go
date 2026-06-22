@@ -192,7 +192,8 @@ func NewPlugin(version string) error {
 	// Propagate --vault-ca-cert to the VAULT_CACERT env var so that api.DefaultConfig()
 	// picks it up when building the main Vault client's TLS transport.
 	if opts.VaultCACert != "" {
-		if err = os.Setenv("VAULT_CACERT", opts.VaultCACert); err != nil {
+		err = os.Setenv("VAULT_CACERT", opts.VaultCACert)
+		if err != nil {
 			return fmt.Errorf("setting VAULT_CACERT: %w", err)
 		}
 

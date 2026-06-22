@@ -9,7 +9,7 @@ import (
 // ParseCombinedPEMFile reads a PEM file that contains both a CERTIFICATE block and a PRIVATE KEY
 // block (e.g. kubelet's kubelet-client-current.pem) and writes each to a separate temp file.
 // The caller must invoke the returned cleanup function when the temp files are no longer needed.
-func ParseCombinedPEMFile(path string) (certFile, keyFile string, cleanup func(), err error) {
+func ParseCombinedPEMFile(path string) (string, string, func(), error) {
 	certPEM, keyPEM, err := parseCombinedPEM(path)
 	if err != nil {
 		return "", "", func() {}, err
@@ -53,11 +53,13 @@ func ParseCombinedPEMFile(path string) (certFile, keyFile string, cleanup func()
 }
 
 // parseCombinedPEM reads a PEM file and returns the CERTIFICATE and PRIVATE KEY blocks separately.
-func parseCombinedPEM(path string) (certPEM []byte, keyPEM []byte, err error) {
+func parseCombinedPEM(path string) ([]byte, []byte, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot read PEM file %s: %w", path, err)
 	}
+
+	var certPEM, keyPEM []byte
 
 	rest := data
 

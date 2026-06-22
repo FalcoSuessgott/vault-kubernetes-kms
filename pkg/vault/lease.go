@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/metrics"
@@ -14,7 +15,7 @@ import (
 func isAuthError(err error) bool {
 	var respErr *api.ResponseError
 	return errors.As(err, &respErr) &&
-		(respErr.StatusCode == 401 || respErr.StatusCode == 403)
+		(respErr.StatusCode == http.StatusUnauthorized || respErr.StatusCode == 403)
 }
 
 func authenticateAndVerify(c *Client) error {
@@ -52,6 +53,7 @@ func (c *Client) LeaseRefresher(ctx context.Context, interval time.Duration) {
 				}
 
 				zap.L().Error("failed to lookup token", zap.Error(err))
+
 				continue
 			}
 

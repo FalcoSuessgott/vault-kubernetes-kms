@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -183,6 +184,7 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 	clientCertFile, err := writeTLSTempFile("vault-client-cert-*.pem", certs.ClientCertPEM)
 	if err != nil {
 		os.Remove(caCertFile)
+
 		return nil, err
 	}
 
@@ -190,6 +192,7 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 	if err != nil {
 		os.Remove(caCertFile)
 		os.Remove(clientCertFile)
+
 		return nil, err
 	}
 
@@ -238,6 +241,7 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 	container, err := testcontainers.GenericContainer(ctx, req)
 	if err != nil {
 		cleanupFiles()
+
 		return nil, fmt.Errorf("start TLS vault container: %w", err)
 	}
 
@@ -262,7 +266,8 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 		return nil, fmt.Errorf("parse vault init output: %w (raw: %q)", err, initOutput)
 	}
 
-	if _, err = tlsExecAndRead(ctx, container, "vault", "operator", "unseal", unsealKey); err != nil {
+	_, err = tlsExecAndRead(ctx, container, "vault", "operator", "unseal", unsealKey)
+	if err != nil {
 		container.Terminate(ctx) //nolint:errcheck
 		cleanupFiles()
 		return nil, fmt.Errorf("vault unseal: %w", err)
@@ -285,7 +290,7 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 	return &TLSTestContainer{
 		TestContainer: &TestContainer{
 			Container: container,
-			URI:       fmt.Sprintf("https://%s:%s", host, port.Port()),
+			URI:       "https://" + net.JoinHostPort(host, port.Port()),
 			Token:     rootToken,
 		},
 		CACertFile:     caCertFile,
@@ -298,10 +303,10 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 // parseVaultInitOutput extracts root_token and first unseal key from vault operator init JSON.
 // It uses simple string scanning rather than encoding/json to avoid import complexity and
 // handles both compact (`"key":"value"`) and spaced (`"key": "value"`) JSON formatting.
-func parseVaultInitOutput(raw string) (rootToken, unsealKey string, err error) {
+func parseVaultInitOutput(raw string) (string, string, error) {
 	raw = strings.TrimSpace(raw)
 
-	rootToken, err = extractJSONString(raw, `"root_token"`)
+	rootToken, err := extractJSONString(raw, `"root_token"`)
 	if err != nil {
 		return "", "", fmt.Errorf("root_token: %w", err)
 	}
@@ -309,21 +314,19 @@ func parseVaultInitOutput(raw string) (rootToken, unsealKey string, err error) {
 	// unseal_keys_b64 is an array; find the bracket, then the first quoted value.
 	const ukKey = `"unseal_keys_b64"` //nolint:gosec
 
-	ukIdx := strings.Index(raw, ukKey)
-	if ukIdx < 0 {
-		return "", "", fmt.Errorf("unseal_keys_b64 not found")
+	_, rest, found := strings.Cut(raw, ukKey)
+	if !found {
+		return "", "", errors.New("unseal_keys_b64 not found")
 	}
-
-	rest := raw[ukIdx+len(ukKey):]
 
 	bracketIdx := strings.Index(rest, "[")
 	if bracketIdx < 0 {
-		return "", "", fmt.Errorf("malformed unseal_keys_b64: missing array bracket")
+		return "", "", errors.New("malformed unseal_keys_b64: missing array bracket")
 	}
 
 	rest = rest[bracketIdx:]
 
-	unsealKey, err = extractJSONString(rest, "")
+	unsealKey, err := extractJSONString(rest, "")
 	if err != nil {
 		return "", "", fmt.Errorf("unseal_keys_b64 value: %w", err)
 	}
@@ -345,17 +348,17 @@ func extractJSONString(s, key string) (string, error) {
 
 	openIdx := strings.Index(s, `"`)
 	if openIdx < 0 {
-		return "", fmt.Errorf("no opening quote found")
+		return "", errors.New("no opening quote found")
 	}
 
 	s = s[openIdx+1:]
 
-	closeIdx := strings.Index(s, `"`)
-	if closeIdx < 0 {
-		return "", fmt.Errorf("no closing quote found")
+	value, _, found := strings.Cut(s, `"`)
+	if !found {
+		return "", errors.New("no closing quote found")
 	}
 
-	return s[:closeIdx], nil
+	return value, nil
 }
 
 func tlsExecAndRead(ctx context.Context, c testcontainers.Container, args ...string) (string, error) {
@@ -370,7 +373,7 @@ func tlsExecAndRead(ctx context.Context, c testcontainers.Container, args ...str
 	}
 
 	// Docker exec output has an 8-byte multiplexed stream header per frame.
-	if len(out) > 8 {
+	if len(out) > 8 { //nolint:mnd
 		out = out[8:]
 	}
 
@@ -385,7 +388,8 @@ func writeTLSTempFile(pattern string, data []byte) (string, error) {
 
 	defer f.Close()
 
-	if _, err = f.Write(data); err != nil {
+	_, err = f.Write(data)
+	if err != nil {
 		os.Remove(f.Name())
 		return "", fmt.Errorf("write temp file %s: %w", pattern, err)
 	}

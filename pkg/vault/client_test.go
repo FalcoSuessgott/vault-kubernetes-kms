@@ -2,7 +2,6 @@ package vault
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"runtime"
 	"strings"
@@ -191,7 +190,7 @@ func TestCertAuth(t *testing.T) {
 	require.NoError(t, err, "copy CA cert to container")
 
 	_, err = tc.ExecWithToken(
-		fmt.Sprintf("vault write auth/cert/certs/kms certificate=@/tmp/vault-ca.crt policies=default"),
+		"vault write auth/cert/certs/kms certificate=@/tmp/vault-ca.crt policies=default",
 	)
 	require.NoError(t, err, "write cert role")
 
