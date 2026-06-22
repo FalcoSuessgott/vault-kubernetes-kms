@@ -195,6 +195,10 @@ func TestCertAuth(t *testing.T) {
 	require.NoError(t, err, "write cert role")
 
 	// 5. Create a Vault client using cert auth and verify encrypt/decrypt works.
+	// VAULT_CACERT must be set before NewClient so api.DefaultConfig() builds a
+	// TLS transport that trusts Vault's self-signed test certificate.
+	t.Setenv("VAULT_CACERT", tc.CACertFile)
+
 	vc, err := NewClient(
 		WithVaultAddress(tc.URI),
 		WithTransit("transit", "kms"),
