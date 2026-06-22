@@ -180,6 +180,12 @@ func TestCertAuth(t *testing.T) {
 	_, err = tc.ExecWithToken("vault auth enable cert")
 	require.NoError(t, err, "enable cert auth")
 
+	// Create a policy that allows the plugin's transit encrypt/decrypt operations.
+	_, err = tc.ExecWithToken(
+		`echo 'path "transit/*" { capabilities = ["create", "read", "update"] }' | vault policy write transit-pol -`,
+	)
+	require.NoError(t, err, "write transit policy")
+
 	// Copy the CA cert into the container and write a cert role that trusts it.
 	err = tc.Container.CopyFileToContainer(
 		context.Background(),
@@ -190,7 +196,7 @@ func TestCertAuth(t *testing.T) {
 	require.NoError(t, err, "copy CA cert to container")
 
 	_, err = tc.ExecWithToken(
-		"vault write auth/cert/certs/kms certificate=@/tmp/vault-ca.crt policies=default",
+		"vault write auth/cert/certs/kms certificate=@/tmp/vault-ca.crt policies=transit-pol",
 	)
 	require.NoError(t, err, "write cert role")
 
