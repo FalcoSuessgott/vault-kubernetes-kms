@@ -42,8 +42,10 @@ func TestParseCombinedPEM(t *testing.T) {
 		defer os.Remove(f.Name())
 
 		// Write cert first, then key — matches kubelet-client-current.pem layout.
-		f.Write(certBlock)
-		f.Write(keyBlock)
+		_, err = f.Write(certBlock)
+		require.NoError(t, err)
+		_, err = f.Write(keyBlock)
+		require.NoError(t, err)
 		f.Close()
 
 		gotCert, gotKey, err := parseCombinedPEM(f.Name())
@@ -57,8 +59,10 @@ func TestParseCombinedPEM(t *testing.T) {
 		require.NoError(t, err)
 		defer os.Remove(f.Name())
 
-		f.Write(keyBlock)
-		f.Write(certBlock)
+		_, err = f.Write(keyBlock)
+		require.NoError(t, err)
+		_, err = f.Write(certBlock)
+		require.NoError(t, err)
 		f.Close()
 
 		gotCert, gotKey, err := parseCombinedPEM(f.Name())
@@ -72,7 +76,8 @@ func TestParseCombinedPEM(t *testing.T) {
 		require.NoError(t, err)
 		defer os.Remove(f.Name())
 
-		f.Write(certBlock)
+		_, err = f.Write(certBlock)
+		require.NoError(t, err)
 		f.Close()
 
 		_, _, err = parseCombinedPEM(f.Name())
@@ -84,7 +89,8 @@ func TestParseCombinedPEM(t *testing.T) {
 		require.NoError(t, err)
 		defer os.Remove(f.Name())
 
-		f.Write(keyBlock)
+		_, err = f.Write(keyBlock)
+		require.NoError(t, err)
 		f.Close()
 
 		_, _, err = parseCombinedPEM(f.Name())
@@ -101,8 +107,10 @@ func TestParseCombinedPEM(t *testing.T) {
 		require.NoError(t, err)
 		defer os.Remove(f.Name())
 
-		f.Write(certBlock)
-		f.Write(keyBlock)
+		_, err = f.Write(certBlock)
+		require.NoError(t, err)
+		_, err = f.Write(keyBlock)
+		require.NoError(t, err)
 		f.Close()
 
 		certFile, keyFile, cleanup, err := ParseCombinedPEMFile(f.Name())

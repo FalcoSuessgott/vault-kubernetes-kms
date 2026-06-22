@@ -74,6 +74,8 @@ func (v *TLSTestContainer) ExecWithToken(cmd string) (string, error) {
 
 // GenerateTestCerts creates an ephemeral CA, server cert (for Vault HTTPS), and client cert
 // (for Vault cert auth). All three are signed by the same CA.
+//
+//nolint:funlen
 func GenerateTestCerts() (*TLSCerts, error) {
 	caKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -248,34 +250,34 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 		"-format=json",
 	)
 	if err != nil {
-		container.Terminate(ctx)
+		container.Terminate(ctx) //nolint:errcheck
 		cleanupFiles()
 		return nil, fmt.Errorf("vault init: %w", err)
 	}
 
 	rootToken, unsealKey, err := parseVaultInitOutput(initOutput)
 	if err != nil {
-		container.Terminate(ctx)
+		container.Terminate(ctx) //nolint:errcheck
 		cleanupFiles()
 		return nil, fmt.Errorf("parse vault init output: %w (raw: %q)", err, initOutput)
 	}
 
 	if _, err = tlsExecAndRead(ctx, container, "vault", "operator", "unseal", unsealKey); err != nil {
-		container.Terminate(ctx)
+		container.Terminate(ctx) //nolint:errcheck
 		cleanupFiles()
 		return nil, fmt.Errorf("vault unseal: %w", err)
 	}
 
 	host, err := container.Host(ctx)
 	if err != nil {
-		container.Terminate(ctx)
+		container.Terminate(ctx) //nolint:errcheck
 		cleanupFiles()
 		return nil, fmt.Errorf("get container host: %w", err)
 	}
 
 	port, err := container.MappedPort(ctx, "8200/tcp")
 	if err != nil {
-		container.Terminate(ctx)
+		container.Terminate(ctx) //nolint:errcheck
 		cleanupFiles()
 		return nil, fmt.Errorf("get container port: %w", err)
 	}

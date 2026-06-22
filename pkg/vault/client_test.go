@@ -168,7 +168,7 @@ func TestCertAuth(t *testing.T) {
 	tc, err := testutils.StartTLSTestContainer(certs)
 	require.NoError(t, err, "start TLS vault container")
 
-	defer tc.Terminate()
+	defer func() { _ = tc.Terminate() }()
 
 	// 3. Configure Vault: enable transit engine and create the KMS key.
 	_, err = tc.ExecWithToken("vault secrets enable transit")
