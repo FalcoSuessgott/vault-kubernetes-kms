@@ -209,6 +209,8 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 				"VAULT_ADDR":        "https://127.0.0.1:8200",
 			},
 			// Files are copied to the container before it starts, so Vault has them at startup.
+			// All files use 0o444 — Vault runs as a non-root user inside the container and the
+			// files are owned by root after docker cp, so owner-only modes would be unreadable.
 			Files: []testcontainers.ContainerFile{
 				{
 					Reader:            bytes.NewReader(certs.ServerCertPEM),
@@ -218,7 +220,7 @@ func StartTLSTestContainer(certs *TLSCerts) (*TLSTestContainer, error) {
 				{
 					Reader:            bytes.NewReader(certs.ServerKeyPEM),
 					ContainerFilePath: "/tmp/vault-server.key",
-					FileMode:          0o400,
+					FileMode:          0o444,
 				},
 				{
 					Reader:            bytes.NewReader([]byte(vaultTLSConfig)),
