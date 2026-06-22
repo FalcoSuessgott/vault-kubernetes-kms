@@ -28,7 +28,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-const shutdownTimeout = 3 * time.Second
+const (
+	shutdownTimeout = 3 * time.Second
+	certAuthMethod  = "cert"
+)
 
 type Options struct {
 	Socket               string `env:"SOCKET"                 envDefault:"unix:///opt/kms/vaultkms.socket"`
@@ -39,6 +42,7 @@ type Options struct {
 	// vault server
 	VaultAddress   string `env:"VAULT_ADDR"`
 	VaultNamespace string `env:"VAULT_NAMESPACE"`
+	VaultCACert    string `env:"VAULT_CACERT"`
 
 	// auth
 	AuthMethod string `env:"AUTH_METHOD"`
@@ -55,6 +59,13 @@ type Options struct {
 	UserPassUsername string `env:"USERPASS_USERNAME"`
 	UserPassPassword string `env:"USERPASS_PASSWORD"`
 	UserPassMount    string `env:"USERPASS_MOUNT"    envDefault:"userpass"`
+
+	// cert auth (Vault TLS Certificate auth method)
+	CertAuthMount string `env:"CERT_MOUNT" envDefault:"cert"`
+	CertAuthRole  string `env:"CERT_ROLE"`
+	CertFile      string `env:"CERT_FILE"`
+	CertKey       string `env:"CERT_KEY"`
+	CertPEM       string `env:"CERT_PEM"` // combined cert+key PEM file (e.g. kubelet-client-current.pem)
 
 	// token refresh
 	TokenRefreshInterval string `env:"TOKEN_REFRESH_INTERVAL" envDefault:"60s"`
@@ -94,8 +105,9 @@ func NewPlugin(version string) error {
 
 	flag.StringVar(&opts.VaultAddress, "vault-address", opts.VaultAddress, "Vault API address (required)")
 	flag.StringVar(&opts.VaultNamespace, "vault-namespace", opts.VaultNamespace, "Vault Namespace (only when Vault Enterprise)")
+	flag.StringVar(&opts.VaultCACert, "vault-ca-cert", opts.VaultCACert, "Path to CA cert for verifying Vault's TLS certificate")
 
-	flag.StringVar(&opts.AuthMethod, "auth-method", opts.AuthMethod, "Auth Method. Supported: token, approle, userpass")
+	flag.StringVar(&opts.AuthMethod, "auth-method", opts.AuthMethod, "Auth Method. Supported: token, approle, userpass, cert")
 
 	flag.StringVar(&opts.Token, "token", opts.Token, "Vault Token (when Token auth)")
 
@@ -106,6 +118,12 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.UserPassMount, "userpass-mount", opts.UserPassMount, "Vault UserPass mount name (when userpass auth)")
 	flag.StringVar(&opts.UserPassUsername, "userpass-username", opts.UserPassUsername, "Vault UserPass username (when userpass auth)")
 	flag.StringVar(&opts.UserPassPassword, "userpass-password", opts.UserPassPassword, "Vault UserPass password (when userpass auth)")
+
+	flag.StringVar(&opts.CertAuthMount, "cert-mount", opts.CertAuthMount, "Vault cert auth mount name (when cert auth)")
+	flag.StringVar(&opts.CertAuthRole, "cert-role", opts.CertAuthRole, "Vault cert role name (when cert auth)")
+	flag.StringVar(&opts.CertFile, "cert-file", opts.CertFile, "Path to TLS client certificate file (when cert auth)")
+	flag.StringVar(&opts.CertKey, "cert-key", opts.CertKey, "Path to TLS client key file (when cert auth)")
+	flag.StringVar(&opts.CertPEM, "cert-pem", opts.CertPEM, "Path to combined cert+key PEM file (when cert auth, e.g. /var/lib/kubelet/pki/kubelet-client-current.pem)")
 
 	flag.StringVar(&opts.TokenRefreshInterval, "token-refresh-interval", opts.TokenRefreshInterval, "Interval to check for a token renewal")
 	flag.IntVar(&opts.TokenRenewalSeconds, "token-renewal", opts.TokenRenewalSeconds, "The number of seconds to renew the token")
@@ -171,6 +189,17 @@ func NewPlugin(version string) error {
 		zap.Bool("disable-v2", opts.DisableV2),
 	)
 
+	// Propagate --vault-ca-cert to the VAULT_CACERT env var so that api.DefaultConfig()
+	// picks it up when building the main Vault client's TLS transport.
+	if opts.VaultCACert != "" {
+		err = os.Setenv("VAULT_CACERT", opts.VaultCACert)
+		if err != nil {
+			return fmt.Errorf("setting VAULT_CACERT: %w", err)
+		}
+
+		logFields = append(logFields, zap.String("vault-ca-cert", opts.VaultCACert))
+	}
+
 	switch strings.ToLower(opts.AuthMethod) {
 	case "token":
 		authMethod = vault.WithTokenAuth(opts.Token)
@@ -184,6 +213,16 @@ func NewPlugin(version string) error {
 		logFields = append(logFields,
 			zap.String("userpass-mount", opts.UserPassMount),
 			zap.String("userpass-username", opts.UserPassUsername))
+	case certAuthMethod:
+		if opts.CertPEM != "" {
+			authMethod = vault.WithCertPEMAuth(opts.CertAuthMount, opts.CertAuthRole, opts.CertPEM, opts.VaultCACert)
+		} else {
+			authMethod = vault.WithCertAuth(opts.CertAuthMount, opts.CertAuthRole, opts.CertFile, opts.CertKey, opts.VaultCACert)
+		}
+
+		logFields = append(logFields,
+			zap.String("cert-mount", opts.CertAuthMount),
+			zap.String("cert-role", opts.CertAuthRole))
 	default:
 		return fmt.Errorf("invalid auth method: %s", opts.AuthMethod)
 	}
@@ -305,8 +344,8 @@ func (o *Options) validateFlags() error {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
 	// check auth method
-	case !slices.Contains([]string{"token", "approle", "userpass"}, strings.ToLower(o.AuthMethod)):
-		return errors.New("invalid auth method. Supported: token, approle, userpass")
+	case !slices.Contains([]string{"token", "approle", "userpass", certAuthMethod}, strings.ToLower(o.AuthMethod)):
+		return errors.New("invalid auth method. Supported: token, approle, userpass, cert")
 
 	// validate token auth
 	case strings.ToLower(o.AuthMethod) == "token" && o.Token == "":
@@ -319,6 +358,13 @@ func (o *Options) validateFlags() error {
 	// validate userpass auth
 	case strings.ToLower(o.AuthMethod) == "userpass" && (o.UserPassUsername == "" || o.UserPassPassword == ""):
 		return errors.New("userpass username and password required when using userpass auth")
+
+	// validate cert auth — need either separate cert+key files or a combined PEM
+	case strings.ToLower(o.AuthMethod) == certAuthMethod && o.CertAuthRole == "":
+		return errors.New("cert-role required when using cert auth")
+
+	case strings.ToLower(o.AuthMethod) == certAuthMethod && o.CertPEM == "" && (o.CertFile == "" || o.CertKey == ""):
+		return errors.New("cert auth requires either --cert-pem or both --cert-file and --cert-key")
 
 	case o.DisableV1 && o.DisableV2:
 		return errors.New("at least one kms plugin version must be enabled")

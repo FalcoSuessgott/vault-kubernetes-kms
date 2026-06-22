@@ -5,6 +5,8 @@ const (
 
 	userPassAuthLoginPath = "auth/%s/login/%s" //nolint:gosec
 
+	certAuthLoginPath = "auth/%s/login"
+
 	encryptDataPath = "%s/encrypt/%s"
 	decryptDataPath = "%s/decrypt/%s"
 

@@ -22,6 +22,11 @@ type Client struct {
 	Username      string
 	Password      string
 
+	CertAuthMount string
+	CertRole      string
+	CertFile      string
+	CertKey       string
+
 	AuthMethodFunc Option
 
 	TokenRenewalSeconds int
@@ -36,7 +41,10 @@ type Option func(*Client) error
 // NewClient returns a new vault client wrapper.
 func NewClient(opts ...Option) (*Client, error) {
 	cfg := api.DefaultConfig()
-	cfg.HttpClient = customHTTP.New()
+
+	// Wrap the existing transport (which carries any TLS config set by VAULT_CACERT env var
+	// via api.DefaultConfig's ReadEnvironment) instead of replacing it wholesale.
+	cfg.HttpClient = customHTTP.NewWithTransport(cfg.HttpClient.Transport)
 
 	c, err := api.NewClient(cfg)
 	if err != nil {
@@ -169,4 +177,94 @@ func WithUserPassAuth(mount string, username string, password string) Option {
 
 		return nil
 	}
+}
+
+// WithCertAuth performs Vault TLS Certificate auth login.
+// The client certificate is presented during the TLS handshake; caFile should be the CA that
+// signed the Vault server's TLS certificate (for the HTTPS connection). Vault verifies the
+// client cert against cert roles configured with vault write auth/{mount}/certs/{name}.
+func WithCertAuth(mount, role, certFile, keyFile, caFile string) Option {
+	return func(c *Client) error {
+		c.CertAuthMount = mount
+		c.CertRole = role
+		c.CertFile = certFile
+		c.CertKey = keyFile
+
+		err := certAuthLogin(c, mount, role, certFile, keyFile, caFile)
+		if err != nil {
+			return err
+		}
+
+		if c.AuthMethodFunc == nil {
+			c.AuthMethodFunc = WithCertAuth(mount, role, certFile, keyFile, caFile)
+		}
+
+		return nil
+	}
+}
+
+// WithCertPEMAuth performs Vault TLS Certificate auth from a combined cert+key PEM file.
+// Unlike WithCertAuth, the PEM file is re-read and re-split on every (re-)authentication,
+// so cert rotation is picked up automatically without restarting the plugin.
+func WithCertPEMAuth(mount, role, pemFile, caFile string) Option {
+	return func(c *Client) error {
+		certFile, keyFile, cleanup, err := ParseCombinedPEMFile(pemFile)
+		if err != nil {
+			return fmt.Errorf("parsing combined PEM file: %w", err)
+		}
+
+		defer cleanup()
+
+		c.CertAuthMount = mount
+		c.CertRole = role
+
+		err = certAuthLogin(c, mount, role, certFile, keyFile, caFile)
+		if err != nil {
+			return err
+		}
+
+		if c.AuthMethodFunc == nil {
+			c.AuthMethodFunc = WithCertPEMAuth(mount, role, pemFile, caFile)
+		}
+
+		return nil
+	}
+}
+
+// certAuthLogin builds a temporary TLS-configured Vault client, authenticates with cert auth,
+// and sets the resulting token on c. The main client's namespace is propagated to the temp client
+// so cert auth works correctly with Vault Enterprise namespaces.
+func certAuthLogin(c *Client, mount, role, certFile, keyFile, caFile string) error {
+	tmpCfg := api.DefaultConfig()
+	tmpCfg.Address = c.Address()
+
+	err := tmpCfg.ConfigureTLS(&api.TLSConfig{
+		ClientCert: certFile,
+		ClientKey:  keyFile,
+		CACert:     caFile,
+	})
+	if err != nil {
+		return fmt.Errorf("error configuring TLS for cert auth: %w", err)
+	}
+
+	tmpClient, err := api.NewClient(tmpCfg)
+	if err != nil {
+		return fmt.Errorf("error creating cert auth client: %w", err)
+	}
+
+	if ns := c.Namespace(); ns != "" {
+		tmpClient.SetNamespace(ns)
+	}
+
+	s, err := tmpClient.Logical().Write(
+		fmt.Sprintf(certAuthLoginPath, mount),
+		map[string]any{"name": role},
+	)
+	if err != nil {
+		return fmt.Errorf("error performing cert auth: %w", err)
+	}
+
+	c.SetToken(s.Auth.ClientToken)
+
+	return nil
 }

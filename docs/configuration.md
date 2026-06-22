@@ -59,7 +59,46 @@ path "transit/keys/kms" {
 You can create the policy using `vault policy write kms ./kms-policy.hcl`.
 
 ### Vault Auth
-`vault-kubernetes-kms` suppors Token & Approle Auth. Kubernetes Auth was removed (see [falcosuessgott/vault-kubernetes-kms#81](https://github.com/FalcoSuessgott/vault-kubernetes-kms/issues/81)), since a static pod cannot reference any other API objects, such as Service Account, which are required for Kubernetes Auth.
+`vault-kubernetes-kms` supports Token, Approle, UserPass, and TLS Certificate (`cert`) auth. Kubernetes Auth was removed (see [falcosuessgott/vault-kubernetes-kms#81](https://github.com/FalcoSuessgott/vault-kubernetes-kms/issues/81)), since a static pod cannot reference any other API objects, such as Service Account, which are required for Kubernetes Auth.
+
+### Cert (TLS Certificate) Auth
+
+Vault TLS Certificate auth allows the plugin to authenticate using an X.509 client certificate — for example the kubelet's `kubelet-client-current.pem`. The certificate is presented during the TLS handshake, so **Vault must be reachable over HTTPS** (plain HTTP does not work with this auth method).
+
+!!! warning
+    **Vault must be running with TLS enabled.** Cert auth is not available when `VAULT_ADDR` is an `http://` address. Always use `https://` and provide `--vault-ca-cert` (or set `VAULT_CACERT`) so the plugin can verify Vault's server certificate.
+
+```bash
+# Enable the cert auth method (default mount: "cert")
+$> vault auth enable cert
+
+# Create a policy granting the plugin access to transit encrypt/decrypt
+$> vault policy write kms ./kms-policy.hcl
+
+# Register a cert role, trusting certificates signed by your CA.
+# The plugin's client cert must be signed by this CA.
+$> vault write auth/cert/certs/kms \
+    certificate=@/path/to/ca.crt \
+    policies=kms
+```
+
+> [!NOTE]
+> The cert role (`auth/cert/certs/<name>`) is matched against the **CA that signed the client certificate**, not the client certificate itself. Any cert signed by the registered CA and within its validity period is accepted. If you want to restrict to a specific certificate, use the `allowed_common_names`, `allowed_dns_sans`, or `allowed_uri_sans` fields on the cert role.
+
+**Options for providing the client certificate:**
+
+| Scenario | Flags to use |
+|---|---|
+| Separate cert and key files | `--cert-file` + `--cert-key` |
+| Combined cert+key PEM (e.g. kubelet) | `--cert-pem` |
+
+The kubelet writes a single combined PEM file (`kubelet-client-current.pem`) containing both the certificate and private key. Use `--cert-pem` to point the plugin directly at this file — it will be split internally.
+
+**Cert rotation:** when using `--cert-pem`, the file is re-read on every re-authentication (e.g. after token expiry), so cert rotation is picked up automatically without restarting the plugin. When using `--cert-file`/`--cert-key`, the paths are fixed at startup — a restart is required to pick up rotated certs.
+
+**Vault Enterprise namespaces:** the namespace set via `--vault-namespace` is automatically propagated to the cert auth login request, so no additional configuration is needed.
+
+**Static pod constraint:** cert files must live on the control-plane node filesystem and be mounted into the pod via `hostPath`. You cannot reference a Kubernetes Secret here.
 
 ### Approle Auth
 
@@ -140,6 +179,15 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 * **(Required)**: `-userpass-username` (`VAULT_KMS_USERPASS_USERNAME`)
 * **(Required)**: `-userpass-password` (`VAULT_KMS_USERPASS_PASSWORD`)
 * **(Optional)**: `-userpass-mount` (`VAULT_KMS_USERPASS_MOUNT`); default: `"userpass"`
+
+**If Vault Cert Auth**:
+
+* **(Required)**: `-auth-method="cert"` (`VAULT_KMS_AUTH_METHOD`)
+* **(Required)**: `-cert-role` (`VAULT_KMS_CERT_ROLE`) — name of the cert role in Vault
+* **(Required, option A)**: `-cert-file` (`VAULT_KMS_CERT_FILE`) + `-cert-key` (`VAULT_KMS_CERT_KEY`) — separate cert and key files
+* **(Required, option B)**: `-cert-pem` (`VAULT_KMS_CERT_PEM`) — combined cert+key PEM file (e.g. `/var/lib/kubelet/pki/kubelet-client-current.pem`)
+* **(Optional)**: `-cert-mount` (`VAULT_KMS_CERT_MOUNT`); default: `"cert"`
+* **(Required)**: `-vault-ca-cert` (`VAULT_KMS_VAULT_CACERT`) — path to CA cert for verifying Vault's TLS certificate (cert auth requires HTTPS)
 
 **Lease Refreshing Settings**:
 
@@ -261,6 +309,67 @@ spec:
     - name: kms
       hostPath:
         path: /opt/kms
+```
+
+### Example Vault Cert Auth
+
+The example below uses the kubelet's combined PEM file. The certs directory (containing the client cert/key and Vault's CA cert) is mounted from the host node via `hostPath`.
+
+!!! warning
+    You cannot use a Kubernetes Secret to provide the cert files — static pods cannot reference other Kubernetes API objects. The cert files must be present on the control-plane node filesystem before the pod starts.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vault-kubernetes-kms
+  namespace: kube-system
+spec:
+  priorityClassName: system-node-critical
+  hostNetwork: true
+  containers:
+    - name: vault-kubernetes-kms
+      image: falcosuessgott/vault-kubernetes-kms:latest
+      command:
+        - /vault-kubernetes-kms
+        - -vault-address=https://vault.server.de
+        - -auth-method=cert
+        - -cert-role=kms
+        # option A: separate cert and key files
+        # - -cert-file=/opt/kms/certs/client.crt
+        # - -cert-key=/opt/kms/certs/client.key
+        # option B: combined PEM (e.g. kubelet client cert)
+        - -cert-pem=/var/lib/kubelet/pki/kubelet-client-current.pem
+        - -vault-ca-cert=/opt/kms/certs/vault-ca.crt
+      volumeMounts:
+        - name: kms
+          mountPath: /opt/kms
+        # mount kubelet PKI dir if using kubelet cert
+        - name: kubelet-pki
+          mountPath: /var/lib/kubelet/pki
+          readOnly: true
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 8080
+      readinessProbe:
+        httpGet:
+          path: /live
+          port: 8080
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 2
+          memory: 1Gi
+  volumes:
+    - name: kms
+      hostPath:
+        path: /opt/kms
+    - name: kubelet-pki
+      hostPath:
+        path: /var/lib/kubelet/pki
 ```
 
 ### Example TLS Configuration
