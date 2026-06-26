@@ -11,6 +11,8 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/vault"
 )
 
+const dockerMuxHeaderSize = 8
+
 var (
 	image = "hashicorp/vault:1.16.0"
 	token = "root"
@@ -48,31 +50,6 @@ func StartTestContainer(commands ...string) (*TestContainer, error) {
 	}, nil
 }
 
-func (v *TestContainer) GetApproleCreds(mount, role string) (string, string, error) {
-	_, r, err := v.Container.Exec(context.Background(), []string{"vault", "read", "-field=role_id", fmt.Sprintf("auth/%s/role/%s/role-id", mount, role)})
-	if err != nil {
-		return "", "", fmt.Errorf("error creating role_id: %w", err)
-	}
-
-	roleID, err := io.ReadAll(r)
-	if err != nil {
-		return "", "", fmt.Errorf("error reading role_id: %w", err)
-	}
-
-	_, r, err = v.Container.Exec(context.Background(), []string{"vault", "write", "-field=secret_id", "-force", fmt.Sprintf("auth/%s/role/%s/secret-id", mount, role)})
-	if err != nil {
-		return "", "", fmt.Errorf("error creating secret_id: %w", err)
-	}
-
-	secretID, err := io.ReadAll(r)
-	if err != nil {
-		return "", "", fmt.Errorf("error reading secret_id: %w", err)
-	}
-
-	// removing the first 8 bytes, which is the shell prompt
-	return string(roleID[8:]), string(secretID[8:]), nil
-}
-
 // GetToken creates a token with the supplied policy and TTL.
 // nolint: perfsprint
 func (v *TestContainer) GetToken(policy string, ttl string) (string, error) {
@@ -96,6 +73,33 @@ func (v *TestContainer) RunCommand(cmd string) (string, error) {
 
 	// removing the first 8 bytes, which is the shell prompt
 	return string(rootToken[8:]), nil
+}
+
+// ExecShell runs a command via "sh -c" inside the container.
+// Use when the command requires shell features such as pipes or redirection.
+func (v *TestContainer) ExecShell(cmd string) (string, error) {
+	log.Println("running shell command: ", cmd)
+
+	_, r, err := v.Container.Exec(context.Background(), []string{
+		"sh", "-c",
+		"export VAULT_TOKEN=" + v.Token + " && " + cmd,
+	})
+	if err != nil {
+		return "", fmt.Errorf("error executing shell command: %w", err)
+	}
+
+	out, err := io.ReadAll(r)
+	if err != nil {
+		return "", fmt.Errorf("error reading shell output: %w", err)
+	}
+
+	if len(out) > dockerMuxHeaderSize {
+		out = out[dockerMuxHeaderSize:]
+	}
+
+	log.Println("output: ", string(out))
+
+	return string(out), nil
 }
 
 // Terminate terminates the testcontainer.

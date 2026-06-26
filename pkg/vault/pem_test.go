@@ -41,14 +41,14 @@ func TestParseCombinedPEM(t *testing.T) {
 		f, err := os.CreateTemp(t.TempDir(), "combined-*.pem")
 		require.NoError(t, err)
 
-		defer os.Remove(f.Name())
+		defer func() { _ = os.Remove(f.Name()) }()
 
 		// Write cert first, then key — matches kubelet-client-current.pem layout.
 		_, err = f.Write(certBlock)
 		require.NoError(t, err)
 		_, err = f.Write(keyBlock)
 		require.NoError(t, err)
-		f.Close()
+		require.NoError(t, f.Close())
 
 		gotCert, gotKey, err := parseCombinedPEM(f.Name())
 		require.NoError(t, err)
@@ -60,13 +60,13 @@ func TestParseCombinedPEM(t *testing.T) {
 		f, err := os.CreateTemp(t.TempDir(), "reversed-*.pem")
 		require.NoError(t, err)
 
-		defer os.Remove(f.Name())
+		defer func() { _ = os.Remove(f.Name()) }()
 
 		_, err = f.Write(keyBlock)
 		require.NoError(t, err)
 		_, err = f.Write(certBlock)
 		require.NoError(t, err)
-		f.Close()
+		require.NoError(t, f.Close())
 
 		gotCert, gotKey, err := parseCombinedPEM(f.Name())
 		require.NoError(t, err)
@@ -78,11 +78,11 @@ func TestParseCombinedPEM(t *testing.T) {
 		f, err := os.CreateTemp(t.TempDir(), "cert-only-*.pem")
 		require.NoError(t, err)
 
-		defer os.Remove(f.Name())
+		defer func() { _ = os.Remove(f.Name()) }()
 
 		_, err = f.Write(certBlock)
 		require.NoError(t, err)
-		f.Close()
+		require.NoError(t, f.Close())
 
 		_, _, err = parseCombinedPEM(f.Name())
 		require.ErrorContains(t, err, "no PRIVATE KEY")
@@ -92,11 +92,11 @@ func TestParseCombinedPEM(t *testing.T) {
 		f, err := os.CreateTemp(t.TempDir(), "key-only-*.pem")
 		require.NoError(t, err)
 
-		defer os.Remove(f.Name())
+		defer func() { _ = os.Remove(f.Name()) }()
 
 		_, err = f.Write(keyBlock)
 		require.NoError(t, err)
-		f.Close()
+		require.NoError(t, f.Close())
 
 		_, _, err = parseCombinedPEM(f.Name())
 		require.ErrorContains(t, err, "no CERTIFICATE")
@@ -111,13 +111,13 @@ func TestParseCombinedPEM(t *testing.T) {
 		f, err := os.CreateTemp(t.TempDir(), "combined-*.pem")
 		require.NoError(t, err)
 
-		defer os.Remove(f.Name())
+		defer func() { _ = os.Remove(f.Name()) }()
 
 		_, err = f.Write(certBlock)
 		require.NoError(t, err)
 		_, err = f.Write(keyBlock)
 		require.NoError(t, err)
-		f.Close()
+		require.NoError(t, f.Close())
 
 		certFile, keyFile, cleanup, err := ParseCombinedPEMFile(f.Name())
 		require.NoError(t, err)

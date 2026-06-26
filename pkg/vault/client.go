@@ -1,8 +1,11 @@
 package vault
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
+	"os"
+	"strings"
 
 	customHTTP "github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/http"
 	"github.com/hashicorp/vault/api"
@@ -26,6 +29,9 @@ type Client struct {
 	CertRole      string
 	CertFile      string
 	CertKey       string
+
+	JWTMount string
+	JWTRole  string
 
 	AuthMethodFunc Option
 
@@ -221,6 +227,43 @@ func WithCertAuth(mount, role, certFile, keyFile, caFile string) Option {
 
 		if c.AuthMethodFunc == nil {
 			c.AuthMethodFunc = WithCertAuth(mount, role, certFile, keyFile, caFile)
+		}
+
+		return nil
+	}
+}
+
+// WithJWTAuth performs a JWT auth login.
+// The token file is re-read on every call so that rotated Kubernetes service account tokens
+// are picked up automatically during token renewal.
+func WithJWTAuth(mount, role, tokenPath string) Option {
+	return func(c *Client) error {
+		c.JWTMount = mount
+		c.JWTRole = role
+
+		jwtBytes, err := os.ReadFile(tokenPath)
+		if err != nil {
+			return fmt.Errorf("error reading jwt token file %q: %w", tokenPath, err)
+		}
+
+		opts := map[string]any{
+			"role": role,
+			"jwt":  strings.TrimSpace(string(jwtBytes)),
+		}
+
+		s, err := c.Logical().Write(fmt.Sprintf(certAuthLoginPath, mount), opts)
+		if err != nil {
+			return fmt.Errorf("error performing jwt auth: %w", err)
+		}
+
+		if s == nil || s.Auth == nil {
+			return errors.New("jwt auth: empty auth response from vault")
+		}
+
+		c.SetToken(s.Auth.ClientToken)
+
+		if c.AuthMethodFunc == nil {
+			c.AuthMethodFunc = WithJWTAuth(mount, role, tokenPath)
 		}
 
 		return nil

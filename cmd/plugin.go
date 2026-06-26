@@ -67,6 +67,11 @@ type Options struct {
 	CertKey       string `env:"CERT_KEY"`
 	CertPEM       string `env:"CERT_PEM"` // combined cert+key PEM file (e.g. kubelet-client-current.pem)
 
+	// jwt auth
+	JWTRole      string `env:"JWT_ROLE"`
+	JWTMount     string `env:"JWT_MOUNT"      envDefault:"jwt"`
+	JWTTokenPath string `env:"JWT_TOKEN_PATH" envDefault:"/var/run/secrets/kubernetes.io/serviceaccount/token"`
+
 	// token refresh
 	TokenRefreshInterval string `env:"TOKEN_REFRESH_INTERVAL" envDefault:"60s"`
 	TokenRenewalSeconds  int    `env:"TOKEN_RENEWAL_SECONDS"  envDefault:"3600"`
@@ -107,7 +112,7 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.VaultNamespace, "vault-namespace", opts.VaultNamespace, "Vault Namespace (only when Vault Enterprise)")
 	flag.StringVar(&opts.VaultCACert, "vault-ca-cert", opts.VaultCACert, "Path to CA cert for verifying Vault's TLS certificate")
 
-	flag.StringVar(&opts.AuthMethod, "auth-method", opts.AuthMethod, "Auth Method. Supported: token, approle, userpass, cert")
+	flag.StringVar(&opts.AuthMethod, "auth-method", opts.AuthMethod, "Auth Method. Supported: token, approle, userpass, cert, jwt")
 
 	flag.StringVar(&opts.Token, "token", opts.Token, "Vault Token (when Token auth)")
 
@@ -124,6 +129,10 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.CertFile, "cert-file", opts.CertFile, "Path to TLS client certificate file (when cert auth)")
 	flag.StringVar(&opts.CertKey, "cert-key", opts.CertKey, "Path to TLS client key file (when cert auth)")
 	flag.StringVar(&opts.CertPEM, "cert-pem", opts.CertPEM, "Path to combined cert+key PEM file (when cert auth, e.g. /var/lib/kubelet/pki/kubelet-client-current.pem)")
+
+	flag.StringVar(&opts.JWTMount, "jwt-mount", opts.JWTMount, "Vault JWT mount name (when JWT auth)")
+	flag.StringVar(&opts.JWTRole, "jwt-role", opts.JWTRole, "Vault JWT role name (when JWT auth)")
+	flag.StringVar(&opts.JWTTokenPath, "jwt-token-path", opts.JWTTokenPath, "Path to the JWT token file (when JWT auth)")
 
 	flag.StringVar(&opts.TokenRefreshInterval, "token-refresh-interval", opts.TokenRefreshInterval, "Interval to check for a token renewal")
 	flag.IntVar(&opts.TokenRenewalSeconds, "token-renewal", opts.TokenRenewalSeconds, "The number of seconds to renew the token")
@@ -231,6 +240,11 @@ func NewPlugin(version string) error {
 		logFields = append(logFields,
 			zap.String("cert-mount", opts.CertAuthMount),
 			zap.String("cert-role", opts.CertAuthRole))
+	case "jwt":
+		authMethod = vault.WithJWTAuth(opts.JWTMount, opts.JWTRole, opts.JWTTokenPath)
+		logFields = append(logFields,
+			zap.String("jwt-mount", opts.JWTMount),
+			zap.String("jwt-role", opts.JWTRole))
 	default:
 		return fmt.Errorf("invalid auth method: %s", opts.AuthMethod)
 	}
@@ -352,8 +366,8 @@ func (o *Options) validateFlags() error {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
 	// check auth method
-	case !slices.Contains([]string{"token", "approle", "userpass", certAuthMethod}, strings.ToLower(o.AuthMethod)):
-		return errors.New("invalid auth method. Supported: token, approle, userpass, cert")
+	case !slices.Contains([]string{"token", "approle", "userpass", "jwt", certAuthMethod}, strings.ToLower(o.AuthMethod)):
+		return errors.New("invalid auth method. Supported: token, approle, userpass, cert, jwt")
 
 	// validate token auth
 	case strings.ToLower(o.AuthMethod) == "token" && o.Token == "":
@@ -373,6 +387,10 @@ func (o *Options) validateFlags() error {
 
 	case strings.ToLower(o.AuthMethod) == certAuthMethod && o.CertPEM == "" && (o.CertFile == "" || o.CertKey == ""):
 		return errors.New("cert auth requires either --cert-pem or both --cert-file and --cert-key")
+
+	// validate jwt auth
+	case strings.ToLower(o.AuthMethod) == "jwt" && o.JWTRole == "":
+		return errors.New("jwt role required when using jwt auth")
 
 	case o.DisableV1 && o.DisableV2:
 		return errors.New("at least one kms plugin version must be enabled")

@@ -2,14 +2,19 @@ package vault
 
 import (
 	"log"
+	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/testutils"
+	"github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
+
+const windowsOS = "windows"
 
 type VaultSuite struct {
 	suite.Suite
@@ -145,16 +150,26 @@ func (s *VaultSuite) TestAuthMethods() {
 
 func TestVaultSuite(t *testing.T) {
 	// github actions doesn't offer the docker sock, which we require for testing
-	if runtime.GOOS != "windows" {
+	if runtime.GOOS != windowsOS {
 		suite.Run(t, new(VaultSuite))
 	}
+}
+
+func TestWithJWTAuthErrors(t *testing.T) {
+	t.Run("missing token file", func(t *testing.T) {
+		opt := WithJWTAuth("jwt", "kms", "/nonexistent/token/path")
+		c := &Client{Client: &api.Client{}}
+		err := opt(c)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "error reading jwt token file")
+	})
 }
 
 // TestCertAuth tests the full cert auth flow against a real TLS-enabled Vault container.
 // It generates ephemeral certs, starts Vault in non-dev TLS mode, configures cert auth,
 // and verifies that the plugin can authenticate and perform transit encrypt/decrypt.
 func TestCertAuth(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windowsOS {
 		t.Skip("docker sock unavailable on windows CI")
 	}
 
@@ -220,4 +235,97 @@ func TestCertAuth(t *testing.T) {
 	require.NoError(t, err, "decrypt")
 
 	require.Equal(t, plaintext, decrypted, "decrypted plaintext must match original")
+}
+
+// TestJWTAuth tests the full JWT auth flow against a real dev-mode Vault container.
+// It generates an ephemeral ES256 signing key, creates a signed JWT, configures Vault
+// JWT auth with the matching static public key, and verifies transit encrypt/decrypt.
+//
+//nolint:funlen
+func TestJWTAuth(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skip("docker sock unavailable on windows CI")
+	}
+
+	// 1. Generate ES256 signing key pair.
+	privKey, pubKeyPEM, err := testutils.GenerateJWTSigningKey()
+	require.NoError(t, err, "generate jwt signing key")
+
+	// 2. Start dev-mode Vault with transit pre-enabled (no TLS needed for JWT auth).
+	tc, err := testutils.StartTestContainer(
+		"secrets enable transit",
+		"write -f transit/keys/kms",
+	)
+	require.NoError(t, err, "start vault container")
+
+	defer func() { _ = tc.Terminate() }()
+
+	// 3. Sign a test JWT.
+	jwtToken, err := testutils.SignTestJWT(privKey, "test-sa", "vault-kms")
+	require.NoError(t, err, "sign test jwt")
+
+	// 4. Write JWT to a temp file — WithJWTAuth reads the token from disk.
+	tokenPath := filepath.Join(t.TempDir(), "jwt-token")
+	require.NoError(t, os.WriteFile(tokenPath, []byte(jwtToken), 0o600), "write jwt token file")
+
+	// 5. Copy the public key PEM into the container; vault write can then use @/tmp/jwt-pub.pem.
+	err = tc.Container.CopyToContainer(t.Context(), []byte(pubKeyPEM), "/tmp/jwt-pub.pem", 0o444)
+	require.NoError(t, err, "copy public key to container")
+
+	// 6. Enable JWT auth method.
+	_, err = tc.ExecShell("vault auth enable jwt")
+	require.NoError(t, err, "enable jwt auth")
+
+	// 7. Configure JWT auth with the static public key (@ reads from file path in the container).
+	_, err = tc.ExecShell("vault write auth/jwt/config jwt_validation_pubkeys=@/tmp/jwt-pub.pem")
+	require.NoError(t, err, "configure jwt auth")
+
+	// 8. Write transit policy (pipe requires ExecShell).
+	_, err = tc.ExecShell(
+		`printf 'path "transit/*" { capabilities = ["create","read","update"] }' | vault policy write transit-pol -`,
+	)
+	require.NoError(t, err, "write transit policy")
+
+	// 9. Create a JWT role bound to our test subject and audience.
+	_, err = tc.ExecShell(
+		"vault write auth/jwt/role/kms role_type=jwt bound_audiences=vault-kms " +
+			"user_claim=sub bound_subject=test-sa token_policies=transit-pol token_period=3600",
+	)
+	require.NoError(t, err, "write jwt role")
+
+	// 10. Create vault client using JWT auth.
+	vc, err := NewClient(
+		WithVaultAddress(tc.URI),
+		WithTransit("transit", "kms"),
+		WithJWTAuth("jwt", "kms", tokenPath),
+	)
+	require.NoError(t, err, "create vault client with jwt auth")
+
+	plaintext := []byte("hello-jwt-auth")
+
+	ciphertext, _, err := vc.Encrypt(t.Context(), plaintext)
+	require.NoError(t, err, "encrypt")
+
+	decrypted, err := vc.Decrypt(t.Context(), ciphertext)
+	require.NoError(t, err, "decrypt")
+
+	require.Equal(t, plaintext, decrypted, "decrypted plaintext must match original")
+
+	// 11. Token rotation: overwrite the token file and re-authenticate via AuthMethodFunc.
+	// This proves that WithJWTAuth re-reads the file on each call, supporting K8s token rotation.
+	t.Run("token rotation", func(t *testing.T) {
+		newJWT, err := testutils.SignTestJWT(privKey, "test-sa", "vault-kms")
+		require.NoError(t, err, "sign rotated jwt")
+
+		require.NoError(t, os.WriteFile(tokenPath, []byte(newJWT), 0o600), "overwrite token file")
+		require.NoError(t, vc.AuthMethodFunc(vc), "re-authenticate with rotated jwt")
+
+		ciphertext, _, err := vc.Encrypt(t.Context(), plaintext)
+		require.NoError(t, err, "encrypt after rotation")
+
+		decrypted, err := vc.Decrypt(t.Context(), ciphertext)
+		require.NoError(t, err, "decrypt after rotation")
+
+		require.Equal(t, plaintext, decrypted, "decrypted must match after rotation")
+	})
 }
