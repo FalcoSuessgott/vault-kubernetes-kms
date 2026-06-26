@@ -69,7 +69,7 @@ type Options struct {
 
 	// jwt auth
 	JWTRole      string `env:"JWT_ROLE"`
-	JWTMount     string `env:"JWT_MOUNT" envDefault:"jwt"`
+	JWTMount     string `env:"JWT_MOUNT"      envDefault:"jwt"`
 	JWTTokenPath string `env:"JWT_TOKEN_PATH" envDefault:"/var/run/secrets/kubernetes.io/serviceaccount/token"`
 
 	// token refresh

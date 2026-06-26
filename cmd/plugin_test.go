@@ -225,6 +225,21 @@ func TestValidateFlags(t *testing.T) {
 				AuthMethod:   "jwt",
 			},
 		},
+		{
+			name: "jwt auth valid",
+			err:  false,
+			opts: &Options{ //nolint:gosec
+				VaultAddress:         "e2e",
+				AuthMethod:           "jwt",
+				JWTRole:              "kms",
+				JWTMount:             "jwt",
+				JWTTokenPath:         "/var/run/secrets/kubernetes.io/serviceaccount/token",
+				TransitKey:           "kms",
+				TransitMount:         "transit",
+				HealthPort:           "8080",
+				TokenRefreshInterval: "60s",
+			},
+		},
 
 		{
 			name: "all plugin versions disabled",

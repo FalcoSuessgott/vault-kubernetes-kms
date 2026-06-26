@@ -7,8 +7,6 @@ const (
 
 	certAuthLoginPath = "auth/%s/login"
 
-	jwtAuthLoginPath = "auth/%s/login"
-
 	encryptDataPath = "%s/encrypt/%s"
 	decryptDataPath = "%s/decrypt/%s"
 

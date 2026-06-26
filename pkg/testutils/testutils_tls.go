@@ -189,23 +189,23 @@ func StartTLSTestContainer(tb testing.TB, certs *TLSCerts) (*TLSTestContainer, e
 
 	clientCertFile, err := writeTLSTempFile("vault-client-cert-*.pem", certs.ClientCertPEM)
 	if err != nil {
-		os.Remove(caCertFile)
+		_ = os.Remove(caCertFile)
 
 		return nil, err
 	}
 
 	clientKeyFile, err := writeTLSTempFile("vault-client-key-*.pem", certs.ClientKeyPEM)
 	if err != nil {
-		os.Remove(caCertFile)
-		os.Remove(clientCertFile)
+		_ = os.Remove(caCertFile)
+		_ = os.Remove(clientCertFile)
 
 		return nil, err
 	}
 
 	cleanupFiles := func() {
-		os.Remove(caCertFile)
-		os.Remove(clientCertFile)
-		os.Remove(clientKeyFile)
+		_ = os.Remove(caCertFile)
+		_ = os.Remove(clientCertFile)
+		_ = os.Remove(clientKeyFile)
 	}
 
 	ctx := tb.Context()
@@ -366,11 +366,11 @@ func writeTLSTempFile(pattern string, data []byte) (string, error) {
 		return "", fmt.Errorf("create temp file %s: %w", pattern, err)
 	}
 
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	_, err = f.Write(data)
 	if err != nil {
-		os.Remove(f.Name())
+		_ = os.Remove(f.Name())
 
 		return "", fmt.Errorf("write temp file %s: %w", pattern, err)
 	}

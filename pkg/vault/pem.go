@@ -22,35 +22,35 @@ func ParseCombinedPEMFile(path string) (string, string, func(), error) {
 
 	_, err = certF.Write(certPEM)
 	if err != nil {
-		certF.Close()
-		os.Remove(certF.Name())
+		_ = certF.Close()
+		_ = os.Remove(certF.Name())
 
 		return "", "", func() {}, fmt.Errorf("error writing cert to temp file: %w", err)
 	}
 
-	certF.Close()
+	_ = certF.Close()
 
 	keyF, err := os.CreateTemp("", "vault-key-*.pem")
 	if err != nil {
-		os.Remove(certF.Name())
+		_ = os.Remove(certF.Name())
 
 		return "", "", func() {}, fmt.Errorf("error creating temp key file: %w", err)
 	}
 
 	_, err = keyF.Write(keyPEM)
 	if err != nil {
-		keyF.Close()
-		os.Remove(certF.Name())
-		os.Remove(keyF.Name())
+		_ = keyF.Close()
+		_ = os.Remove(certF.Name())
+		_ = os.Remove(keyF.Name())
 
 		return "", "", func() {}, fmt.Errorf("error writing key to temp file: %w", err)
 	}
 
-	keyF.Close()
+	_ = keyF.Close()
 
 	return certF.Name(), keyF.Name(), func() {
-		os.Remove(certF.Name())
-		os.Remove(keyF.Name())
+		_ = os.Remove(certF.Name())
+		_ = os.Remove(keyF.Name())
 	}, nil
 }
 

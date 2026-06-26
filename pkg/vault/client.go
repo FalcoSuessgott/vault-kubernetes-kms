@@ -186,6 +186,7 @@ func WithUserPassAuth(mount string, username string, password string) Option {
 }
 
 // WithCertAuth performs Vault TLS Certificate auth login.
+// The client certificate is presented during the TLS handshake; caFile should be the CA that
 // signed the Vault server's TLS certificate (for the HTTPS connection). Vault verifies the
 // client cert against cert roles configured with vault write auth/{mount}/certs/{name}.
 func WithCertAuth(mount, role, certFile, keyFile, caFile string) Option {
@@ -221,6 +222,7 @@ func WithCertAuth(mount, role, certFile, keyFile, caFile string) Option {
 		if err != nil {
 			return fmt.Errorf("error performing cert auth: %w", err)
 		}
+
 		c.SetToken(s.Auth.ClientToken)
 
 		if c.AuthMethodFunc == nil {
@@ -231,13 +233,11 @@ func WithCertAuth(mount, role, certFile, keyFile, caFile string) Option {
 	}
 }
 
-// WithJWTAuth performs a jwt auth login.
+// WithJWTAuth performs a JWT auth login.
+// The token file is re-read on every call so that rotated Kubernetes service account tokens
+// are picked up automatically during token renewal.
 func WithJWTAuth(mount, role, tokenPath string) Option {
 	return func(c *Client) error {
-		if role == "" {
-			return errors.New("role is required")
-		}
-
 		c.JWTMount = mount
 		c.JWTRole = role
 
@@ -251,9 +251,13 @@ func WithJWTAuth(mount, role, tokenPath string) Option {
 			"jwt":  strings.TrimSpace(string(jwtBytes)),
 		}
 
-		s, err := c.Logical().Write(fmt.Sprintf(jwtAuthLoginPath, mount), opts)
+		s, err := c.Logical().Write(fmt.Sprintf(certAuthLoginPath, mount), opts)
 		if err != nil {
 			return fmt.Errorf("error performing jwt auth: %w", err)
+		}
+
+		if s == nil || s.Auth == nil {
+			return errors.New("jwt auth: empty auth response from vault")
 		}
 
 		c.SetToken(s.Auth.ClientToken)

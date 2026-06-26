@@ -59,7 +59,7 @@ path "transit/keys/kms" {
 You can create the policy using `vault policy write kms ./kms-policy.hcl`.
 
 ### Vault Auth
-`vault-kubernetes-kms` supports Token, AppRole, TLS Certificate (`cert`) & JWT Auth. Since a static pod cannot reference any other Kubernetes API-Objects, JWT authentication is only possible in scenarios, where the plugin does not run as a static pod (see [Issue #312](https://github.com/FalcoSuessgott/vault-kubernetes-kms/issues/312)).
+`vault-kubernetes-kms` supports Token, AppRole, UserPass, TLS Certificate (`cert`) & JWT Auth. Since a static pod cannot reference any other Kubernetes API-Objects, JWT authentication is only possible in scenarios, where the plugin does not run as a static pod (see [Issue #312](https://github.com/FalcoSuessgott/vault-kubernetes-kms/issues/312)).
 
 ### Cert (TLS Certificate) Auth
 
