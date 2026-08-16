@@ -9,7 +9,7 @@ require (
 	github.com/prometheus/client_model v0.6.2
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.44.0
-	github.com/testcontainers/testcontainers-go/modules/vault v0.43.0
+	github.com/testcontainers/testcontainers-go/modules/vault v0.44.0
 	go.uber.org/zap v1.28.0
 	google.golang.org/grpc v1.82.0
 	gotest.tools/gotestsum v1.13.0
