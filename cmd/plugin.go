@@ -23,14 +23,18 @@ import (
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/utils"
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/vault"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/spiffe/go-spiffe/v2/spiffeid"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 )
 
 const (
-	shutdownTimeout = 3 * time.Second
-	certAuthMethod  = "cert"
+	shutdownTimeout      = 3 * time.Second
+	certAuthMethod       = "cert"
+	jwtAuthMethod        = "jwt"
+	jwtTokenSourceFile   = "file"
+	jwtTokenSourceSPIFFE = "spiffe"
 )
 
 type Options struct {
@@ -68,9 +72,13 @@ type Options struct {
 	CertPEM       string `env:"CERT_PEM"` // combined cert+key PEM file (e.g. kubelet-client-current.pem)
 
 	// jwt auth
-	JWTRole      string `env:"JWT_ROLE"`
-	JWTMount     string `env:"JWT_MOUNT"      envDefault:"jwt"`
-	JWTTokenPath string `env:"JWT_TOKEN_PATH" envDefault:"/var/run/secrets/kubernetes.io/serviceaccount/token"`
+	JWTRole           string `env:"JWT_ROLE"`
+	JWTMount          string `env:"JWT_MOUNT"           envDefault:"jwt"`
+	JWTTokenPath      string `env:"JWT_TOKEN_PATH"      envDefault:"/var/run/secrets/kubernetes.io/serviceaccount/token"`
+	JWTTokenSource    string `env:"JWT_TOKEN_SOURCE"    envDefault:"file"`
+	JWTSpiffeEndpoint string `env:"JWT_SPIFFE_ENDPOINT"`
+	JWTSpiffeAudience string `env:"JWT_SPIFFE_AUDIENCE"`
+	JWTSpiffeID       string `env:"JWT_SPIFFE_ID"`
 
 	// token refresh
 	TokenRefreshInterval string `env:"TOKEN_REFRESH_INTERVAL" envDefault:"60s"`
@@ -133,6 +141,15 @@ func NewPlugin(version string) error {
 	flag.StringVar(&opts.JWTMount, "jwt-mount", opts.JWTMount, "Vault JWT mount name (when JWT auth)")
 	flag.StringVar(&opts.JWTRole, "jwt-role", opts.JWTRole, "Vault JWT role name (when JWT auth)")
 	flag.StringVar(&opts.JWTTokenPath, "jwt-token-path", opts.JWTTokenPath, "Path to the JWT token file (when JWT auth)")
+	flag.StringVar(&opts.JWTTokenSource, "jwt-token-source", opts.JWTTokenSource, "JWT token source. Supported: file, spiffe")
+	flag.StringVar(
+		&opts.JWTSpiffeEndpoint,
+		"jwt-spiffe-endpoint",
+		opts.JWTSpiffeEndpoint,
+		"SPIFFE Workload API endpoint (when JWT token source is spiffe; defaults to SPIFFE_ENDPOINT_SOCKET)",
+	)
+	flag.StringVar(&opts.JWTSpiffeAudience, "jwt-spiffe-audience", opts.JWTSpiffeAudience, "JWT-SVID audience (when JWT token source is spiffe)")
+	flag.StringVar(&opts.JWTSpiffeID, "jwt-spiffe-id", opts.JWTSpiffeID, "Exact SPIFFE ID to request (when JWT token source is spiffe)")
 
 	flag.StringVar(&opts.TokenRefreshInterval, "token-refresh-interval", opts.TokenRefreshInterval, "Interval to check for a token renewal")
 	flag.IntVar(&opts.TokenRenewalSeconds, "token-renewal", opts.TokenRenewalSeconds, "The number of seconds to renew the token")
@@ -240,11 +257,9 @@ func NewPlugin(version string) error {
 		logFields = append(logFields,
 			zap.String("cert-mount", opts.CertAuthMount),
 			zap.String("cert-role", opts.CertAuthRole))
-	case "jwt":
-		authMethod = vault.WithJWTAuth(opts.JWTMount, opts.JWTRole, opts.JWTTokenPath)
-		logFields = append(logFields,
-			zap.String("jwt-mount", opts.JWTMount),
-			zap.String("jwt-role", opts.JWTRole))
+	case jwtAuthMethod:
+		authMethod = jwtAuthOption(opts)
+		logFields = append(logFields, jwtLogFields(opts)...)
 	default:
 		return fmt.Errorf("invalid auth method: %s", opts.AuthMethod)
 	}
@@ -362,38 +377,44 @@ func NewPlugin(version string) error {
 
 // nolint: cyclop
 func (o *Options) validateFlags() error {
+	authMethod := strings.ToLower(o.AuthMethod)
+
 	switch {
 	case o.VaultAddress == "":
 		return errors.New("vault address required")
 	// check auth method
-	case !slices.Contains([]string{"token", "approle", "userpass", "jwt", certAuthMethod}, strings.ToLower(o.AuthMethod)):
+	case !slices.Contains([]string{"token", "approle", "userpass", jwtAuthMethod, certAuthMethod}, authMethod):
 		return errors.New("invalid auth method. Supported: token, approle, userpass, cert, jwt")
 
 	// validate token auth
-	case strings.ToLower(o.AuthMethod) == "token" && o.Token == "":
+	case authMethod == "token" && o.Token == "":
 		return errors.New("token required when using token auth")
 
 	// validate approle auth
-	case strings.ToLower(o.AuthMethod) == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
+	case authMethod == "approle" && (o.AppRoleRoleID == "" || o.AppRoleRoleSecretID == ""):
 		return errors.New("approle role id and secret id required when using approle auth")
 
 	// validate userpass auth
-	case strings.ToLower(o.AuthMethod) == "userpass" && (o.UserPassUsername == "" || o.UserPassPassword == ""):
+	case authMethod == "userpass" && (o.UserPassUsername == "" || o.UserPassPassword == ""):
 		return errors.New("userpass username and password required when using userpass auth")
 
 	// validate cert auth — need either separate cert+key files or a combined PEM
-	case strings.ToLower(o.AuthMethod) == certAuthMethod && o.CertAuthRole == "":
+	case authMethod == certAuthMethod && o.CertAuthRole == "":
 		return errors.New("cert-role required when using cert auth")
 
-	case strings.ToLower(o.AuthMethod) == certAuthMethod && o.CertPEM == "" && (o.CertFile == "" || o.CertKey == ""):
+	case authMethod == certAuthMethod && o.CertPEM == "" && (o.CertFile == "" || o.CertKey == ""):
 		return errors.New("cert auth requires either --cert-pem or both --cert-file and --cert-key")
 
 	// validate jwt auth
-	case strings.ToLower(o.AuthMethod) == "jwt" && o.JWTRole == "":
-		return errors.New("jwt role required when using jwt auth")
-
 	case o.DisableV1 && o.DisableV2:
 		return errors.New("at least one kms plugin version must be enabled")
+	}
+
+	if authMethod == jwtAuthMethod {
+		err := o.validateJWTFlags()
+		if err != nil {
+			return err
+		}
 	}
 
 	_, err := time.ParseDuration(o.TokenRefreshInterval)
@@ -402,6 +423,66 @@ func (o *Options) validateFlags() error {
 	}
 
 	return nil
+}
+
+func (o *Options) validateJWTFlags() error {
+	if o.JWTRole == "" {
+		return errors.New("jwt role required when using jwt auth")
+	}
+
+	switch o.JWTTokenSource {
+	case jwtTokenSourceFile:
+		if o.JWTTokenPath == "" {
+			return errors.New("jwt token path required when using file jwt token source")
+		}
+	case jwtTokenSourceSPIFFE:
+		if o.JWTSpiffeAudience == "" {
+			return errors.New("jwt spiffe audience required when using spiffe jwt token source")
+		}
+
+		if o.JWTSpiffeID == "" {
+			return errors.New("jwt spiffe id required when using spiffe jwt token source")
+		}
+
+		_, err := spiffeid.FromString(o.JWTSpiffeID)
+		if err != nil {
+			return fmt.Errorf("invalid jwt spiffe id: %w", err)
+		}
+	default:
+		return errors.New("invalid jwt token source. Supported: file, spiffe")
+	}
+
+	return nil
+}
+
+func jwtAuthOption(o *Options) vault.Option {
+	if o.JWTTokenSource == jwtTokenSourceFile {
+		return vault.WithJWTAuth(o.JWTMount, o.JWTRole, o.JWTTokenPath)
+	}
+
+	return vault.WithSPIFFEJWTAuth(
+		o.JWTMount,
+		o.JWTRole,
+		o.JWTSpiffeEndpoint,
+		o.JWTSpiffeAudience,
+		o.JWTSpiffeID,
+	)
+}
+
+func jwtLogFields(o *Options) []zapcore.Field {
+	fields := []zapcore.Field{
+		zap.String("jwt-mount", o.JWTMount),
+		zap.String("jwt-role", o.JWTRole),
+		zap.String("jwt-token-source", o.JWTTokenSource),
+	}
+	if o.JWTTokenSource == jwtTokenSourceSPIFFE {
+		fields = append(fields,
+			zap.String("jwt-spiffe-endpoint", o.JWTSpiffeEndpoint),
+			zap.String("jwt-spiffe-audience", o.JWTSpiffeAudience),
+			zap.String("jwt-spiffe-id", o.JWTSpiffeID))
+	}
+
+	return fields
 }
 
 func shutDownSignal(ctx context.Context) context.Context {
