@@ -930,9 +930,9 @@ $&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>v
 $&gt;<span class="w"> </span>make<span class="w"> </span>setup-vault
 
 <span class="c1"># point your vault CLI to the local Vault server</span>
-$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_ADDR</span><span class="o">=</span><span class="s2">&quot;http://127.0.0.1:8200&quot;</span>
-$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_SKIP_VERIFY</span><span class="o">=</span><span class="s2">&quot;true&quot;</span>
-$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_TOKEN</span><span class="o">=</span><span class="s2">&quot;root&quot;</span>
+$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_ADDR</span><span class="o">=</span><span class="s2">"http://127.0.0.1:8200"</span>
+$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_SKIP_VERIFY</span><span class="o">=</span><span class="s2">"true"</span>
+$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_TOKEN</span><span class="o">=</span><span class="s2">"root"</span>
 $&gt;<span class="w"> </span>vault<span class="w"> </span>status
 Key<span class="w">             </span>Value
 ---<span class="w">             </span>-----
@@ -958,14 +958,14 @@ kms
 <p>Now, we have a local running Vault server, lets start a local running Kubernetes cluster using <code>kind</code>, which will deploy the <code>vault-kubernetes-kms</code> plugin as a static pod on the control plane as well as its required <code>encryption_provider_config</code> (see <a href="https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/">https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/</a> for the required configuration steps):</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># can take up to 2 minutes</span>
 $&gt;<span class="w"> </span>kind<span class="w"> </span>create<span class="w"> </span>cluster<span class="w"> </span>--name<span class="o">=</span>kms<span class="w"> </span>--config<span class="w"> </span>assets/kind-config.yaml
-Creating<span class="w"> </span>cluster<span class="w"> </span><span class="s2">&quot;kms&quot;</span><span class="w"> </span>...
+Creating<span class="w"> </span>cluster<span class="w"> </span><span class="s2">"kms"</span><span class="w"> </span>...
 <span class="w"> </span>✓<span class="w"> </span>Ensuring<span class="w"> </span>node<span class="w"> </span>image<span class="w"> </span><span class="o">(</span>kindest/node:v1.29.2<span class="o">)</span><span class="w"> </span>🖼
 <span class="w"> </span>✓<span class="w"> </span>Preparing<span class="w"> </span>nodes<span class="w"> </span>📦
 <span class="w"> </span>✓<span class="w"> </span>Writing<span class="w"> </span>configuration<span class="w"> </span>📜
 <span class="w"> </span>✓<span class="w"> </span>Starting<span class="w"> </span>control-plane<span class="w"> </span>🕹️
 <span class="w"> </span>✓<span class="w"> </span>Installing<span class="w"> </span>CNI<span class="w"> </span>🔌
 <span class="w"> </span>✓<span class="w"> </span>Installing<span class="w"> </span>StorageClass<span class="w"> </span>💾
-Set<span class="w"> </span>kubectl<span class="w"> </span>context<span class="w"> </span>to<span class="w"> </span><span class="s2">&quot;kind-kms&quot;</span>
+Set<span class="w"> </span>kubectl<span class="w"> </span>context<span class="w"> </span>to<span class="w"> </span><span class="s2">"kind-kms"</span>
 You<span class="w"> </span>can<span class="w"> </span>now<span class="w"> </span>use<span class="w"> </span>your<span class="w"> </span>cluster<span class="w"> </span>with:
 
 kubectl<span class="w"> </span>cluster-info<span class="w"> </span>--context<span class="w"> </span>kind-kms
@@ -991,18 +991,18 @@ $&gt;<span class="w"> </span>kubectl<span class="w"> </span>create<span class="w
 secret/secret-encrypted<span class="w"> </span>created
 
 <span class="c1"># show the secret</span>
-§&gt;<span class="w">  </span>kubectl<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>secret-encrypted<span class="w"> </span>-o<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.data | map_values(@base64d)&#39;</span>
+§&gt;<span class="w">  </span>kubectl<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>secret-encrypted<span class="w"> </span>-o<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.data | map_values(@base64d)'</span>
 <span class="o">{</span>
-<span class="w">  </span><span class="s2">&quot;key&quot;</span>:<span class="w"> </span><span class="s2">&quot;value&quot;</span>
+<span class="w">  </span><span class="s2">"key"</span>:<span class="w"> </span><span class="s2">"value"</span>
 <span class="o">}</span>
 
 <span class="c1"># show secret in etcd storage</span>
-$&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>etcd-kms-control-plane<span class="w"> </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;ETCDCTL_API=3 etcdctl \</span>
+$&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>etcd-kms-control-plane<span class="w"> </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">"ETCDCTL_API=3 etcdctl \</span>
 <span class="s2">    --endpoints=https://127.0.0.1:2379 \</span>
 <span class="s2">    --cert /etc/kubernetes/pki/etcd/server.crt \</span>
 <span class="s2">    --key /etc/kubernetes/pki/etcd/server.key \</span>
 <span class="s2">    --cacert /etc/kubernetes/pki/etcd/ca.crt \</span>
-<span class="s2">    get /registry/secrets/default/secret-encrypted&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>hexdump<span class="w"> </span>-C
+<span class="s2">    get /registry/secrets/default/secret-encrypted"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>hexdump<span class="w"> </span>-C
 <span class="m">00000000</span><span class="w">  </span>2f<span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">67</span><span class="w"> </span><span class="m">69</span><span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">74</span><span class="w"> </span><span class="m">72</span><span class="w">  </span><span class="m">79</span><span class="w"> </span>2f<span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="p">|</span>/registry/secret<span class="p">|</span>
 <span class="m">00000010</span><span class="w">  </span><span class="m">73</span><span class="w"> </span>2f<span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">66</span><span class="w"> </span><span class="m">61</span><span class="w"> </span><span class="m">75</span><span class="w"> </span>6c<span class="w">  </span><span class="m">74</span><span class="w"> </span>2f<span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="p">|</span>s/default/secret<span class="p">|</span>
 <span class="m">00000020</span><span class="w">  </span>2d<span class="w"> </span><span class="m">65</span><span class="w"> </span>6e<span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">79</span><span class="w"> </span><span class="m">70</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="m">65</span><span class="w"> </span><span class="m">64</span><span class="w"> </span>0a<span class="w"> </span>6b<span class="w"> </span><span class="m">38</span><span class="w"> </span><span class="m">73</span><span class="w"> </span>3a<span class="w"> </span><span class="m">65</span><span class="w">  </span><span class="p">|</span>-encrypted.k8s:e<span class="p">|</span>
@@ -1025,7 +1025,7 @@ $&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> <
 <span class="m">00000130</span><span class="w">  </span><span class="m">15</span><span class="w"> </span><span class="m">31</span><span class="w"> </span>ce<span class="w"> </span><span class="m">41</span><span class="w"> </span><span class="m">59</span><span class="w"> </span>6b<span class="w"> </span>b8<span class="w"> </span>c6<span class="w">  </span>7d<span class="w"> </span>5e<span class="w"> </span>b3<span class="w"> </span>ee<span class="w"> </span><span class="m">07</span><span class="w"> </span>a7<span class="w"> </span><span class="m">65</span><span class="w"> </span>3b<span class="w">  </span><span class="p">|</span>.1.AYk..<span class="o">}</span>^....e<span class="p">;|</span>
 <span class="m">00000140</span><span class="w">  </span>a8<span class="w"> </span>f2<span class="w"> </span>8a<span class="w"> </span>ab<span class="w"> </span>e7<span class="w"> </span>d0<span class="w"> </span><span class="m">37</span><span class="w"> </span>bc<span class="w">  </span>9c<span class="w"> </span>e6<span class="w"> </span>e6<span class="w"> </span><span class="m">33</span><span class="w"> </span><span class="m">71</span><span class="w"> </span><span class="m">57</span><span class="w"> </span>c5<span class="w"> </span>6c<span class="w">  </span><span class="p">|</span>......7....3qW.l<span class="p">|</span>
 <span class="m">00000150</span><span class="w">  </span><span class="m">09</span><span class="w"> </span>ff<span class="w"> </span>e9<span class="w"> </span><span class="m">65</span><span class="w"> </span>c9<span class="w"> </span>8c<span class="w"> </span>9f<span class="w"> </span>aa<span class="w">  </span>1c<span class="w"> </span>e2<span class="w"> </span>df<span class="w"> </span>a4<span class="w"> </span>ad<span class="w"> </span><span class="nb">fc</span><span class="w"> </span>a0<span class="w"> </span><span class="m">02</span><span class="w">  </span><span class="p">|</span>...e............<span class="p">|</span>
-<span class="m">00000160</span><span class="w">  </span>2b<span class="w"> </span>6d<span class="w"> </span><span class="m">93</span><span class="w"> </span>5e<span class="w"> </span><span class="m">44</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">28</span><span class="w">  </span>d7<span class="w"> </span>3f<span class="w"> </span>e1<span class="w"> </span><span class="m">98</span><span class="w"> </span>eb<span class="w"> </span><span class="m">84</span><span class="w"> </span>ab<span class="w"> </span><span class="m">22</span><span class="w">  </span><span class="p">|</span>+m.^D<span class="w"> </span>d<span class="o">(</span>.?.....<span class="s2">&quot;|</span>
+<span class="m">00000160</span><span class="w">  </span>2b<span class="w"> </span>6d<span class="w"> </span><span class="m">93</span><span class="w"> </span>5e<span class="w"> </span><span class="m">44</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">28</span><span class="w">  </span>d7<span class="w"> </span>3f<span class="w"> </span>e1<span class="w"> </span><span class="m">98</span><span class="w"> </span>eb<span class="w"> </span><span class="m">84</span><span class="w"> </span>ab<span class="w"> </span><span class="m">22</span><span class="w">  </span><span class="p">|</span>+m.^D<span class="w"> </span>d<span class="o">(</span>.?.....<span class="s2">"|</span>
 <span class="s2">00000170  82 92 7a b6 b2 b8 12 0a  31 37 31 31 32 34 32 33  |..z.....17112423|</span>
 <span class="s2">00000180  36 34 1a 59 76 61 75 6c  74 3a 76 31 3a 6d 42 41  |64.Yvault:v1:mBA|  # encrypted value</span>
 <span class="s2">00000190  4a 47 56 56 35 72 46 78  36 47 4c 4f 62 33 46 50  |JGVV5rFx6GLOb3FP|</span>
@@ -1042,12 +1042,12 @@ $&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> <
 <h2 id="verify-decryption-after-restart">Verify decryption after restart<a class="headerlink" href="#verify-decryption-after-restart" title="Permanent link">&para;</a></h2>
 <p>If we restart the <code>kube-apiserver</code> the secrets have been Successfully decrypted:</p>
 <div class="highlight"><pre><span></span><code>$&gt;<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pod/etcd-kms-control-plane<span class="w"> </span>-n<span class="w"> </span>kube-system
-pod<span class="w"> </span><span class="s2">&quot;kube-apiserver-minikube&quot;</span><span class="w"> </span>deleted
+pod<span class="w"> </span><span class="s2">"kube-apiserver-minikube"</span><span class="w"> </span>deleted
 
 <span class="c1"># secret has been successfully decrypted</span>
-$&gt;<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>secret-encrypted<span class="w"> </span>-o<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.data | map_values(@base64d)&#39;</span>
+$&gt;<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>secret-encrypted<span class="w"> </span>-o<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.data | map_values(@base64d)'</span>
 <span class="o">{</span>
-<span class="w">  </span><span class="s2">&quot;key&quot;</span>:<span class="w"> </span><span class="s2">&quot;value&quot;</span>
+<span class="w">  </span><span class="s2">"key"</span>:<span class="w"> </span><span class="s2">"value"</span>
 <span class="o">}</span>
 </code></pre></div>
 <h2 id="teardown">Teardown<a class="headerlink" href="#teardown" title="Permanent link">&para;</a></h2>

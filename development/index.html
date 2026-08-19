@@ -909,18 +909,18 @@
 <p>You don't have to deploy the plugin in a Kubernetes Cluster, you can just execute it locally, given you have a Vault running:</p>
 <div class="highlight"><pre><span></span><code>$&gt;<span class="w"> </span>make<span class="w"> </span>setup-vault
 $&gt;<span class="w"> </span>go<span class="w"> </span>run<span class="w"> </span>main.go<span class="w"> </span>-vault-address<span class="o">=</span>http://127.0.0.1:8200<span class="w"> </span>-auth-method<span class="o">=</span>token<span class="w"> </span>-token<span class="o">=</span>root<span class="w"> </span>-socket<span class="o">=</span>unix:///tmp/kms.socket
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-08-25T15:36:19.233+1000&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/plugin.go:174&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;starting kms plugin&quot;</span>,<span class="s2">&quot;auth-method&quot;</span>:<span class="s2">&quot;token&quot;</span>,<span class="s2">&quot;socket&quot;</span>:<span class="s2">&quot;unix:///tmp/kms.socket&quot;</span>,<span class="s2">&quot;debug&quot;</span>:false,<span class="s2">&quot;vault-address&quot;</span>:<span class="s2">&quot;http://127.0.0.1:8200&quot;</span>,<span class="s2">&quot;vault-namespace&quot;</span>:<span class="s2">&quot;&quot;</span>,<span class="s2">&quot;transit-engine&quot;</span>:<span class="s2">&quot;transit&quot;</span>,<span class="s2">&quot;transit-key&quot;</span>:<span class="s2">&quot;kms&quot;</span>,<span class="s2">&quot;health-port&quot;</span>:<span class="s2">&quot;8080&quot;</span>,<span class="s2">&quot;token-refresh-interval&quot;</span>:<span class="s2">&quot;60s&quot;</span>,<span class="s2">&quot;token-renewal-seconds&quot;</span>:3600,<span class="s2">&quot;disable-v1&quot;</span>:false,<span class="s2">&quot;disable-v2&quot;</span>:false<span class="o">}</span>
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-08-25T15:36:19.235+1000&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/plugin.go:187&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Successfully authenticated to vault&quot;</span><span class="o">}</span>
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-08-25T15:36:19.235+1000&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/plugin.go:205&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Successfully created unix socket&quot;</span>,<span class="s2">&quot;socket&quot;</span>:<span class="s2">&quot;/tmp/kms.socket&quot;</span><span class="o">}</span>
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-08-25T15:36:19.235+1000&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/plugin.go:230&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Successfully registered kms plugin v1&quot;</span><span class="o">}</span>
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-08-25T15:36:19.235+1000&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/plugin.go:238&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Successfully registered kms plugin v2&quot;</span><span class="o">}</span>
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-08-25T15:36:19.235+1000&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/plugin.go:260&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Exposing metrics under /metrics&quot;</span>,<span class="s2">&quot;port&quot;</span>:<span class="s2">&quot;8080&quot;</span><span class="o">}</span>
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-08-25T15:36:19.235+1000&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/plugin.go:261&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Exposing health check under /health&quot;</span>,<span class="s2">&quot;port&quot;</span>:<span class="s2">&quot;8080&quot;</span><span class="o">}</span>
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-08-25T15:36:19.235+1000&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/plugin.go:262&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Exposing live check under /live&quot;</span>,<span class="s2">&quot;port&quot;</span>:<span class="s2">&quot;8080&quot;</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-08-25T15:36:19.233+1000"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/plugin.go:174"</span>,<span class="s2">"message"</span>:<span class="s2">"starting kms plugin"</span>,<span class="s2">"auth-method"</span>:<span class="s2">"token"</span>,<span class="s2">"socket"</span>:<span class="s2">"unix:///tmp/kms.socket"</span>,<span class="s2">"debug"</span>:false,<span class="s2">"vault-address"</span>:<span class="s2">"http://127.0.0.1:8200"</span>,<span class="s2">"vault-namespace"</span>:<span class="s2">""</span>,<span class="s2">"transit-engine"</span>:<span class="s2">"transit"</span>,<span class="s2">"transit-key"</span>:<span class="s2">"kms"</span>,<span class="s2">"health-port"</span>:<span class="s2">"8080"</span>,<span class="s2">"token-refresh-interval"</span>:<span class="s2">"60s"</span>,<span class="s2">"token-renewal-seconds"</span>:3600,<span class="s2">"disable-v1"</span>:false,<span class="s2">"disable-v2"</span>:false<span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-08-25T15:36:19.235+1000"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/plugin.go:187"</span>,<span class="s2">"message"</span>:<span class="s2">"Successfully authenticated to vault"</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-08-25T15:36:19.235+1000"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/plugin.go:205"</span>,<span class="s2">"message"</span>:<span class="s2">"Successfully created unix socket"</span>,<span class="s2">"socket"</span>:<span class="s2">"/tmp/kms.socket"</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-08-25T15:36:19.235+1000"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/plugin.go:230"</span>,<span class="s2">"message"</span>:<span class="s2">"Successfully registered kms plugin v1"</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-08-25T15:36:19.235+1000"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/plugin.go:238"</span>,<span class="s2">"message"</span>:<span class="s2">"Successfully registered kms plugin v2"</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-08-25T15:36:19.235+1000"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/plugin.go:260"</span>,<span class="s2">"message"</span>:<span class="s2">"Exposing metrics under /metrics"</span>,<span class="s2">"port"</span>:<span class="s2">"8080"</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-08-25T15:36:19.235+1000"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/plugin.go:261"</span>,<span class="s2">"message"</span>:<span class="s2">"Exposing health check under /health"</span>,<span class="s2">"port"</span>:<span class="s2">"8080"</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-08-25T15:36:19.235+1000"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/plugin.go:262"</span>,<span class="s2">"message"</span>:<span class="s2">"Exposing live check under /live"</span>,<span class="s2">"port"</span>:<span class="s2">"8080"</span><span class="o">}</span>
 </code></pre></div>
 <p>In order to send encryption and decryption requests you can use the client CLI tool in <code>cmd/v2_Client/main.go</code>. This tool simply connects to the plugin and encrypts a given string and decrypts it back to its plaintext version:</p>
 <div class="highlight"><pre><span></span><code>$&gt;<span class="w"> </span>go<span class="w"> </span>run<span class="w"> </span>cmd/v2_client/main.go<span class="w"> </span>encrypt<span class="w"> </span>this<span class="w"> </span>string
-<span class="s2">&quot;encrypt this string&quot;</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="s2">&quot;dmF1bHQ6djE6VzJMcHp4UmJMdHV4TWNnUnVWMWJQQzBHMWZ0VkwvZFVUMldLRzQ0RUtCa1VJcjVwVjgxMFd3T29pRmVhQzVNPQ==&quot;</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="s2">&quot;encrypt this string&quot;</span>
+<span class="s2">"encrypt this string"</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="s2">"dmF1bHQ6djE6VzJMcHp4UmJMdHV4TWNnUnVWMWJQQzBHMWZ0VkwvZFVUMldLRzQ0RUtCa1VJcjVwVjgxMFd3T29pRmVhQzVNPQ=="</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="s2">"encrypt this string"</span>
 </code></pre></div>
 <h2 id="local-development-with-kubernetes">Local Development with Kubernetes<a class="headerlink" href="#local-development-with-kubernetes" title="Permanent link">&para;</a></h2>
 <p>The following steps describe how to build &amp; run the vault-kubernetes-kms completely locally using <code>docker</code>, <code>vault</code> &amp; <code>kind</code>.</p>
@@ -939,7 +939,7 @@ $&gt;<span class="w"> </span>go<span class="w"> </span>run<span class="w"> </spa
 <div class="highlight"><pre><span></span><code><span class="ch">#!/usr/bin/env bash</span>
 <span class="nb">set</span><span class="w"> </span>-x
 
-<span class="nb">command</span><span class="w"> </span>-v<span class="w"> </span>vault<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;vault is not installed.  Aborting.&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<span class="nb">command</span><span class="w"> </span>-v<span class="w"> </span>vault<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"vault is not installed.  Aborting."</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
 
 <span class="c1"># kill any remaining vault instances</span>
 <span class="nb">kill</span><span class="w"> </span><span class="k">$(</span>pgrep<span class="w"> </span>-x<span class="w"> </span>vault<span class="k">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
@@ -949,9 +949,9 @@ nohup<span class="w"> </span>vault<span class="w"> </span>server<span class="w">
 sleep<span class="w"> </span><span class="m">3</span>
 
 <span class="c1"># auth to vault</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_ADDR</span><span class="o">=</span><span class="s2">&quot;http://127.0.0.1:8200&quot;</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_SKIP_VERIFY</span><span class="o">=</span><span class="s2">&quot;true&quot;</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_TOKEN</span><span class="o">=</span><span class="s2">&quot;root&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_ADDR</span><span class="o">=</span><span class="s2">"http://127.0.0.1:8200"</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_SKIP_VERIFY</span><span class="o">=</span><span class="s2">"true"</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_TOKEN</span><span class="o">=</span><span class="s2">"root"</span>
 
 <span class="c1"># enable transit engine</span>
 vault<span class="w"> </span>secrets<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>transit
@@ -960,23 +960,23 @@ vault<span class="w"> </span>write<span class="w"> </span>-f<span class="w"> </s
 <span class="c1"># write vault policy</span>
 vault<span class="w"> </span>policy<span class="w"> </span>write<span class="w"> </span>kms<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
 <span class="s"># perform a simple vault login test</span>
-<span class="s">path &quot;auth/token/lookup-self&quot; {</span>
-<span class="s">    capabilities = [&quot;read&quot;]</span>
+<span class="s">path "auth/token/lookup-self" {</span>
+<span class="s">    capabilities = ["read"]</span>
 <span class="s">}</span>
 
 <span class="s"># encrypt</span>
-<span class="s">path &quot;transit/encrypt/kms&quot; {</span>
-<span class="s">   capabilities = [ &quot;update&quot; ]</span>
+<span class="s">path "transit/encrypt/kms" {</span>
+<span class="s">   capabilities = [ "update" ]</span>
 <span class="s">}</span>
 
 <span class="s"># decrypt</span>
-<span class="s">path &quot;transit/decrypt/kms&quot; {</span>
-<span class="s">   capabilities = [ &quot;update&quot; ]</span>
+<span class="s">path "transit/decrypt/kms" {</span>
+<span class="s">   capabilities = [ "update" ]</span>
 <span class="s">}</span>
 
 <span class="s"># get key version</span>
-<span class="s">path &quot;transit/keys/kms&quot; {</span>
-<span class="s">   capabilities = [ &quot;read&quot; ]</span>
+<span class="s">path "transit/keys/kms" {</span>
+<span class="s">   capabilities = [ "read" ]</span>
 <span class="s">}</span>
 <span class="s">EOF</span>
 </code></pre></div>
@@ -986,29 +986,29 @@ vault<span class="w"> </span>policy<span class="w"> </span>write<span class="w">
 <div class="highlight"><pre><span></span><code><span class="ch">#!/usr/bin/env bash</span>
 <span class="nb">set</span><span class="w"> </span>-xeu
 
-<span class="nb">command</span><span class="w"> </span>-v<span class="w"> </span>docker<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;docker is not installed.  Aborting.&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<span class="nb">command</span><span class="w"> </span>-v<span class="w"> </span>docker<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"docker is not installed.  Aborting."</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
 
 <span class="nv">REGISTRY_NAME</span><span class="o">=</span>registry
 <span class="nv">REGISTRY_PORT</span><span class="o">=</span><span class="m">5000</span>
 <span class="nv">IMAGE_NAME</span><span class="o">=</span>vault-kubernetes-kms
 
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;====&gt; create kind docker network&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"====&gt; create kind docker network"</span>
 docker<span class="w"> </span>network<span class="w"> </span>create<span class="w"> </span>kind<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
 
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;====&gt; creating registry container unless it already exists&quot;</span>
-<span class="o">[[</span><span class="w"> </span><span class="k">$(</span>docker<span class="w"> </span>ps<span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;name=</span><span class="si">${</span><span class="nv">REGISTRY_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>--format<span class="w"> </span><span class="s1">&#39;{{.Names}}&#39;</span><span class="k">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nv">$REGISTRY_NAME</span><span class="w"> </span><span class="o">]]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--restart<span class="o">=</span>always<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REGISTRY_PORT</span><span class="si">}</span><span class="s2">:5000&quot;</span><span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REGISTRY_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>registry:2
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"====&gt; creating registry container unless it already exists"</span>
+<span class="o">[[</span><span class="w"> </span><span class="k">$(</span>docker<span class="w"> </span>ps<span class="w"> </span>-f<span class="w"> </span><span class="s2">"name=</span><span class="si">${</span><span class="nv">REGISTRY_NAME</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span>--format<span class="w"> </span><span class="s1">'{{.Names}}'</span><span class="k">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nv">$REGISTRY_NAME</span><span class="w"> </span><span class="o">]]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--restart<span class="o">=</span>always<span class="w"> </span>-p<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">REGISTRY_PORT</span><span class="si">}</span><span class="s2">:5000"</span><span class="w"> </span>--name<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">REGISTRY_NAME</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span>registry:2
 
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;====&gt; building container ...&quot;</span>
-docker<span class="w"> </span>build<span class="w"> </span>--no-cache<span class="w"> </span>-t<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">IMAGE_NAME</span><span class="si">}</span><span class="s2">:latest&quot;</span><span class="w"> </span>.
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"====&gt; building container ..."</span>
+docker<span class="w"> </span>build<span class="w"> </span>--no-cache<span class="w"> </span>-t<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">IMAGE_NAME</span><span class="si">}</span><span class="s2">:latest"</span><span class="w"> </span>.
 
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;====&gt; tagging container ...&quot;</span>
-docker<span class="w"> </span>tag<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">IMAGE_NAME</span><span class="si">}</span><span class="s2">:latest&quot;</span><span class="w"> </span><span class="s2">&quot;localhost:</span><span class="si">${</span><span class="nv">REGISTRY_PORT</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">IMAGE_NAME</span><span class="si">}</span><span class="s2">:latest&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"====&gt; tagging container ..."</span>
+docker<span class="w"> </span>tag<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">IMAGE_NAME</span><span class="si">}</span><span class="s2">:latest"</span><span class="w"> </span><span class="s2">"localhost:</span><span class="si">${</span><span class="nv">REGISTRY_PORT</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">IMAGE_NAME</span><span class="si">}</span><span class="s2">:latest"</span>
 
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;====&gt; pushing container to local registry ....&quot;</span>
-docker<span class="w"> </span>push<span class="w"> </span><span class="s2">&quot;localhost:</span><span class="si">${</span><span class="nv">REGISTRY_PORT</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">IMAGE_NAME</span><span class="si">}</span><span class="s2">:latest&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"====&gt; pushing container to local registry ...."</span>
+docker<span class="w"> </span>push<span class="w"> </span><span class="s2">"localhost:</span><span class="si">${</span><span class="nv">REGISTRY_PORT</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">IMAGE_NAME</span><span class="si">}</span><span class="s2">:latest"</span>
 
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;====&gt; connecting registry to kind ....&quot;</span>
-docker<span class="w"> </span>network<span class="w"> </span>connect<span class="w"> </span>kind<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REGISTRY_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"====&gt; connecting registry to kind ...."</span>
+docker<span class="w"> </span>network<span class="w"> </span>connect<span class="w"> </span>kind<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">REGISTRY_NAME</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
 </code></pre></div>
 <h4 id="3-local-kubernetes-cluster-using-kind">3. Local Kubernetes Cluster using <code>kind</code><a class="headerlink" href="#3-local-kubernetes-cluster-using-kind" title="Permanent link">&para;</a></h4>
 <p>Last but not least, we combine the above mentioned tools and consume them with <code>kind</code></p>
@@ -1020,8 +1020,8 @@ docker<span class="w"> </span>network<span class="w"> </span>connect<span class=
 <span class="c1"># add a local docker registry to containerd</span>
 <span class="c1"># the registry is run via  a separated docker container</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|-</span>
-<span class="w">  </span><span class="no">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.registry.mirrors.&quot;localhost:5000&quot;]</span>
-<span class="w">    </span><span class="no">endpoint = [&quot;http://registry:5000&quot;]</span>
+<span class="w">  </span><span class="no">[plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5000"]</span>
+<span class="w">    </span><span class="no">endpoint = ["http://registry:5000"]</span>
 <span class="nt">nodes</span><span class="p">:</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">control-plane</span>
 <span class="w">  </span><span class="nt">extraMounts</span><span class="p">:</span>
@@ -1041,16 +1041,16 @@ docker<span class="w"> </span>network<span class="w"> </span>connect<span class=
 <span class="w">      </span><span class="no">kind: ClusterConfiguration</span>
 <span class="w">      </span><span class="no">apiServer:</span>
 <span class="w">        </span><span class="no">extraArgs:</span>
-<span class="w">          </span><span class="no">encryption-provider-config: &quot;/etc/kubernetes/encryption_provider_config_v2.yaml&quot;</span>
+<span class="w">          </span><span class="no">encryption-provider-config: "/etc/kubernetes/encryption_provider_config_v2.yaml"</span>
 <span class="w">        </span><span class="no">extraVolumes:</span>
 <span class="w">        </span><span class="no">- name: encryption-config</span>
-<span class="w">          </span><span class="no">hostPath: &quot;/etc/kubernetes/encryption_provider_config_v2.yaml&quot;</span>
-<span class="w">          </span><span class="no">mountPath: &quot;/etc/kubernetes/encryption_provider_config_v2.yaml&quot;</span>
+<span class="w">          </span><span class="no">hostPath: "/etc/kubernetes/encryption_provider_config_v2.yaml"</span>
+<span class="w">          </span><span class="no">mountPath: "/etc/kubernetes/encryption_provider_config_v2.yaml"</span>
 <span class="w">          </span><span class="no">readOnly: true</span>
 <span class="w">          </span><span class="no">pathType: File</span>
 <span class="w">        </span><span class="no">- name: socket</span>
-<span class="w">          </span><span class="no">hostPath: &quot;/opt/kms&quot;</span>
-<span class="w">          </span><span class="no">mountPath: &quot;/opt/kms&quot;</span>
+<span class="w">          </span><span class="no">hostPath: "/opt/kms"</span>
+<span class="w">          </span><span class="no">mountPath: "/opt/kms"</span>
 </code></pre></div>
 <p><strong>the <code>vault-kubernetes-kms</code> manifest:</strong></p>
 <p>for development purposes, we use the vault dev servers configured root token (<code>"root"</code>):</p>
@@ -1104,17 +1104,17 @@ docker<span class="w"> </span>network<span class="w"> </span>connect<span class=
 $&gt;<span class="w"> </span>make<span class="w"> </span>setup-registry
 $&gt;<span class="w"> </span>make<span class="w"> </span>setup-kind
 kind<span class="w"> </span>delete<span class="w"> </span>cluster<span class="w"> </span>--name<span class="o">=</span>kms<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
-Deleting<span class="w"> </span>cluster<span class="w"> </span><span class="s2">&quot;kms&quot;</span><span class="w"> </span>...
-Deleted<span class="w"> </span>nodes:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;kms-control-plane&quot;</span><span class="o">]</span>
+Deleting<span class="w"> </span>cluster<span class="w"> </span><span class="s2">"kms"</span><span class="w"> </span>...
+Deleted<span class="w"> </span>nodes:<span class="w"> </span><span class="o">[</span><span class="s2">"kms-control-plane"</span><span class="o">]</span>
 kind<span class="w"> </span>create<span class="w"> </span>cluster<span class="w"> </span>--name<span class="o">=</span>kms<span class="w"> </span>--config<span class="w"> </span>scripts/kind-config.yaml
-Creating<span class="w"> </span>cluster<span class="w"> </span><span class="s2">&quot;kms&quot;</span><span class="w"> </span>...
+Creating<span class="w"> </span>cluster<span class="w"> </span><span class="s2">"kms"</span><span class="w"> </span>...
 <span class="w"> </span>✓<span class="w"> </span>Ensuring<span class="w"> </span>node<span class="w"> </span>image<span class="w"> </span><span class="o">(</span>kindest/node:v1.29.2<span class="o">)</span><span class="w"> </span>🖼
 <span class="w"> </span>✓<span class="w"> </span>Preparing<span class="w"> </span>nodes<span class="w"> </span>📦
 <span class="w"> </span>✓<span class="w"> </span>Writing<span class="w"> </span>configuration<span class="w"> </span>📜
 <span class="w"> </span>✓<span class="w"> </span>Starting<span class="w"> </span>control-plane<span class="w"> </span>🕹️
 <span class="w"> </span>✓<span class="w"> </span>Installing<span class="w"> </span>CNI<span class="w"> </span>🔌
 <span class="w"> </span>✓<span class="w"> </span>Installing<span class="w"> </span>StorageClass<span class="w"> </span>💾
-Set<span class="w"> </span>kubectl<span class="w"> </span>context<span class="w"> </span>to<span class="w"> </span><span class="s2">&quot;kind-kms&quot;</span>
+Set<span class="w"> </span>kubectl<span class="w"> </span>context<span class="w"> </span>to<span class="w"> </span><span class="s2">"kind-kms"</span>
 You<span class="w"> </span>can<span class="w"> </span>now<span class="w"> </span>use<span class="w"> </span>your<span class="w"> </span>cluster<span class="w"> </span>with:
 
 <span class="c1"># testing kubectl</span>
@@ -1136,11 +1136,11 @@ $&gt;<span class="w"> </span>kubectl<span class="w"> </span>create<span class="w
 secret/secret<span class="w"> </span>created
 
 <span class="c1"># checking encryption value in etcd</span>
-$&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>etcd-kms-control-plane<span class="w"> </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \</span>
+$&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>etcd-kms-control-plane<span class="w"> </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">"ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \</span>
 <span class="s2">    --cert /etc/kubernetes/pki/etcd/server.crt \</span>
 <span class="s2">    --key /etc/kubernetes/pki/etcd/server.key \</span>
 <span class="s2">    --cacert /etc/kubernetes/pki/etcd/ca.crt \</span>
-<span class="s2">    get /registry/secrets/default/secret&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>hexdump<span class="w"> </span>-C
+<span class="s2">    get /registry/secrets/default/secret"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>hexdump<span class="w"> </span>-C
 <span class="m">00000000</span><span class="w">  </span>2f<span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">67</span><span class="w"> </span><span class="m">69</span><span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">74</span><span class="w"> </span><span class="m">72</span><span class="w">  </span><span class="m">79</span><span class="w"> </span>2f<span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="p">|</span>/registry/secret<span class="p">|</span>
 <span class="m">00000010</span><span class="w">  </span><span class="m">73</span><span class="w"> </span>2f<span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">66</span><span class="w"> </span><span class="m">61</span><span class="w"> </span><span class="m">75</span><span class="w"> </span>6c<span class="w">  </span><span class="m">74</span><span class="w"> </span>2f<span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="p">|</span>s/default/secret<span class="p">|</span>
 <span class="m">00000020</span><span class="w">  </span>2d<span class="w"> </span><span class="m">65</span><span class="w"> </span>6e<span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">79</span><span class="w"> </span><span class="m">70</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="m">65</span><span class="w"> </span><span class="m">64</span><span class="w"> </span>0a<span class="w"> </span>6b<span class="w"> </span><span class="m">38</span><span class="w"> </span><span class="m">73</span><span class="w"> </span>3a<span class="w"> </span><span class="m">65</span><span class="w">  </span><span class="p">|</span>-encrypted.k8s:e<span class="p">|</span>
@@ -1163,7 +1163,7 @@ $&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> <
 <span class="m">00000130</span><span class="w">  </span><span class="m">15</span><span class="w"> </span><span class="m">31</span><span class="w"> </span>ce<span class="w"> </span><span class="m">41</span><span class="w"> </span><span class="m">59</span><span class="w"> </span>6b<span class="w"> </span>b8<span class="w"> </span>c6<span class="w">  </span>7d<span class="w"> </span>5e<span class="w"> </span>b3<span class="w"> </span>ee<span class="w"> </span><span class="m">07</span><span class="w"> </span>a7<span class="w"> </span><span class="m">65</span><span class="w"> </span>3b<span class="w">  </span><span class="p">|</span>.1.AYk..<span class="o">}</span>^....e<span class="p">;|</span>
 <span class="m">00000140</span><span class="w">  </span>a8<span class="w"> </span>f2<span class="w"> </span>8a<span class="w"> </span>ab<span class="w"> </span>e7<span class="w"> </span>d0<span class="w"> </span><span class="m">37</span><span class="w"> </span>bc<span class="w">  </span>9c<span class="w"> </span>e6<span class="w"> </span>e6<span class="w"> </span><span class="m">33</span><span class="w"> </span><span class="m">71</span><span class="w"> </span><span class="m">57</span><span class="w"> </span>c5<span class="w"> </span>6c<span class="w">  </span><span class="p">|</span>......7....3qW.l<span class="p">|</span>
 <span class="m">00000150</span><span class="w">  </span><span class="m">09</span><span class="w"> </span>ff<span class="w"> </span>e9<span class="w"> </span><span class="m">65</span><span class="w"> </span>c9<span class="w"> </span>8c<span class="w"> </span>9f<span class="w"> </span>aa<span class="w">  </span>1c<span class="w"> </span>e2<span class="w"> </span>df<span class="w"> </span>a4<span class="w"> </span>ad<span class="w"> </span><span class="nb">fc</span><span class="w"> </span>a0<span class="w"> </span><span class="m">02</span><span class="w">  </span><span class="p">|</span>...e............<span class="p">|</span>
-<span class="m">00000160</span><span class="w">  </span>2b<span class="w"> </span>6d<span class="w"> </span><span class="m">93</span><span class="w"> </span>5e<span class="w"> </span><span class="m">44</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">28</span><span class="w">  </span>d7<span class="w"> </span>3f<span class="w"> </span>e1<span class="w"> </span><span class="m">98</span><span class="w"> </span>eb<span class="w"> </span><span class="m">84</span><span class="w"> </span>ab<span class="w"> </span><span class="m">22</span><span class="w">  </span><span class="p">|</span>+m.^D<span class="w"> </span>d<span class="o">(</span>.?.....<span class="s2">&quot;|</span>
+<span class="m">00000160</span><span class="w">  </span>2b<span class="w"> </span>6d<span class="w"> </span><span class="m">93</span><span class="w"> </span>5e<span class="w"> </span><span class="m">44</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">28</span><span class="w">  </span>d7<span class="w"> </span>3f<span class="w"> </span>e1<span class="w"> </span><span class="m">98</span><span class="w"> </span>eb<span class="w"> </span><span class="m">84</span><span class="w"> </span>ab<span class="w"> </span><span class="m">22</span><span class="w">  </span><span class="p">|</span>+m.^D<span class="w"> </span>d<span class="o">(</span>.?.....<span class="s2">"|</span>
 <span class="s2">00000170  82 92 7a b6 b2 b8 12 0a  31 37 31 31 32 34 32 33  |..z.....17112423|</span>
 <span class="s2">00000180  36 34 1a 59 76 61 75 6c  74 3a 76 31 3a 6d 42 41  |64.Yvault:v1:mBA|</span>
 <span class="s2">00000190  4a 47 56 56 35 72 46 78  36 47 4c 4f 62 33 46 50  |JGVV5rFx6GLOb3FP|</span>
@@ -1174,9 +1174,9 @@ $&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> <
 <span class="s2">000001e0</span>
 
 <span class="s2"># receiving the secret</span>
-$<span class="s2">&gt;  kubectl get secret secret -o json | jq &#39;.data | map_values(@base64d)&#39;</span>
+$<span class="s2">&gt;  kubectl get secret secret -o json | jq '.data | map_values(@base64d)'</span>
 <span class="s2">{</span>
-<span class="s2">  &quot;</span>key<span class="s2">&quot;: &quot;</span>value<span class="s2">&quot;</span>
+<span class="s2">  "</span>key<span class="s2">": "</span>value<span class="s2">"</span>
 <span class="s2">}</span>
 </code></pre></div>
 

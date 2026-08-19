@@ -780,16 +780,16 @@
 <div class="highlight"><pre><span></span><code><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ClusterConfiguration</span>
 <span class="nt">apiServer</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">extraArgs</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">encryption-provider-config</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/etc/kubernetes/encryption_provider_config_v2.yaml&quot;</span>
+<span class="w">    </span><span class="nt">encryption-provider-config</span><span class="p">:</span><span class="w"> </span><span class="s">"/etc/kubernetes/encryption_provider_config_v2.yaml"</span>
 <span class="w">  </span><span class="nt">extraVolumes</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">encryption-config</span>
-<span class="w">      </span><span class="nt">hostPath</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/etc/kubernetes/encryption_provider_config_v2.yaml&quot;</span>
-<span class="w">      </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/etc/kubernetes/encryption_provider_config_v2.yaml&quot;</span>
+<span class="w">      </span><span class="nt">hostPath</span><span class="p">:</span><span class="w"> </span><span class="s">"/etc/kubernetes/encryption_provider_config_v2.yaml"</span>
+<span class="w">      </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="s">"/etc/kubernetes/encryption_provider_config_v2.yaml"</span>
 <span class="w">      </span><span class="nt">readOnly</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">      </span><span class="nt">pathType</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">File</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">socket</span>
-<span class="w">      </span><span class="nt">hostPath</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/opt/kms&quot;</span>
-<span class="w">      </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/opt/kms&quot;</span>
+<span class="w">      </span><span class="nt">hostPath</span><span class="p">:</span><span class="w"> </span><span class="s">"/opt/kms"</span>
+<span class="w">      </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="s">"/opt/kms"</span>
 </code></pre></div>
 <h2 id="kind">kind<a class="headerlink" href="#kind" title="Permanent link">&para;</a></h2>
 <ul>
@@ -816,16 +816,16 @@
 <span class="w">      </span><span class="no">kind: ClusterConfiguration</span>
 <span class="w">      </span><span class="no">apiServer:</span>
 <span class="w">        </span><span class="no">extraArgs:</span>
-<span class="w">          </span><span class="no">encryption-provider-config: &quot;/etc/kubernetes/encryption_provider_config_v2.yaml&quot;</span>
+<span class="w">          </span><span class="no">encryption-provider-config: "/etc/kubernetes/encryption_provider_config_v2.yaml"</span>
 <span class="w">        </span><span class="no">extraVolumes:</span>
 <span class="w">        </span><span class="no">- name: encryption-config</span>
-<span class="w">          </span><span class="no">hostPath: &quot;/etc/kubernetes/encryption_provider_config_v2.yaml&quot;</span>
-<span class="w">          </span><span class="no">mountPath: &quot;/etc/kubernetes/encryption_provider_config_v2.yaml&quot;</span>
+<span class="w">          </span><span class="no">hostPath: "/etc/kubernetes/encryption_provider_config_v2.yaml"</span>
+<span class="w">          </span><span class="no">mountPath: "/etc/kubernetes/encryption_provider_config_v2.yaml"</span>
 <span class="w">          </span><span class="no">readOnly: true</span>
 <span class="w">          </span><span class="no">pathType: File</span>
 <span class="w">        </span><span class="no">- name: socket</span>
-<span class="w">          </span><span class="no">hostPath: &quot;/opt/kms&quot;</span>
-<span class="w">          </span><span class="no">mountPath: &quot;/opt/kms&quot;</span>
+<span class="w">          </span><span class="no">hostPath: "/opt/kms"</span>
+<span class="w">          </span><span class="no">mountPath: "/opt/kms"</span>
 </code></pre></div>
 <h2 id="kops">kops<a class="headerlink" href="#kops" title="Permanent link">&para;</a></h2>
 <ul>
@@ -885,7 +885,7 @@
 <span class="w">                </span><span class="no">cpu: 100m</span>
 <span class="w">                </span><span class="no">memory: 128Mi</span>
 <span class="w">                </span><span class="no">limits:</span>
-<span class="w">                </span><span class="no">cpu: &quot;2&quot;</span>
+<span class="w">                </span><span class="no">cpu: "2"</span>
 <span class="w">                </span><span class="no">memory: 1Gi</span>
 <span class="w">        </span><span class="no">volumes:</span>
 <span class="w">            </span><span class="no"># mount /opt/kms host directory</span>

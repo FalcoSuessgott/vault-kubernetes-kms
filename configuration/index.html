@@ -1274,8 +1274,8 @@
 <p>You can also perform these steps using Vaults UI or Vaults Terraform Provider (recommended).</p>
 </div>
 <p>The following steps enable a transit engine <code>transit</code> and create transit key <code>kms</code>:
-<div class="highlight"><pre><span></span><code>$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_ADDR</span><span class="o">=</span><span class="s2">&quot;https://vault.tld.de&quot;</span><span class="w">   </span><span class="c1"># change to your Vaults API Address</span>
-$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_TOKEN</span><span class="o">=</span><span class="s2">&quot;hvs.XXXX&quot;</span><span class="w">             </span><span class="c1"># change to a token allowed to create a transit engine and a transit key</span>
+<div class="highlight"><pre><span></span><code>$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_ADDR</span><span class="o">=</span><span class="s2">"https://vault.tld.de"</span><span class="w">   </span><span class="c1"># change to your Vaults API Address</span>
+$&gt;<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_TOKEN</span><span class="o">=</span><span class="s2">"hvs.XXXX"</span><span class="w">             </span><span class="c1"># change to a token allowed to create a transit engine and a transit key</span>
 $&gt;<span class="w"> </span>vault<span class="w"> </span>secrets<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>transit
 $&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> </span>-f<span class="w"> </span>transit/keys/kms
 </code></pre></div></p>
@@ -1293,42 +1293,42 @@ In case your configuration differs, you will have to update the policy according
 </div>
 <div class="highlight"><pre><span></span><code><span class="c1"># kms-policy.hcl</span>
 <span class="c1"># lookup the current tokens ttl for token renewal, is also in Vaults default policy</span>
-<span class="err">path</span><span class="w"> </span><span class="s2">&quot;auth/token/lookup-self&quot;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="na">capabilities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;read&quot;</span><span class="p">]</span>
+<span class="err">path</span><span class="w"> </span><span class="s2">"auth/token/lookup-self"</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="na">capabilities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"read"</span><span class="p">]</span>
 <span class="p">}</span>
 
 <span class="c1"># encrypt any data using the transit key</span>
-<span class="err">path</span><span class="w"> </span><span class="s2">&quot;transit/encrypt/kms&quot;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">   </span><span class="na">capabilities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;update&quot;</span><span class="w"> </span><span class="p">]</span>
+<span class="err">path</span><span class="w"> </span><span class="s2">"transit/encrypt/kms"</span><span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="na">capabilities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"update"</span><span class="w"> </span><span class="p">]</span>
 <span class="p">}</span>
 
 <span class="c1"># decrypt any data using the transit key</span>
-<span class="err">path</span><span class="w"> </span><span class="s2">&quot;transit/decrypt/kms&quot;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">   </span><span class="na">capabilities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;update&quot;</span><span class="w"> </span><span class="p">]</span>
+<span class="err">path</span><span class="w"> </span><span class="s2">"transit/decrypt/kms"</span><span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="na">capabilities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"update"</span><span class="w"> </span><span class="p">]</span>
 <span class="p">}</span>
 
 <span class="c1"># get the transit keys key versions for KMS key rotation</span>
-<span class="err">path</span><span class="w"> </span><span class="s2">&quot;transit/keys/kms&quot;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">   </span><span class="na">capabilities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;read&quot;</span><span class="w"> </span><span class="p">]</span>
+<span class="err">path</span><span class="w"> </span><span class="s2">"transit/keys/kms"</span><span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="na">capabilities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"read"</span><span class="w"> </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>You can create the policy using <code>vault policy write kms ./kms-policy.hcl</code>.</p>
 <h3 id="vault-auth">Vault Auth<a class="headerlink" href="#vault-auth" title="Permanent link">&para;</a></h3>
-<p><code>vault-kubernetes-kms</code> supports Token, AppRole, UserPass, TLS Certificate (<code>cert</code>) &amp; JWT Auth. Since a static pod cannot reference any other Kubernetes API-Objects, JWT authentication is only possible in scenarios, where the plugin does not run as a static pod (see <a href="https://github.com/FalcoSuessgott/vault-kubernetes-kms/issues/312">Issue #312</a>).</p>
+<p><code>vault-kubernetes-kms</code> supports Token, AppRole, UserPass, TLS Certificate (<code>cert</code>) and JWT auth. JWT auth can read a token from a file or fetch a JWT-SVID from the SPIFFE Workload API. The SPIFFE source is suitable for a static pod when the SPIRE agent socket is mounted from the host.</p>
 <h3 id="cert-tls-certificate-auth">Cert (TLS Certificate) Auth<a class="headerlink" href="#cert-tls-certificate-auth" title="Permanent link">&para;</a></h3>
 <p>Vault TLS Certificate auth allows the plugin to authenticate using an X.509 client certificate — for example the kubelet's <code>kubelet-client-current.pem</code>. The certificate is presented during the TLS handshake, so <strong>Vault must be reachable over HTTPS</strong> (plain HTTP does not work with this auth method).</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><strong>Vault must be running with TLS enabled.</strong> Cert auth is not available when <code>VAULT_ADDR</code> is an <code>http://</code> address. Always use <code>https://</code> and provide <code>--vault-ca-cert</code> (or set <code>VAULT_CACERT</code>) so the plugin can verify Vault's server certificate.</p>
 </div>
-<div class="highlight"><pre><span></span><code><span class="c1"># Enable the cert auth method (default mount: &quot;cert&quot;)</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Enable the cert auth method (default mount: "cert")</span>
 $&gt;<span class="w"> </span>vault<span class="w"> </span>auth<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>cert
 
 <span class="c1"># Create a policy granting the plugin access to transit encrypt/decrypt</span>
 $&gt;<span class="w"> </span>vault<span class="w"> </span>policy<span class="w"> </span>write<span class="w"> </span>kms<span class="w"> </span>./kms-policy.hcl
 
 <span class="c1"># Register a cert role, trusting certificates signed by your CA.</span>
-<span class="c1"># The plugin&#39;s client cert must be signed by this CA.</span>
+<span class="c1"># The plugin's client cert must be signed by this CA.</span>
 $&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> </span>auth/cert/certs/kms<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span><span class="nv">certificate</span><span class="o">=</span>@/path/to/ca.crt<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span><span class="nv">policies</span><span class="o">=</span>kms
@@ -1380,20 +1380,49 @@ $&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> 
 <h3 id="token-auth">Token Auth<a class="headerlink" href="#token-auth" title="Permanent link">&para;</a></h3>
 <p>It is recommended, that the Vault token used for authentication is <strong>an orphaned and periodic token</strong>. Periodic tokens can be renewed within the period. An orphan token does not have a parent token and will not be revoked when the token that created it expires.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># get the token from the output</span>
-$&gt;<span class="w"> </span>vault<span class="w"> </span>token<span class="w"> </span>create<span class="w"> </span>-orphan<span class="w"> </span>-policy<span class="o">=</span><span class="s2">&quot;kms&quot;</span><span class="w"> </span>-period<span class="o">=</span>24h
+$&gt;<span class="w"> </span>vault<span class="w"> </span>token<span class="w"> </span>create<span class="w"> </span>-orphan<span class="w"> </span>-policy<span class="o">=</span><span class="s2">"kms"</span><span class="w"> </span>-period<span class="o">=</span>24h
 </code></pre></div>
 <h3 id="jwt-auth">JWT Auth<a class="headerlink" href="#jwt-auth" title="Permanent link">&para;</a></h3>
-<p>This authentication method is specifically for deployment models, where the plugin <strong>does not</strong> run in a static pod and has access to a Kubernetes Service Account token. With the usual deployment in a static pod, this authentication method does not work.</p>
+<p>JWT auth has two token sources:</p>
+<ul>
+<li><code>file</code> (default) reads a JWT from <code>--jwt-token-path</code>. This is useful for a projected Kubernetes Service Account token when the plugin is not a static pod.</li>
+<li><code>spiffe</code> requests a fresh JWT-SVID from the SPIFFE Workload API for every Vault login. It requires an audience and an exact SPIFFE ID. The Workload API still enforces whether the workload is authorized to request that identity.</li>
+</ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># Follow https://developer.hashicorp.com/vault/docs/auth/jwt</span>
 <span class="c1"># enable jwt</span>
 $&gt;<span class="w"> </span>vault<span class="w"> </span>auth<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>jwt
 
 <span class="c1"># configure jwt auth, either with an OIDC Discovery URL or public keys</span>
-$&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> </span>auth/jwt/config<span class="w"> </span><span class="nv">oidc_discovery_url</span><span class="o">=</span><span class="s2">&quot;[OIDC Discovery URL]&quot;</span><span class="w"> </span><span class="nv">oidc_discovery_ca_pem</span><span class="o">=</span><span class="s2">&quot;[OIDC Discovery Certificate]&quot;</span>
-$&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> </span>auth/jwt/config<span class="w"> </span><span class="nv">jwt_validation_pubkeys</span><span class="o">=</span><span class="s2">&quot;-----BEGIN PUBLIC KEY-----...&quot;</span>
+$&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> </span>auth/jwt/config<span class="w"> </span><span class="nv">oidc_discovery_url</span><span class="o">=</span><span class="s2">"[OIDC Discovery URL]"</span><span class="w"> </span><span class="nv">oidc_discovery_ca_pem</span><span class="o">=</span><span class="s2">"[OIDC Discovery Certificate]"</span>
+$&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> </span>auth/jwt/config<span class="w"> </span><span class="nv">jwt_validation_pubkeys</span><span class="o">=</span><span class="s2">"-----BEGIN PUBLIC KEY-----..."</span>
 
-<span class="c1"># create a role</span>
-$&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> </span>auth/jwt/role/kms<span class="w"> </span><span class="nv">role_type</span><span class="o">=</span><span class="s2">&quot;jwt&quot;</span><span class="w"> </span><span class="nv">bound_audiences</span><span class="o">=</span><span class="s2">&quot;vault-kms&quot;</span><span class="w"> </span><span class="nv">user_claim</span><span class="o">=</span><span class="s2">&quot;sub&quot;</span><span class="w"> </span><span class="nv">bound_subject</span><span class="o">=</span><span class="s2">&quot;system:serviceaccount:[NAMESPACE]:[SERVICE_ACCOUNT_NAME]&quot;</span><span class="w"> </span><span class="nv">token_policies</span><span class="o">=</span><span class="s2">&quot;kms&quot;</span><span class="w"> </span><span class="nv">token_period</span><span class="o">=</span><span class="s2">&quot;3600&quot;</span>
+<span class="c1"># create a role for a file-backed Kubernetes Service Account token</span>
+$&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> </span>auth/jwt/role/kms<span class="w"> </span><span class="nv">role_type</span><span class="o">=</span><span class="s2">"jwt"</span><span class="w"> </span><span class="nv">bound_audiences</span><span class="o">=</span><span class="s2">"vault-kms"</span><span class="w"> </span><span class="nv">user_claim</span><span class="o">=</span><span class="s2">"sub"</span><span class="w"> </span><span class="nv">bound_subject</span><span class="o">=</span><span class="s2">"system:serviceaccount:[NAMESPACE]:[SERVICE_ACCOUNT_NAME]"</span><span class="w"> </span><span class="nv">token_policies</span><span class="o">=</span><span class="s2">"kms"</span><span class="w"> </span><span class="nv">token_period</span><span class="o">=</span><span class="s2">"3600"</span>
+
+<span class="c1"># or create a role for a SPIFFE JWT-SVID</span>
+$&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> </span>auth/jwt/role/kms<span class="w"> </span><span class="nv">role_type</span><span class="o">=</span><span class="s2">"jwt"</span><span class="w"> </span><span class="nv">bound_audiences</span><span class="o">=</span><span class="s2">"vault-kms"</span><span class="w"> </span><span class="nv">user_claim</span><span class="o">=</span><span class="s2">"sub"</span><span class="w"> </span><span class="nv">bound_subject</span><span class="o">=</span><span class="s2">"spiffe://example.org/workload/vault-kubernetes-kms"</span><span class="w"> </span><span class="nv">token_policies</span><span class="o">=</span><span class="s2">"kms"</span><span class="w"> </span><span class="nv">token_period</span><span class="o">=</span><span class="s2">"3600"</span>
+</code></pre></div>
+<p>For SPIFFE auth, either pass <code>--jwt-spiffe-endpoint</code> or set the standard <code>SPIFFE_ENDPOINT_SOCKET</code> environment variable. If Vault token renewal fails, the plugin re-authenticates and fetches a new JWT-SVID; JWT-SVIDs are never persisted by the plugin.</p>
+<p>A static pod can mount the node-local SPIRE agent socket and select the SPIFFE source explicitly:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">containers</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vault-kubernetes-kms</span>
+<span class="w">      </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--auth-method=jwt</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--jwt-role=kms</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--jwt-token-source=spiffe</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--jwt-spiffe-endpoint=unix:///run/spire/sockets/agent.sock</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--jwt-spiffe-audience=vault-kms</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--jwt-spiffe-id=spiffe://example.org/workload/vault-kubernetes-kms</span>
+<span class="w">      </span><span class="nt">volumeMounts</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spire-agent-socket</span>
+<span class="w">          </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/run/spire/sockets</span>
+<span class="w">          </span><span class="nt">readOnly</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spire-agent-socket</span>
+<span class="w">      </span><span class="nt">hostPath</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/run/spire/sockets</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Directory</span>
 </code></pre></div>
 <h2 id="deploying-vault-kubernetes-kms">Deploying <code>vault-kubernetes-kms</code><a class="headerlink" href="#deploying-vault-kubernetes-kms" title="Permanent link">&para;</a></h2>
 <h4 id="container-images">Container Images<a class="headerlink" href="#container-images" title="Permanent link">&para;</a></h4>
@@ -1452,8 +1481,12 @@ $&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> 
 <ul>
 <li><strong>(Required)</strong>: <code>-auth-method="jwt"</code> (<code>VAULT_KMS_AUTH_METHOD</code>)</li>
 <li><strong>(Required)</strong>: <code>-jwt-role</code> (<code>VAULT_KMS_JWT_ROLE</code>)</li>
-<li><strong>(Optional)</strong>: <code>-jwt-token-path</code> (<code>VAULT_KMS_JWT_TOKEN_PATH</code>); default: <code>"/var/run/secrets/kubernetes.io/serviceaccount/token"</code></li>
 <li><strong>(Optional)</strong>: <code>-jwt-mount</code> (<code>VAULT_KMS_JWT_MOUNT</code>); default: <code>"jwt"</code></li>
+<li><strong>(Optional)</strong>: <code>-jwt-token-source</code> (<code>VAULT_KMS_JWT_TOKEN_SOURCE</code>); supported values: <code>file</code>, <code>spiffe</code>; default: <code>"file"</code></li>
+<li><strong>(Required for <code>file</code>)</strong>: <code>-jwt-token-path</code> (<code>VAULT_KMS_JWT_TOKEN_PATH</code>); default: <code>"/var/run/secrets/kubernetes.io/serviceaccount/token"</code></li>
+<li><strong>(Required for <code>spiffe</code>)</strong>: <code>-jwt-spiffe-audience</code> (<code>VAULT_KMS_JWT_SPIFFE_AUDIENCE</code>)</li>
+<li><strong>(Required for <code>spiffe</code>)</strong>: <code>-jwt-spiffe-id</code> (<code>VAULT_KMS_JWT_SPIFFE_ID</code>) — exact SPIFFE ID to request</li>
+<li><strong>(Optional for <code>spiffe</code>)</strong>: <code>-jwt-spiffe-endpoint</code> (<code>VAULT_KMS_JWT_SPIFFE_ENDPOINT</code>); defaults to <code>SPIFFE_ENDPOINT_SOCKET</code></li>
 </ul>
 <p><strong>Lease Refreshing Settings</strong>:</p>
 <ul>
@@ -1684,11 +1717,11 @@ $&gt;<span class="w"> </span>vault<span class="w"> </span>write<span class="w"> 
 </code></pre></div>
 <p>After applying you check the pods logs for any errors:</p>
 <div class="highlight"><pre><span></span><code>$&gt;<span class="w"> </span>kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span>vault-kubernetes-kms
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-01-31T13:18:24.852Z&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/main.go:111&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;starting kms plugin&quot;</span>,<span class="s2">&quot;socket&quot;</span>:<span class="s2">&quot;unix:///opt/vaultkms.socket&quot;</span>,<span class="s2">&quot;debug&quot;</span>:false,<span class="s2">&quot;vault-address&quot;</span>:<span class="s2">&quot;http://host.minikube.internal:8200&quot;</span>,<span class="s2">&quot;vault-namespace&quot;</span>:<span class="s2">&quot;&quot;</span>,<span class="s2">&quot;vault-token&quot;</span>:<span class="s2">&quot;&quot;</span>,<span class="s2">&quot;vault-k8s-mount&quot;</span>:<span class="s2">&quot;kubernetes&quot;</span>,<span class="s2">&quot;vault-k8s-role&quot;</span>:<span class="s2">&quot;kms&quot;</span>,<span class="s2">&quot;vault-transit-mount&quot;</span>:<span class="s2">&quot;transit&quot;</span>,<span class="s2">&quot;vault-transit-key&quot;</span>:<span class="s2">&quot;kms&quot;</span><span class="o">}</span>
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-01-31T13:18:24.898Z&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/main.go:144&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Successfully authenticated to vault&quot;</span><span class="o">}</span>
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-01-31T13:18:24.898Z&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/main.go:151&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Successfully created unix socket&quot;</span>,<span class="s2">&quot;socket&quot;</span>:<span class="s2">&quot;/opt/vaultkms.socket&quot;</span><span class="o">}</span>
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-01-31T13:18:24.898Z&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/main.go:158&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Listening for connection&quot;</span><span class="o">}</span>
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-01-31T13:18:24.898Z&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;cmd/main.go:169&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Successfully registered kms plugin&quot;</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-01-31T13:18:24.852Z"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/main.go:111"</span>,<span class="s2">"message"</span>:<span class="s2">"starting kms plugin"</span>,<span class="s2">"socket"</span>:<span class="s2">"unix:///opt/vaultkms.socket"</span>,<span class="s2">"debug"</span>:false,<span class="s2">"vault-address"</span>:<span class="s2">"http://host.minikube.internal:8200"</span>,<span class="s2">"vault-namespace"</span>:<span class="s2">""</span>,<span class="s2">"vault-token"</span>:<span class="s2">""</span>,<span class="s2">"vault-k8s-mount"</span>:<span class="s2">"kubernetes"</span>,<span class="s2">"vault-k8s-role"</span>:<span class="s2">"kms"</span>,<span class="s2">"vault-transit-mount"</span>:<span class="s2">"transit"</span>,<span class="s2">"vault-transit-key"</span>:<span class="s2">"kms"</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-01-31T13:18:24.898Z"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/main.go:144"</span>,<span class="s2">"message"</span>:<span class="s2">"Successfully authenticated to vault"</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-01-31T13:18:24.898Z"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/main.go:151"</span>,<span class="s2">"message"</span>:<span class="s2">"Successfully created unix socket"</span>,<span class="s2">"socket"</span>:<span class="s2">"/opt/vaultkms.socket"</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-01-31T13:18:24.898Z"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/main.go:158"</span>,<span class="s2">"message"</span>:<span class="s2">"Listening for connection"</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-01-31T13:18:24.898Z"</span>,<span class="s2">"caller"</span>:<span class="s2">"cmd/main.go:169"</span>,<span class="s2">"message"</span>:<span class="s2">"Successfully registered kms plugin"</span><span class="o">}</span>
 </code></pre></div>
 <h2 id="enabling-the-encryption-provider-configuration-for-the-kube-apiserver">Enabling the encryption provider configuration for the <code>kube-apiserver</code>.<a class="headerlink" href="#enabling-the-encryption-provider-configuration-for-the-kube-apiserver" title="Permanent link">&para;</a></h2>
 <h3 id="determine-which-kms-version-to-use">Determine which KMS version to use<a class="headerlink" href="#determine-which-kms-version-to-use" title="Permanent link">&para;</a></h3>
@@ -1768,7 +1801,7 @@ vault-kubernetes-kms<span class="w">               </span><span class="m">1</spa
 </code></pre></div>
 <p>You should now see in the plugin logs that encryption and decryption requests are coming:</p>
 <div class="highlight"><pre><span></span><code>$&gt;<span class="w"> </span>kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span>vault-kubernetes-kms
-<span class="o">{</span><span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;info&quot;</span>,<span class="s2">&quot;timestamp&quot;</span>:<span class="s2">&quot;2024-01-31T13:31:29.159Z&quot;</span>,<span class="s2">&quot;caller&quot;</span>:<span class="s2">&quot;kms/plugin.go:112&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;encryption request&quot;</span>,<span class="s2">&quot;request_id&quot;</span>:<span class="s2">&quot;f1eb6db8-390e-4bd4-8481-c56e46c1d685&quot;</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"timestamp"</span>:<span class="s2">"2024-01-31T13:31:29.159Z"</span>,<span class="s2">"caller"</span>:<span class="s2">"kms/plugin.go:112"</span>,<span class="s2">"message"</span>:<span class="s2">"encryption request"</span>,<span class="s2">"request_id"</span>:<span class="s2">"f1eb6db8-390e-4bd4-8481-c56e46c1d685"</span><span class="o">}</span>
 </code></pre></div>
 <h2 id="verify-secret-encryption">Verify Secret Encryption<a class="headerlink" href="#verify-secret-encryption" title="Permanent link">&para;</a></h2>
 <p>Finally, create a secret to verify everything works correctly:</p>
@@ -1778,26 +1811,26 @@ secret/secret-encrypted<span class="w"> </span>created
 <p><strong>If the secret creation fails, something does not work!</strong></p>
 <p>You could also check the etcd storage for the encrypted data:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># this works only on minikube, you would have to update the params according to your cluster config</span>
-$&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>etcd-minikube<span class="w"> </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;ETCDCTL_API=3 etcdctl</span>
+$&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>etcd-minikube<span class="w"> </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">"ETCDCTL_API=3 etcdctl</span>
 <span class="s2">    --endpoints=https://127.0.0.1:2379 \</span>
 <span class="s2">    --cert /var/lib/minikube/certs/etcd/server.crt \</span>
 <span class="s2">    --key /var/lib/minikube/certs/etcd/server.key \</span>
 <span class="s2">    --cacert /var/lib/minikube/certs/etcd/ca.crt \</span>
-<span class="s2">    get /registry/secrets/default/secret-encrypted&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>hexdump<span class="w"> </span>-C
+<span class="s2">    get /registry/secrets/default/secret-encrypted"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>hexdump<span class="w"> </span>-C
 <span class="m">00000000</span><span class="w">  </span>2f<span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">67</span><span class="w"> </span><span class="m">69</span><span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">74</span><span class="w"> </span><span class="m">72</span><span class="w">  </span><span class="m">79</span><span class="w"> </span>2f<span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="p">|</span>/registry/secret<span class="p">|</span>
 <span class="m">00000010</span><span class="w">  </span><span class="m">73</span><span class="w"> </span>2f<span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">66</span><span class="w"> </span><span class="m">61</span><span class="w"> </span><span class="m">75</span><span class="w"> </span>6c<span class="w">  </span><span class="m">74</span><span class="w"> </span>2f<span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">65</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="p">|</span>s/default/secret<span class="p">|</span>
 <span class="m">00000020</span><span class="w">  </span>2d<span class="w"> </span><span class="m">65</span><span class="w"> </span>6e<span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">72</span><span class="w"> </span><span class="m">79</span><span class="w"> </span><span class="m">70</span><span class="w"> </span><span class="m">74</span><span class="w">  </span><span class="m">65</span><span class="w"> </span><span class="m">64</span><span class="w"> </span>0a<span class="w"> </span>6b<span class="w"> </span><span class="m">38</span><span class="w"> </span><span class="m">73</span><span class="w"> </span>3a<span class="w"> </span><span class="m">65</span><span class="w">  </span><span class="p">|</span>-encrypted.k8s:e<span class="p">|</span>
 <span class="m">00000030</span><span class="w">  </span>6e<span class="w"> </span><span class="m">63</span><span class="w"> </span>3a<span class="w"> </span>6b<span class="w"> </span>6d<span class="w"> </span><span class="m">73</span><span class="w"> </span>3a<span class="w"> </span><span class="m">76</span><span class="w">  </span><span class="m">32</span><span class="w"> </span>3a<span class="w"> </span><span class="m">76</span><span class="w"> </span><span class="m">61</span><span class="w"> </span><span class="m">75</span><span class="w"> </span>6c<span class="w"> </span><span class="m">74</span><span class="w"> </span>3a<span class="w">  </span><span class="p">|</span>nc:kms:v2:vault:<span class="p">|</span>
 <span class="m">00000040</span><span class="w">  </span>0a<span class="w"> </span>a4<span class="w"> </span><span class="m">02</span><span class="w"> </span>2f<span class="w"> </span>0b<span class="w"> </span>6f<span class="w"> </span><span class="m">44</span><span class="w"> </span><span class="m">78</span><span class="w">  </span>f8<span class="w"> </span>9b<span class="w"> </span>2c<span class="w"> </span><span class="m">23</span><span class="w"> </span>b7<span class="w"> </span>d8<span class="w"> </span><span class="m">99</span><span class="w"> </span>e0<span class="w">  </span><span class="p">|</span>.../.oDx..,#....<span class="p">|</span>
-<span class="m">00000050</span><span class="w">  </span>6f<span class="w"> </span>2b<span class="w"> </span><span class="m">71</span><span class="w"> </span><span class="m">48</span><span class="w"> </span><span class="m">00</span><span class="w"> </span><span class="m">27</span><span class="w"> </span><span class="m">08</span><span class="w"> </span><span class="m">31</span><span class="w">  </span><span class="m">58</span><span class="w"> </span>c2<span class="w"> </span>2d<span class="w"> </span>9c<span class="w"> </span>8c<span class="w"> </span><span class="m">41</span><span class="w"> </span><span class="m">54</span><span class="w"> </span><span class="m">87</span><span class="w">  </span><span class="p">|</span>o+qH.<span class="s1">&#39;.1X.-..AT.|</span>
+<span class="m">00000050</span><span class="w">  </span>6f<span class="w"> </span>2b<span class="w"> </span><span class="m">71</span><span class="w"> </span><span class="m">48</span><span class="w"> </span><span class="m">00</span><span class="w"> </span><span class="m">27</span><span class="w"> </span><span class="m">08</span><span class="w"> </span><span class="m">31</span><span class="w">  </span><span class="m">58</span><span class="w"> </span>c2<span class="w"> </span>2d<span class="w"> </span>9c<span class="w"> </span>8c<span class="w"> </span><span class="m">41</span><span class="w"> </span><span class="m">54</span><span class="w"> </span><span class="m">87</span><span class="w">  </span><span class="p">|</span>o+qH.<span class="s1">'.1X.-..AT.|</span>
 <span class="s1">00000060  cd 38 7e 90 78 ea 5d 3d  81 5e d4 67 ac f9 11 25  |.8~.x.]=.^.g...%|</span>
 <span class="s1">00000070  ca eb 68 f3 ae 43 e0 eb  ce 0f fa dc d2 97 91 bb  |..h..C..........|</span>
 <span class="s1">00000080  e4 04 2f fe 7e f7 83 0f  ef cc 4c 5e 41 f2 3f 42  |../.~.....L^A.?B|</span>
 <span class="s1">00000090  5a 47 4d e4 3b 6d dc 78  e2 a3 65 f8 bb 84 88 e5  |ZGM.;m.x..e.....|</span>
 <span class="s1">000000a0  9f 34 1f 53 d2 2a 59 8f  ac 77 a4 58 57 e9 4b 06  |.4.S.*Y..w.XW.K.|</span>
 <span class="s1">000000b0  f8 e9 80 f1 cf 96 aa 50  1a 24 1c 6a f6 6c e7 2d  |.......P.$.j.l.-|</span>
-<span class="s1">000000c0  58 ec 30 13 27 6c 4d 43  f5 60 07 8d 11 6f 43 4c  |X.0.&#39;</span>lMC.<span class="sb">`</span>...oCL<span class="p">|</span>
-000000d0<span class="w">  </span>ae<span class="w"> </span>2b<span class="w"> </span>f0<span class="w"> </span><span class="m">69</span><span class="w"> </span><span class="m">01</span><span class="w"> </span><span class="m">18</span><span class="w"> </span><span class="m">05</span><span class="w"> </span>a0<span class="w">  </span><span class="m">22</span><span class="w"> </span>9b<span class="w"> </span>e9<span class="w"> </span>9b<span class="w"> </span><span class="m">10</span><span class="w"> </span>c6<span class="w"> </span><span class="m">83</span><span class="w"> </span>7f<span class="w">  </span><span class="p">|</span>.+.i....<span class="s2">&quot;.......|</span>
+<span class="s1">000000c0  58 ec 30 13 27 6c 4d 43  f5 60 07 8d 11 6f 43 4c  |X.0.'</span>lMC.<span class="sb">`</span>...oCL<span class="p">|</span>
+000000d0<span class="w">  </span>ae<span class="w"> </span>2b<span class="w"> </span>f0<span class="w"> </span><span class="m">69</span><span class="w"> </span><span class="m">01</span><span class="w"> </span><span class="m">18</span><span class="w"> </span><span class="m">05</span><span class="w"> </span>a0<span class="w">  </span><span class="m">22</span><span class="w"> </span>9b<span class="w"> </span>e9<span class="w"> </span>9b<span class="w"> </span><span class="m">10</span><span class="w"> </span>c6<span class="w"> </span><span class="m">83</span><span class="w"> </span>7f<span class="w">  </span><span class="p">|</span>.+.i....<span class="s2">".......|</span>
 <span class="s2">000000e0  bb 5c 3e 89 cb 33 68 52  fc 16 c0 37 0a f9 8e 5d  |.\&gt;..3hR...7...]|</span>
 <span class="s2">000000f0  7c 88 4f cd 02 f1 94 c9  69 52 d7 bc 61 7d b0 aa  ||.O.....iR..a}..|</span>
 <span class="s2">00000100  bd 4e 7b a1 d9 91 79 17  c8 2a 3d ec 1c a0 60 8e  |.N{...y..*=...`.|</span>
@@ -1805,7 +1838,7 @@ $&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> <
 <span class="s2">00000120  f2 6a 21 1b f8 42 d4 33  57 64 da be 47 43 a8 92  |.j!..B.3Wd..GC..|</span>
 <span class="s2">00000130  09 95 61 1b cd 97 5c 30  f1 e5 bf 21 ba 82 21 68  |..a...\0...!..!h|</span>
 <span class="s2">00000140  3a 14 8b e9 0e 8a 83 6b  ed de 24 f3 5b fd 02 f0  |:......k..</span>$<span class="s2">.[...|</span>
-<span class="s2">00000150  bd 22 b1 ea f3 15 13 9d  c2 a9 01 cf 36 78 5a 77  |.&quot;</span>..........6xZw<span class="p">|</span>
+<span class="s2">00000150  bd 22 b1 ea f3 15 13 9d  c2 a9 01 cf 36 78 5a 77  |."</span>..........6xZw<span class="p">|</span>
 <span class="m">00000160</span><span class="w">  </span>fd<span class="w"> </span><span class="m">83</span><span class="w"> </span>fe<span class="w"> </span><span class="m">46</span><span class="w"> </span>0e<span class="w"> </span><span class="m">49</span><span class="w"> </span>bf<span class="w"> </span><span class="m">12</span><span class="w">  </span>0a<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">37</span><span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">36</span><span class="w"> </span><span class="m">37</span><span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">37</span><span class="w">  </span><span class="p">|</span>...F.I...1706707<span class="p">|</span>
 <span class="m">00000170</span><span class="w">  </span><span class="m">37</span><span class="w"> </span><span class="m">37</span><span class="w"> </span><span class="m">34</span><span class="w"> </span>1a<span class="w"> </span><span class="m">59</span><span class="w"> </span><span class="m">76</span><span class="w"> </span><span class="m">61</span><span class="w"> </span><span class="m">75</span><span class="w">  </span>6c<span class="w"> </span><span class="m">74</span><span class="w"> </span>3a<span class="w"> </span><span class="m">76</span><span class="w"> </span><span class="m">31</span><span class="w"> </span>3a<span class="w"> </span><span class="m">68</span><span class="w"> </span><span class="m">66</span><span class="w">  </span><span class="p">|</span><span class="m">774</span>.Yvault:v1:hf<span class="p">|</span>
 <span class="m">00000180</span><span class="w">  </span><span class="m">54</span><span class="w"> </span><span class="m">61</span><span class="w"> </span><span class="m">73</span><span class="w"> </span><span class="m">58</span><span class="w"> </span><span class="m">37</span><span class="w"> </span><span class="m">39</span><span class="w"> </span>4c<span class="w"> </span><span class="m">63</span><span class="w">  </span><span class="m">38</span><span class="w"> </span><span class="m">37</span><span class="w"> </span><span class="m">68</span><span class="w"> </span>7a<span class="w"> </span><span class="m">38</span><span class="w"> </span><span class="m">48</span><span class="w"> </span><span class="m">77</span><span class="w"> </span><span class="m">31</span><span class="w">  </span><span class="p">|</span>TasX79Lc87hz8Hw1<span class="p">|</span>
@@ -1836,7 +1869,7 @@ $&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> <
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 26, 2026 07:10:43 UTC">June 26, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 19, 2026 02:07:48 UTC">August 19, 2026</span>
   </span>
 
     
@@ -1852,6 +1885,7 @@ $&gt;<span class="w"> </span>kubectl<span class="w"> </span>-n<span class="w"> <
     </span>
     <nav>
       
+        <a href="mailto:chaochn47@outlook.com">Chao</a>, 
         <a href="mailto:tommorelly@gmail.com">FalcoSuessgott</a>, 
         <a href="mailto:ol-sidorenkov@mail.ru">Oleg Sidorenkov</a>, 
         <a href="mailto:tom-morelly@gmx.de">Tom Morelly</a>, 
