@@ -59,7 +59,7 @@ path "transit/keys/kms" {
 You can create the policy using `vault policy write kms ./kms-policy.hcl`.
 
 ### Vault Auth
-`vault-kubernetes-kms` supports Token, AppRole, UserPass, TLS Certificate (`cert`) & JWT Auth. Since a static pod cannot reference any other Kubernetes API-Objects, JWT authentication is only possible in scenarios, where the plugin does not run as a static pod (see [Issue #312](https://github.com/FalcoSuessgott/vault-kubernetes-kms/issues/312)).
+`vault-kubernetes-kms` supports Token, AppRole, UserPass, TLS Certificate (`cert`) and JWT auth. JWT auth can read a token from a file or fetch a JWT-SVID from the SPIFFE Workload API. The SPIFFE source is suitable for a static pod when the SPIRE agent socket is mounted from the host.
 
 ### Cert (TLS Certificate) Auth
 
@@ -131,7 +131,10 @@ $> vault token create -orphan -policy="kms" -period=24h
 ```
 
 ### JWT Auth
-This authentication method is specifically for deployment models, where the plugin **does not** run in a static pod and has access to a Kubernetes Service Account token. With the usual deployment in a static pod, this authentication method does not work.
+JWT auth has two token sources:
+
+* `file` (default) reads a JWT from `--jwt-token-path`. This is useful for a projected Kubernetes Service Account token when the plugin is not a static pod.
+* `spiffe` requests a fresh JWT-SVID from the SPIFFE Workload API for every Vault login. It requires an audience and an exact SPIFFE ID. The Workload API still enforces whether the workload is authorized to request that identity.
 
 ```bash
 # Follow https://developer.hashicorp.com/vault/docs/auth/jwt
@@ -142,8 +145,37 @@ $> vault auth enable jwt
 $> vault write auth/jwt/config oidc_discovery_url="[OIDC Discovery URL]" oidc_discovery_ca_pem="[OIDC Discovery Certificate]"
 $> vault write auth/jwt/config jwt_validation_pubkeys="-----BEGIN PUBLIC KEY-----..."
 
-# create a role
+# create a role for a file-backed Kubernetes Service Account token
 $> vault write auth/jwt/role/kms role_type="jwt" bound_audiences="vault-kms" user_claim="sub" bound_subject="system:serviceaccount:[NAMESPACE]:[SERVICE_ACCOUNT_NAME]" token_policies="kms" token_period="3600"
+
+# or create a role for a SPIFFE JWT-SVID
+$> vault write auth/jwt/role/kms role_type="jwt" bound_audiences="vault-kms" user_claim="sub" bound_subject="spiffe://example.org/workload/vault-kubernetes-kms" token_policies="kms" token_period="3600"
+```
+
+For SPIFFE auth, either pass `--jwt-spiffe-endpoint` or set the standard `SPIFFE_ENDPOINT_SOCKET` environment variable. If Vault token renewal fails, the plugin re-authenticates and fetches a new JWT-SVID; JWT-SVIDs are never persisted by the plugin.
+
+A static pod can mount the node-local SPIRE agent socket and select the SPIFFE source explicitly:
+
+```yaml
+spec:
+  containers:
+    - name: vault-kubernetes-kms
+      args:
+        - --auth-method=jwt
+        - --jwt-role=kms
+        - --jwt-token-source=spiffe
+        - --jwt-spiffe-endpoint=unix:///run/spire/sockets/agent.sock
+        - --jwt-spiffe-audience=vault-kms
+        - --jwt-spiffe-id=spiffe://example.org/workload/vault-kubernetes-kms
+      volumeMounts:
+        - name: spire-agent-socket
+          mountPath: /run/spire/sockets
+          readOnly: true
+  volumes:
+    - name: spire-agent-socket
+      hostPath:
+        path: /run/spire/sockets
+        type: Directory
 ```
 
 ## Deploying `vault-kubernetes-kms`
@@ -207,8 +239,12 @@ List of required and optional CLI args/env vars. **Furthermore, all of Vaults [E
 
 * **(Required)**: `-auth-method="jwt"` (`VAULT_KMS_AUTH_METHOD`)
 * **(Required)**: `-jwt-role` (`VAULT_KMS_JWT_ROLE`)
-* **(Optional)**: `-jwt-token-path` (`VAULT_KMS_JWT_TOKEN_PATH`); default: `"/var/run/secrets/kubernetes.io/serviceaccount/token"`
 * **(Optional)**: `-jwt-mount` (`VAULT_KMS_JWT_MOUNT`); default: `"jwt"`
+* **(Optional)**: `-jwt-token-source` (`VAULT_KMS_JWT_TOKEN_SOURCE`); supported values: `file`, `spiffe`; default: `"file"`
+* **(Required for `file`)**: `-jwt-token-path` (`VAULT_KMS_JWT_TOKEN_PATH`); default: `"/var/run/secrets/kubernetes.io/serviceaccount/token"`
+* **(Required for `spiffe`)**: `-jwt-spiffe-audience` (`VAULT_KMS_JWT_SPIFFE_AUDIENCE`)
+* **(Required for `spiffe`)**: `-jwt-spiffe-id` (`VAULT_KMS_JWT_SPIFFE_ID`) — exact SPIFFE ID to request
+* **(Optional for `spiffe`)**: `-jwt-spiffe-endpoint` (`VAULT_KMS_JWT_SPIFFE_ENDPOINT`); defaults to `SPIFFE_ENDPOINT_SOCKET`
 
 **Lease Refreshing Settings**:
 

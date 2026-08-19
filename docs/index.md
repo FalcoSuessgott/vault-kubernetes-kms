@@ -26,7 +26,7 @@ To do so, you will have to enable Data at Rest encryption, by configuring the `k
 :warning: **`vault-kubernetes-kms` is in early stage! Running it in Production is not yet recommended. Im looking for early adopters in order to  gather important feedback.** :warning:
 
 ## Features
-* support [Vault Token](https://developer.hashicorp.com/vault/docs/auth/token), [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle), [JWT](https://developer.hashicorp.com/vault/docs/auth/jwt) authentication (Since a static pod cannot reference any other Kubernetes API-Objects, JWT authentication is only possible in scenarios, where the plugin does not run as a static pod.)
+* support [Vault Token](https://developer.hashicorp.com/vault/docs/auth/token), [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle), and [JWT](https://developer.hashicorp.com/vault/docs/auth/jwt) authentication. JWTs can be read from a file or fetched as JWT-SVIDs from the SPIFFE Workload API, including from a static pod with access to the agent socket.
 * support Kubernetes [KMS Plugin v1 (deprecated since `v1.28.0`) & v2 (stable in `v1.29.0`)](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#before-you-begin)
 * [automatic Token Renewal for avoiding Token expiry](https://falcosuessgott.github.io/vault-kubernetes-kms/configuration/#cli-args-environment-variables)
 * [Exposes useful Prometheus Metrics](https://falcosuessgott.github.io/vault-kubernetes-kms/metrics/#prometheus-metrics)
