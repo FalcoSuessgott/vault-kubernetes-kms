@@ -13,14 +13,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// nolint: perfsprint, funlen
+//nolint:cyclop,funlen,perfsprint
 func TestNewPlugin(t *testing.T) {
+	const (
+		spiffeAudience = "vault-kms"
+		spiffeSubject  = "spiffe://example.org/workload/vault-kubernetes-kms"
+	)
+
+	var fakeWorkloadAPI *testutils.FakeJWTWorkloadAPI
+
 	testCases := []struct {
 		name      string
 		envVars   map[string]string
 		args      []string
 		vaultCmd  []string
-		extraArgs func(c *testutils.TestContainer) ([]string, error)
+		extraArgs func(t *testing.T, c *testutils.TestContainer) ([]string, error)
+		assert    func(t *testing.T)
 		err       bool
 	}{
 		{
@@ -36,7 +44,7 @@ func TestNewPlugin(t *testing.T) {
 				"-health-port=8081",
 				fmt.Sprintf("-socket=unix:///%s/vaultkms.socket", t.TempDir()),
 			},
-			extraArgs: func(c *testutils.TestContainer) ([]string, error) {
+			extraArgs: func(_ *testing.T, c *testutils.TestContainer) ([]string, error) {
 				return []string{fmt.Sprintf("-vault-address=%s", c.URI)}, nil
 			},
 		},
@@ -54,7 +62,7 @@ func TestNewPlugin(t *testing.T) {
 				"-health-port=8082",
 				fmt.Sprintf("-socket=unix:///%s/vaultkms.socket", t.TempDir()),
 			},
-			extraArgs: func(c *testutils.TestContainer) ([]string, error) {
+			extraArgs: func(_ *testing.T, c *testutils.TestContainer) ([]string, error) {
 				roleID, secretID, err := c.GetApproleCreds("approle", "kms")
 				if err != nil {
 					return nil, err
@@ -86,7 +94,7 @@ func TestNewPlugin(t *testing.T) {
 				"-health-port=8083",
 				fmt.Sprintf("-socket=unix:///%s/vaultkms.socket", t.TempDir()),
 			},
-			extraArgs: func(c *testutils.TestContainer) ([]string, error) {
+			extraArgs: func(_ *testing.T, c *testutils.TestContainer) ([]string, error) {
 				roleID, secretID, err := c.GetApproleCreds("approle2", "kms")
 				if err != nil {
 					return nil, err
@@ -115,10 +123,82 @@ func TestNewPlugin(t *testing.T) {
 				"-userpass-password=kms-pass",
 				fmt.Sprintf("-socket=unix:///%s/vaultkms.socket", t.TempDir()),
 			},
-			extraArgs: func(c *testutils.TestContainer) ([]string, error) {
+			extraArgs: func(_ *testing.T, c *testutils.TestContainer) ([]string, error) {
 				return []string{
 					fmt.Sprintf("-vault-address=%s", c.URI),
 				}, nil
+			},
+		},
+		{
+			name: "spiffe jwt auth with env vars",
+			envVars: map[string]string{
+				"VAULT_KMS_AUTH_METHOD":         "jwt",
+				"VAULT_KMS_JWT_ROLE":            "kms",
+				"VAULT_KMS_JWT_TOKEN_SOURCE":    "spiffe",
+				"VAULT_KMS_JWT_SPIFFE_AUDIENCE": spiffeAudience,
+				"VAULT_KMS_JWT_SPIFFE_ID":       spiffeSubject,
+			},
+			vaultCmd: []string{
+				"secrets enable transit",
+				"write -f transit/keys/kms",
+			},
+			args: []string{
+				"vault-kubernetes-kms",
+				"-health-port=8085",
+				fmt.Sprintf("-socket=unix:///%s/vaultkms.socket", t.TempDir()),
+			},
+			extraArgs: func(t *testing.T, c *testutils.TestContainer) ([]string, error) {
+				t.Helper()
+
+				privateKey, publicKeyPEM, err := testutils.GenerateJWTSigningKey()
+				if err != nil {
+					return nil, fmt.Errorf("generate jwt signing key: %w", err)
+				}
+
+				jwtToken, err := testutils.SignTestJWT(privateKey, spiffeSubject, spiffeAudience)
+				if err != nil {
+					return nil, fmt.Errorf("sign jwt-svid: %w", err)
+				}
+
+				fakeWorkloadAPI = testutils.NewFakeJWTWorkloadAPI(jwtToken)
+				endpoint := testutils.StartFakeJWTWorkloadAPI(t, fakeWorkloadAPI)
+
+				err = c.Container.CopyToContainer(t.Context(), []byte(publicKeyPEM), "/tmp/jwt-pub.pem", 0o444)
+				if err != nil {
+					return nil, fmt.Errorf("copy jwt public key: %w", err)
+				}
+
+				vaultCommands := []string{
+					"vault auth enable jwt",
+					"vault write auth/jwt/config jwt_validation_pubkeys=@/tmp/jwt-pub.pem",
+					`printf 'path "transit/*" { capabilities = ["create","read","update"] }' | vault policy write transit-pol -`,
+					fmt.Sprintf(
+						"vault write auth/jwt/role/kms role_type=jwt bound_audiences=%s "+
+							"user_claim=sub bound_subject=%s token_policies=transit-pol token_period=3600",
+						spiffeAudience,
+						spiffeSubject,
+					),
+				}
+
+				for _, command := range vaultCommands {
+					_, err = c.ExecShell(command)
+					if err != nil {
+						return nil, fmt.Errorf("configure vault jwt auth: %w", err)
+					}
+				}
+
+				return []string{
+					fmt.Sprintf("-vault-address=%s", c.URI),
+					fmt.Sprintf("-jwt-spiffe-endpoint=%s", endpoint),
+				}, nil
+			},
+			assert: func(t *testing.T) {
+				t.Helper()
+
+				requests := fakeWorkloadAPI.RecordedRequests()
+				require.Len(t, requests, 1, "NewPlugin must fetch one JWT-SVID during Vault login")
+				require.Equal(t, []string{spiffeAudience}, requests[0].Audience)
+				require.Equal(t, spiffeSubject, requests[0].SPIFFEID)
 			},
 		},
 	}
@@ -136,7 +216,7 @@ func TestNewPlugin(t *testing.T) {
 			}
 
 			if tc.extraArgs != nil {
-				extraArgs, err := tc.extraArgs(vc)
+				extraArgs, err := tc.extraArgs(t, vc)
 				require.NoError(t, err, "failed to perform extra args func: %w", err)
 
 				tc.args = append(tc.args, extraArgs...)
@@ -168,6 +248,10 @@ func TestNewPlugin(t *testing.T) {
 			}()
 
 			wg.Wait()
+
+			if tc.assert != nil {
+				tc.assert(t)
+			}
 		})
 	}
 }

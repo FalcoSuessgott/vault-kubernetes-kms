@@ -4,96 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 	"runtime"
-	"sync"
 	"testing"
 	"time"
 
 	"github.com/FalcoSuessgott/vault-kubernetes-kms/pkg/testutils"
-	"github.com/spiffe/go-spiffe/v2/proto/spiffe/workload"
 	"github.com/spiffe/go-spiffe/v2/spiffeid"
 	"github.com/spiffe/go-spiffe/v2/svid/jwtsvid"
 	"github.com/spiffe/go-spiffe/v2/workloadapi"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
 )
-
-type jwtSVIDRequest struct {
-	audience []string
-	spiffeID string
-}
-
-type fakeJWTWorkloadAPI struct {
-	workload.UnimplementedSpiffeWorkloadAPIServer
-
-	mu       sync.Mutex
-	token    string
-	requests []jwtSVIDRequest
-}
-
-func (f *fakeJWTWorkloadAPI) FetchJWTSVID(
-	_ context.Context,
-	req *workload.JWTSVIDRequest,
-) (*workload.JWTSVIDResponse, error) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	f.requests = append(f.requests, jwtSVIDRequest{
-		audience: append([]string(nil), req.GetAudience()...),
-		spiffeID: req.GetSpiffeId(),
-	})
-
-	return &workload.JWTSVIDResponse{
-		Svids: []*workload.JWTSVID{{
-			SpiffeId: req.GetSpiffeId(),
-			Svid:     f.token,
-		}},
-	}, nil
-}
-
-func (f *fakeJWTWorkloadAPI) setToken(token string) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	f.token = token
-}
-
-func (f *fakeJWTWorkloadAPI) recordedRequests() []jwtSVIDRequest {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	requests := make([]jwtSVIDRequest, len(f.requests))
-	copy(requests, f.requests)
-
-	return requests
-}
-
-func startFakeJWTWorkloadAPI(t *testing.T, api *fakeJWTWorkloadAPI) string {
-	t.Helper()
-
-	socketPath := filepath.Join(t.TempDir(), "workload-api.sock")
-
-	var listenConfig net.ListenConfig
-
-	listener, err := listenConfig.Listen(t.Context(), "unix", socketPath)
-	require.NoError(t, err, "listen on fake workload API socket")
-
-	server := grpc.NewServer()
-	workload.RegisterSpiffeWorkloadAPIServer(server, api)
-
-	go func() {
-		_ = server.Serve(listener)
-	}()
-
-	t.Cleanup(func() {
-		server.Stop()
-	})
-
-	return "unix://" + socketPath
-}
 
 func TestFileJWTTokenSourceRereadsToken(t *testing.T) {
 	tokenPath := filepath.Join(t.TempDir(), "jwt-token")
@@ -153,8 +75,8 @@ func TestSPIFFEJWTAuth(t *testing.T) {
 	jwtToken, err := testutils.SignTestJWT(privateKey, subject, audience)
 	require.NoError(t, err, "sign initial jwt-svid")
 
-	fakeWorkloadAPI := &fakeJWTWorkloadAPI{token: jwtToken}
-	endpoint := startFakeJWTWorkloadAPI(t, fakeWorkloadAPI)
+	fakeWorkloadAPI := testutils.NewFakeJWTWorkloadAPI(jwtToken)
+	endpoint := testutils.StartFakeJWTWorkloadAPI(t, fakeWorkloadAPI)
 	t.Setenv(workloadapi.SocketEnv, endpoint)
 
 	tc, err := testutils.StartTestContainer(
@@ -193,10 +115,10 @@ func TestSPIFFEJWTAuth(t *testing.T) {
 	)
 	require.NoError(t, err, "create vault client with spiffe jwt auth")
 
-	requests := fakeWorkloadAPI.recordedRequests()
+	requests := fakeWorkloadAPI.RecordedRequests()
 	require.Len(t, requests, 1)
-	require.Equal(t, []string{audience}, requests[0].audience)
-	require.Equal(t, subject, requests[0].spiffeID)
+	require.Equal(t, []string{audience}, requests[0].Audience)
+	require.Equal(t, subject, requests[0].SPIFFEID)
 
 	plaintext := []byte("hello-spiffe-jwt-auth")
 	ciphertext, _, err := vc.Encrypt(t.Context(), plaintext)
@@ -209,14 +131,14 @@ func TestSPIFFEJWTAuth(t *testing.T) {
 	firstVaultToken := vc.Client.Token()
 	rotatedJWT, err := testutils.SignTestJWT(privateKey, subject, audience)
 	require.NoError(t, err, "sign rotated jwt-svid")
-	fakeWorkloadAPI.setToken(rotatedJWT)
+	fakeWorkloadAPI.SetToken(rotatedJWT)
 
 	_, err = tc.ExecShell("vault token revoke " + firstVaultToken)
 	require.NoError(t, err, "revoke initial vault token")
 	require.NoError(t, vc.AuthMethodFunc(vc), "re-authenticate with rotated jwt-svid")
 	require.NotEqual(t, firstVaultToken, vc.Client.Token(), "reauthentication must install a fresh vault token")
 
-	requests = fakeWorkloadAPI.recordedRequests()
+	requests = fakeWorkloadAPI.RecordedRequests()
 	require.Len(t, requests, 2, "each vault login must fetch a fresh jwt-svid")
 
 	ciphertext, _, err = vc.Encrypt(t.Context(), plaintext)
